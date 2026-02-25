@@ -1,0 +1,4 @@
+server.js => application/backend is live => /api
+index.js => particular database related query => eg: /doctor or /patient or /admin
+doctor.js(routes folder) => contains the all the related fn that perform CRUD operation on db
+doctor.js(controller) => controls all the fn and their behaviour with existing DB 
