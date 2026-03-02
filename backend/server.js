@@ -1,24 +1,34 @@
-import { configDotenv } from 'dotenv';
-import express from 'express';
+import path from "path";
 import cors from 'cors';
+import express from 'express';
 import script from './script.js';
+import { configDotenv } from 'dotenv';
 import { connectMongoDb } from "./connection.js";
+import { v2 as cloudinary } from "cloudinary";
 
 configDotenv();
+connectMongoDb();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 
 const PORT = process.env.PORT;
 const app = express();
 
-connectMongoDb();
 
-app.use(cors({ 
+app.use(cors({
   origin: process.env.CORS_ORIGIN,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.use(express.json({extended: false}));
-app.use(express.urlencoded({extended: false}));
+app.use(express.json({ extended: false }));
+app.use(express.urlencoded({ extended: false }));
+app.use("/public", express.static(path.resolve("./public")));
 
 app.get('/', (req, res) => {
   res.send('Backend is running 🚀');

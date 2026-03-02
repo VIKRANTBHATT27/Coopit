@@ -1,4 +1,11 @@
+import { generateToken } from "../service/auth.js";
 import { Schema, model } from "mongoose";
+import { configDotenv } from 'dotenv';
+import bcrypt from "bcrypt";
+
+const { randomBytes, createCipheriv } = await import("node:crypto");
+
+configDotenv();
 
 const patientSchema = new Schema({
      fullName: {
@@ -14,27 +21,49 @@ const patientSchema = new Schema({
           type: String,
           required: true,
      },
+     phoneNumber: {
+          type: String,
+          required: true,
+          validate: {
+               validator: function (v) {
+                    return /^\+?[0-9]{10,15}$/.test(v);
+               },
+               message: props => `${props.value} is not a valid 10-digit phone number!`
+          }
+     },
+     phoneIV: {
+          type: String,
+          required: false,
+     },
      gender: {
           type: String,
           enum: ['Male', 'Female', 'Others'],
           required: true
      },
-     profilePic_url: {
+     pfp_url: {
           type: String,
           required: false,
           default: "/pfp/default-user"
      },
+     pfp_publicId: {
+          type: String,
+          required: false,
+     },
+
      dateOfBirth: {
           type: Date,
           required: false,
      },
-
      weight: {
           type: Number,
+          min: 1,
+          max: 500,
           required: false
      },
      height: {
           type: Number,
+          min: 30,
+          max: 300,
           required: false
      },
 
@@ -94,7 +123,7 @@ const patientSchema = new Schema({
           occupation: { type: String, required: false },
      },
 
-     allergies: {        //past condition like hypertension / diabetes      
+     allergies: {                  //past condition like hypertension / diabetes      
           type: [String],
           default: [],
           required: false,
@@ -113,6 +142,40 @@ const patientSchema = new Schema({
      },
 
 }, { collection: 'patientModel', timestamps: true });
+
+
+// use bycrpt
+patientSchema.pre('save', function () {
+     const user = this;
+
+     if (!user.isModified("phoneNumber")) return next();
+
+     const algo = "aes-256-gcm"
+     const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
+     const IV = randomBytes(16);
+
+     const cipher = createCipheriv(algo, key, IV);
+
+
+     let encryptedPhoneNo = cipher.update(user.phoneNumber, 'utf-8', 'hex');
+     encryptedPhoneNo += cipher.final('hex');
+
+
+     this.phoneIV = IV.toString("hex");
+     this.phoneNumber = encryptedPhoneNo;
+});
+
+patientSchema.static("matchPassword_and_GenerateToken", async (emailId, password) => {
+     const patient = await patientModel.findOne({ emailId });
+     if (!patient) return res.status(404).json({ msg: "NO USER FOUND WITH THIS EMAIL" });
+
+     const isPassMatched = await bcrypt.compare(password, patient.password);
+
+     if (!isPassMatched) throw new Error("Password not matched");
+
+     const token = generateToken(patient, "patient");
+     return token;
+});
 
 const patientModel = model("Patient", patientSchema);
 
