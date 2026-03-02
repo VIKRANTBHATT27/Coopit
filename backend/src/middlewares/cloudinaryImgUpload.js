@@ -19,4 +19,4 @@ export const cloudinary_pfpUploader = async (req, res, next) => {
           console.log("Cloudinary upload failed: ", error);
           return res.status(500).json({ error: "Image upload failed " })
      }
-}
+};

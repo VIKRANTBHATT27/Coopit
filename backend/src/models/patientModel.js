@@ -167,6 +167,9 @@ patientSchema.pre('save', function () {
 
 patientSchema.static("matchPassword_and_GenerateToken", async (emailId, password) => {
      const patient = await patientModel.findOne({ emailId });
+
+     console.log(patient);
+     
      if (!patient) return res.status(404).json({ msg: "NO USER FOUND WITH THIS EMAIL" });
 
      const isPassMatched = await bcrypt.compare(password, patient.password);
@@ -174,6 +177,7 @@ patientSchema.static("matchPassword_and_GenerateToken", async (emailId, password
      if (!isPassMatched) throw new Error("Password not matched");
 
      const token = generateToken(patient, "patient");
+     // console.log(token);
      return token;
 });
 

@@ -1,3 +1,4 @@
+import { cloudinary_Delete_pfp } from "../service/cloudinaryImgDelete.js";
 import patientModel from "../models/patientModel.js";
 import bcrypt from "bcrypt";
 import * as z from "zod";
@@ -8,7 +9,6 @@ const patientSchema = z.object({
      password: z.string().min(6),
      phoneNumber: z.string().regex(/^\+?[0-9]{10,15}$/, "Phone number must be 10–15 digits"),
      gender: z.enum(['Male', 'Female', 'Others']),
-     pfp_url: z.string().optional(),
      dateofBirth: z.date().optional(),
      weight: z.number().optional(),
      height: z.number().optional(),
@@ -37,9 +37,19 @@ export const handlePatientSignup = async (req, res) => {
      try {
           const parsedData = patientSchema.parse(req.body);
 
+          const isAlreadyPatient = await patientModel.findOne({ emailId: parsedData.emailId });
+          if (isAlreadyPatient) {
+               return res.status(400).json({ msg: "Patient already exist with this Email" });
+          }
+
           const hashedPassword = await bcrypt.hash(parsedData.password, 13);
 
-          const patient = await patientModel.create({ ...parsedData, password: hashedPassword });
+          const patient = await patientModel.create({
+               ...parsedData,
+               password: hashedPassword,
+               pfp_url: req.pfpImageURL,
+               pfp_publicId: req.pfpImagePublicId,
+          });
 
           return res.status(201).json({
                msg: "✅ successfully created a patient",
@@ -51,25 +61,114 @@ export const handlePatientSignup = async (req, res) => {
           if (error.message === "ValidationError") {
                return res.status(400).json({ err: "VALIDATION ERROR" });
           }
-     
+
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
+// send otp function is still left
 export const handlePatientLogin = async (req, res) => {
-     // make a cookie and a otp during login in user email or phoneNo if password matched
+     if (!req.body || Object.keys(req.body).length === 0)
+          return res.status(400).json({ err: "no data is provided!" });
 
+
+     // make a cookie and a otp during login in user email or phoneNo if password matched
      const { emailId, password } = req.body;
+
+
+     if (!emailId || !password) {
+          return res.status(400).json({ err: "emailId and password are required!" });
+     }
+
 
      try {
           const token = await patientModel.matchPassword_and_GenerateToken(emailId, password);
 
+          console.log(token);
 
-          
+          res.cookie("authToken", token, {
+               httpOnly: true,
+               secure: false,      //turn it to true on deployment
+          });
+
      } catch (error) {
           console.log("error: ", error.message);
 
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          if (error.message === "Password not matched") return res.status(400).json({ err: "Invalid Credientials" });
+
+          return null;
      }
-     return res.status(200).json({ msg: "query reached successfully" });
+
+     return res.status(200).json({ msg: "✅successfully login" });
+};
+
+export const handleGetPatient = async (req, res) => {
+     if (!req.params.id) res.status(400).json({ msg: "no patient id given" });
+
+     try {
+          const patient = await patientModel.findById(req.params.id);
+
+          if (!patient) {
+               return res.status(404).json({ msg: "Patient not found" });
+          }
+
+          return res.status(200).json(patient);
+     } catch (error) {
+          console.log("error: ", error.message);
+
+          return null;
+     }
+};
+
+export const handleUploadImg = async (req, res) => {
+     if (!req.file) return res.send(400).json({ err: "no image file uploaded" });
+
+     try {
+          const response = await patientModel.findByIdAndUpdate(req.body.id,
+               {
+                    $set: {
+                         pfp_url: req.pfpImageURL,
+                         pfp_publicId: req.pfpImagePublicId
+                    }
+               }, { new: true });
+
+          console.log(response);
+     } catch (error) {
+          console.log("❌ Patient image upload failed", error.message);
+          return null;
+     }
+
+     return res.status(200).json({ msg: "successfully uploaded image" });
+};
+
+// fix the null issue here 
+export const handleDeletePfpImage = async (req, res) => {
+     if (!req.body || Object.keys(req.body).length === 0)
+          return res.status(400).json({ err: "no data is provided" });
+
+     try {
+          const { emailId } = req.body;
+
+          const patient = await patientModel.findOne({ emailId });
+
+          console.log(patient);
+
+          const result = await cloudinary_Delete_pfp(patient.pfp_publicId);
+
+          console.log(result);
+
+          if (result) {
+               const response = await patientModel.findOneAndUpdate({ emailId }, {
+                    $set: {
+                         pfp_url: null,
+                         pfp_publicId: null,
+                    }
+               }, { new: true });
+          }
+     } catch (error) {
+          console.log("patient deletion request Failed!");
+          return null;
+     }
+
+     return res.status(200).json({ msg: "successfully deleted image" });
 };

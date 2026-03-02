@@ -6,7 +6,10 @@ const customStorage = multer.diskStorage({
           cb(null, path.resolve("./public/uploaded-images"))
      },
      filename: (req, file, cb) => {
-          cb(null, file.originalname + "-" + Date.now());
+          const extensionName = path.extname(file.originalname);
+          const basename = path.basename(file.originalname, extensionName);
+          
+          cb(null, "file-" + Date.now() + file.originalname);
      }
 });
 
