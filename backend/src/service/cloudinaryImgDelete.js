@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 
-export const cloudinary_Delete_pfp = async (publicId) => {
+const cloudinary_Delete_pfp = async (publicId) => {
      try {
           if (!publicId) throw new Error("publicId not provided!");
 
@@ -16,3 +16,5 @@ export const cloudinary_Delete_pfp = async (publicId) => {
           throw new Error("Cloudinary profile image deletion failed!");
      }
 };
+
+export default cloudinary_Delete_pfp

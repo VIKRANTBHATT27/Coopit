@@ -35,6 +35,11 @@ const patientSchema = new Schema({
           type: String,
           required: false,
      },
+     phoneAuthTag: {
+          type: String,
+          required: false
+     },
+
      gender: {
           type: String,
           enum: ['Male', 'Female', 'Others'],
@@ -43,7 +48,7 @@ const patientSchema = new Schema({
      pfp_url: {
           type: String,
           required: false,
-          default: "/pfp/default-user"
+          default: "/pfp/default-patient.png"
      },
      pfp_publicId: {
           type: String,
@@ -143,37 +148,40 @@ const patientSchema = new Schema({
 
 }, { collection: 'patientModel', timestamps: true });
 
+patientSchema.index({ location: '2dsphere' });
 
-// use bycrpt
 patientSchema.pre('save', function () {
-     const user = this;
+     const patient = this;
 
-     if (!user.isModified("phoneNumber")) return next();
+     if (!patient.isModified("phoneNumber")) return next();
 
      const algo = "aes-256-gcm"
      const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
      const IV = randomBytes(16);
 
      const cipher = createCipheriv(algo, key, IV);
-
-
-     let encryptedPhoneNo = cipher.update(user.phoneNumber, 'utf-8', 'hex');
+     
+     let encryptedPhoneNo = cipher.update(patient.phoneNumber, 'utf-8', 'hex');
      encryptedPhoneNo += cipher.final('hex');
-
+     
+     const authTag = cipher.getAuthTag();
 
      this.phoneIV = IV.toString("hex");
      this.phoneNumber = encryptedPhoneNo;
+     this.phoneAuthTag = authTag.toString("hex");
+
+     next();
 });
 
+// use bycrpt
 patientSchema.static("matchPassword_and_GenerateToken", async (emailId, password) => {
      const patient = await patientModel.findOne({ emailId });
 
      console.log(patient);
      
-     if (!patient) return res.status(404).json({ msg: "NO USER FOUND WITH THIS EMAIL" });
+     if (!patient) return res.status(404).json({ err: "NO PATIENT FOUND WITH THIS EMAIL" });
 
      const isPassMatched = await bcrypt.compare(password, patient.password);
-
      if (!isPassMatched) throw new Error("Password not matched");
 
      const token = generateToken(patient, "patient");

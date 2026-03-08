@@ -26,8 +26,8 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.use(express.json({ extended: false }));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.resolve("./public")));
 
 app.get('/', (req, res) => {
