@@ -11,7 +11,7 @@ export const generateToken = (user, userRole) => {
           _id: user.id,
           fullName: user.fullName,
           emailId: user.emailId,
-          role: userRole                     //"patient", "doctor", "admin"
+          role: userRole                               //"patient", "doctor", "admin"
      }, secretKey, { expiresIn: "12h" });
 };
 

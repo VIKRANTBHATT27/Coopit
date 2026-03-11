@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { model, Schema } from "mongoose";
 
 const diseaseCase_Schema = new Schema({      //help in analyse of cases in particular area
      patientId: {
@@ -6,7 +6,7 @@ const diseaseCase_Schema = new Schema({      //help in analyse of cases in parti
           required: true,
           ref: "Patient"
      },
-     diagonsedBy: {
+     diagnosedBy: {
           type: Schema.Types.ObjectId,
           required: true,
           ref: "Doctor"
@@ -18,18 +18,17 @@ const diseaseCase_Schema = new Schema({      //help in analyse of cases in parti
 
      startedAt: {
           type: Date,
-          default: Date.now(),
+          default: Date.now,
           required: true,
      },
      endedAt: {
           type: Date,
           default: null,
-          required: true
      },
 
      status: {
           type: String,
-          enum: ['Active', 'Recovered', 'Chronic'],
+          enum: ['Active', 'Recovered', 'Chronic', 'Deceased'],
           default: 'Active',
           required: true,
      },
@@ -40,11 +39,24 @@ const diseaseCase_Schema = new Schema({      //help in analyse of cases in parti
           required: true,
      },
 
-     districtForDiagonsis: {
+     diagnosisLocation: {
           type: String,
           required: true
-     }
+     },
+     diseaseCategory: {
+          type: String,
+          enum: ['Infectious', 'NonCommunicable', 'Genetic', 'Deficiency']
+     },
+     
+     possibleCause: {
+          type: String,
+          required: false
+     },
+
 }, { timestamps: true });
 
-const diseaseCaseModel = model("DiseaseCase", diseaseCase_Schema);
-export default diseaseCaseModel;
+diseaseCase_Schema.index({ patientId: 1 });
+diseaseCase_Schema.index({ diagnosisDistrict: 1 });
+diseaseCase_Schema.index({ diseaseName: 1, status: 1 });
+
+export default model("DiseaseCase", diseaseCase_Schema);;

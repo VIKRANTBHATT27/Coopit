@@ -6,8 +6,8 @@ import {
      handlePatientLogin,
      handlePatientSignup,
      handleGetPatient,
-     handleUploadImg,
-     handleDeletePfpImage,
+     handlePatientUploadImg,
+     handleDeletePatientPfpImage,
      handleGetPatientPhone
 } from "../controllers/patient.js";
 
@@ -17,20 +17,21 @@ router.post('/signup', handlePatientSignup);
 
 router.post('/login', handlePatientLogin);
 
+router.get("/:id", handleGetPatient);
+
 router.get("/getPhone/:id", handleGetPatientPhone);
 
 router.patch('/pfpImgUpload',
      upload.single("profilePic"),
      cloudinary_pfpUploader,
      deleteLocalImgFile,
-     handleUploadImg
+     handlePatientUploadImg
 );
 
-router.delete('/deletePfpImage', handleDeletePfpImage);
+router.delete('/deletePfpImage', handleDeletePatientPfpImage);
 
 // router.post('/:id/document-upload', handleDocumentUpload);
 
-router.get("/:id", handleGetPatient);
 
 
 export default router;

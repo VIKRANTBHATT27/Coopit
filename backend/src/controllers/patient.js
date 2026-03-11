@@ -136,7 +136,7 @@ export const handleGetPatientPhone = async (req, res) => {
      }
 };
 
-export const handleUploadImg = async (req, res) => {
+export const handlePatientUploadImg = async (req, res) => {
      if (!req.file) return res.status(400).json({ err: "no image file uploaded" });
 
      try {
@@ -193,7 +193,7 @@ export const handleDeletePfpImage = async (req, res) => {
 };
 
 
-
+// update current patient requires login first authentication etc.
 
 // // delete the user function or temp delete
 // export const handleDeletePatient = async (req, res) => {

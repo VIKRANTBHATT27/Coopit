@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { model, Schema } from "mongoose";
 
 const checkupSchema = new Schema({
      diseaseCaseId: {
@@ -6,53 +6,66 @@ const checkupSchema = new Schema({
           required: true,
           ref: "DiseaseCase"
      },
+
      patientId: {
           type: Schema.Types.ObjectId,
           required: true,
           ref: "Patient"
      },
+
      doctorId: {
           type: Schema.Types.ObjectId,
-          required: true,  
+          required: true,
           ref: "Doctor"
      },
 
      visitDate: {
           type: Date,
-          required: true,
+          default: Date.now
      },
 
      symptoms: {
-          type: [String],     
-          required: true
+          type: [String],
+          default: []
      },
 
      progressStatus: {
           type: String,
+          required: true,
           enum: ["First Visit", "Improving", "Worsening", "Stable"],
-          required: true
      },
 
      vitals: {
-          temperature: Number,
+          oxygenSaturation: { type: Number, required: false },
+          respirationRate: { type: Number, required: false },
+          temperature: Number,     //*c or *fahrenheit
+          pulse: Number,      //bpm => beats per minute
+
           bp: {
                systolic: Number,
                diastolic: Number
-          },
-          pulse: Number
+          }
      },
 
-     vaccinationsGiven: [
-          {
-               vaccineName: String,
-               doseNumber: Number
-          }
-     ],
+     vaccinationsGiven: {
+          type: [
+               {
+                    vaccineName: String,
+                    doseNumber: Number,
+                    administeredAt: { type: Date, default: Date.now },
+                    administeredBy: {
+                         type: Schema.Types.ObjectId,
+                         ref: "Doctor"
+                    }
+               }
+          ],
+          default: [],
+     },
      treatments: [
           {
                treatmentType: {
                     type: String,
-                    enum: ["Tablet", "Injection", "IV", "Surgery"]
+                    enum: ["Tablet", "Injection", "IV", "Surgery", "Procedure", "Therapy"]     //Procedure => dressing, Therapy => physiotherapy
                },
                name: String,
                dosage: String,          //no dosage but frequency only as dosage
@@ -66,7 +79,39 @@ const checkupSchema = new Schema({
                testName: String,
                result: String,
                normalRange: String,
-               fileUrl: String
+
+               fileUrl: String,
+
+               uploadedAt: {
+                    type: Date,
+                    default: Date.now
+               },
+
+               uploadedBy: {
+                    type: Schema.Types.ObjectId,
+                    ref: "labTechnician",
+                    required: true
+               }
+          }
+     ],
+     attachments: [      
+          {
+               type: {
+                    type: String,
+                    enum: ["XRay", "MRI", "Prescription", "Scan", "Other"]
+               },
+
+               fileUrl: String,
+
+               uploadedAt: {
+                    type: Date,
+                    default: Date.now
+               },
+               uploadedBy: {
+                    type: Schema.Types.ObjectId,
+                    ref: "labTechnician",
+                    required: true
+               }
           }
      ],
 
@@ -80,7 +125,10 @@ const checkupSchema = new Schema({
           required: false
      }
 
-}, { collection: 'checkupModel', timestamps: true });
+}, { timestamps: true });
 
-const checkupModel = model('checkUp', checkupSchema);
+checkupSchema.index({ patientId: 1 });
+checkupSchema.index({ diseaseCaseId: 1 });
+
+const checkupModel = model('Checkup', checkupSchema);
 export default checkupModel;
