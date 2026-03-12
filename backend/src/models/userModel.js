@@ -1,18 +1,14 @@
-const { randomBytes, createCipheriv } = await import("node:crypto");
+import { checkPhoneNumber } from "../service/checkPhoneNumber.js";
 import { generateToken } from "../service/auth.js";
 import { model, Schema } from "mongoose";
-import { configDotenv } from "dotenv";
 import bcrypt from "bcrypt";
-
-configDotenv();
-
 
 const userSchema = new Schema({
      fullName: {
           type: String,
           required: true,
           trim: true,
-          minlength: 2,
+          minlength: 1,
           maxlength: 60
      },
      emailId: {
@@ -90,7 +86,7 @@ const userSchema = new Schema({
           type: String,
           required: true
      },
-     locality: {              //landmark => area wise calculation => only for patients
+     landmark: {              //landmark => area wise calculation => only for patients
           type: String,
           required: true
      },
@@ -105,22 +101,20 @@ const userSchema = new Schema({
           default: false
      }
 
-} { timestamps: true });
+}, { timestamps: true });
 
 userSchema.index({ emailId: 1 });
 
 userSchema.static("matchPassword_and_GenerateToken", async (emailId, password) => {
      const user = await userModel.findOne({ emailId });
+     if (!user) throw new Error("User not found");
 
      console.log(user);
-
-     if (!user) throw new Error("User not found");
 
      const isPassMatched = await bcrypt.compare(password, user.password);
      if (!isPassMatched) throw new Error("Password not matched");
 
-     const token = generateToken(user, user.role);
-     return token;
+     return user.phoneNumber;
 });
 
 

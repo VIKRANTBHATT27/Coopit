@@ -36,12 +36,10 @@ export const handlePatientSignup = async (req, res) => {
           return res.status(400).json({ err: "no data is provided" });
 
      try {
-          const parsedData = patientSchema.parse(req.body);
+          const isAlreadyPatient = await patientModel.findOne({ emailId: req.body.emailId });
+          if (isAlreadyPatient) return res.status(400).json({ msg: "Patient already exist with this Email" });
 
-          const isAlreadyPatient = await patientModel.findOne({ emailId: parsedData.emailId });
-          if (isAlreadyPatient) {
-               return res.status(400).json({ msg: "Patient already exist with this Email" });
-          }
+          const parsedData = patientSchema.parse(req.body);
 
           const hashedPassword = await bcrypt.hash(parsedData.password, 13);
 
@@ -115,26 +113,6 @@ export const handleGetPatient = async (req, res) => {
      }
 };
 
-
-export const handleGetPatientPhone = async (req, res) => {
-     if (!req.params.id) return res.status(400).json({ msg: "no patient Id provided!" });
-
-     try {
-          const patient = await patientModel.findById(req.params.id);
-
-          if (!patient) return res.status(404).json({ err: "no patient available with this id" });
-
-          console.log(patient);
-
-          const phoneNo = await decryptPhoneNumber(patient.phoneNumber, patient.phoneIV, patient.phoneAuthTag);
-
-          return res.status(200).json({ phoneNo });
-
-     } catch (error) {
-          console.log("error: ", error.message);
-          return null;
-     }
-};
 
 export const handlePatientUploadImg = async (req, res) => {
      if (!req.file) return res.status(400).json({ err: "no image file uploaded" });

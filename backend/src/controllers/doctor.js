@@ -94,24 +94,6 @@ export const handleDoctorLogin = async (req, res) => {
      }
 };
 
-export const handleGetDoctorPhone = async (req, res) => {
-     if (!req.params.id) return res.status(400).json({ err: "Doctor id is required!" });
-
-     try {
-          const doctor = await doctorModel.findById(req.params.id);
-
-          if (!doctor) return res.status(400).json({ err: "no doctor available with this id" });
-
-          const phoneNo = await decryptPhoneNumber(patient.phoneNumber, doctor.phoneIV, doctor.phoneAuthTag);
-
-          return res.status(200).json({ phoneNo });
-
-     } catch (error) {
-          console.log("error: ", error.message);
-          return null;
-     }
-};
-
 export const handleGetDoctor = async (req, res) => {
      if (!req.params.id) return res.status(400).json({ err: "Doctor Id is not provided!" });
 

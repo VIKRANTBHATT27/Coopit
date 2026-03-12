@@ -5,7 +5,6 @@ import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
 import {
      handleDoctorLogin,
      handleDoctorSignup,
-     handleGetDoctorPhone,
      handleGetDoctor,
      handleUploadImg,
      handleDeletePfpImage
@@ -16,8 +15,6 @@ const router = express.Router();
 router.post("/signup", handleDoctorSignup);
 
 router.post("/login", handleDoctorLogin);
-
-router.get("/getPhone/:id", handleGetDoctorPhone);
 
 router.get("/:id", handleGetDoctor);
 

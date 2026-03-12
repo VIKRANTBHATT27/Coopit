@@ -8,7 +8,6 @@ import {
      handleGetPatient,
      handlePatientUploadImg,
      handleDeletePatientPfpImage,
-     handleGetPatientPhone
 } from "../controllers/patient.js";
 
 const router = express.Router();
@@ -18,8 +17,6 @@ router.post('/signup', handlePatientSignup);
 router.post('/login', handlePatientLogin);
 
 router.get("/:id", handleGetPatient);
-
-router.get("/getPhone/:id", handleGetPatientPhone);
 
 router.patch('/pfpImgUpload',
      upload.single("profilePic"),

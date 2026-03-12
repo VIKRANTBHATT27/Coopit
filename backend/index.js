@@ -172,7 +172,6 @@ router.post('/sendOtp', (req, res) => {
   async function messageFunc() {
     const msg = await client.messages.create({
       body: 'trial msg for otp on friday afternoon is => ' + otp,
-      messagingServiceSid: process.env.OTP_MESSAGE_SERVICE_SID,
       from: process.env.OTP_MSG_FROM_NUMBER,
       to: "+91" + String(phoneNo),
     })
