@@ -1,5 +1,4 @@
 import cloudinary_Delete_pfp from "../service/cloudinaryImgDelete.js";
-import decryptPhoneNumber from "../service/phoneNumberDecryption.js";
 import patientModel from "../models/patientModel.js";
 import bcrypt from "bcrypt";
 import * as z from "zod";

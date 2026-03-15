@@ -44,7 +44,6 @@ export const sendOneTimePassword = async (phoneNo) => {
 
 export const checkOneTimePassword = async (otp) => {
      // return true on correct otp
-
      if (oneTimePassword !== otp) return false;
 
      return true;
