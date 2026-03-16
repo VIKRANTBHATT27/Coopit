@@ -81,7 +81,7 @@ export const handleUserLogin = async (req, res) => {
      }
 };
 
-export const handleUserLoginSendOtp = async (req, res) => {
+export const handleUserSendOtp = async (req, res) => {
      if (!req.body.emailId)
           return res.staus(400).json({ err: "no emailId is provided!" });
 
@@ -113,10 +113,34 @@ export const handleUserLoginCheckOtp = async (req, res) => {
 
           const token = generateToken(user, user.role);
 
+          res.cookie("authToken", token, {
+               httpOnly: true,
+               secure: false,                //turn it to true on deployment
+          });
+
           return res.status(200).json({ ...token, msg: "successfullly login" });
      } catch (err) {
           console.log("error: ", error.message);
           return null;
+     }
+};
+
+export const handleLogout = (req, res) => {
+     res.clearCookie("token");
+     return res.status(200).json({ msg: "✅ successfully logged out" });
+}
+
+//get User
+export const handleGetUser = async (req, res) => {
+     try {
+          const user = await userModel.findById(req.params.Id);
+
+          if (!user) return res.status(404).json({ err: "No user found with this Id" });
+
+          return res.status(200).json(user);
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ error: "Error fetching user data" });
      }
 };
 
@@ -185,4 +209,3 @@ export const handleUserPasswordReset = async (req, res) => {
           return null;
      }
 };
-
