@@ -20,14 +20,25 @@ const staffSchema = new Schema({
 
      department: {
           type: String,
+          required: true,
           enum: [
+               "Anesthesiology",
+               "Cardiology",
+               "Dermatology",
+               "Emergency Medicine",
+               "Endocrinology",
+               "Gastroenterology",
                "General Medicine",
-               "Emergency",
-               "Radiology",
-               "Pathology",
-               "Administration",
+               "General Surgery",
+               "Gynecology & Obstetrics",
+               "Neurology",
+               "Oncology",
+               "Orthopedics",
                "Pediatrics",
-               "Orthopedics"
+               "Psychiatry",
+               "Pulmonology",
+               "Radiology",
+               "Urology"
           ]
      },
 

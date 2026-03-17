@@ -5,6 +5,7 @@ const hospitalSchema = new Schema({
      name: {
           type: String,
           required: true,
+          unique: true
      },
 
      city: {
@@ -25,12 +26,6 @@ const hospitalSchema = new Schema({
           pincode: {
                type: String,
                required: true,
-               validator: {
-                    validate: {
-                         validator: v => /^[1-9][0-9]{5}$/.test(v)
-                    },
-                    message: props => `${props.value} is not a valid pincode!`
-               }
           },
      },
 
@@ -39,7 +34,7 @@ const hospitalSchema = new Schema({
           enum: ["Government", "Private", "Clinic", "Speciality"]
      },
 
-     phone: {
+     phones: {
           type: [String],
           required: true,
           validator: {
@@ -60,40 +55,22 @@ const hospitalSchema = new Schema({
           enum: [
                "Anesthesiology",
                "Cardiology",
-               "Critical Care Medicine",
                "Dermatology",
                "Emergency Medicine",
                "Endocrinology",
                "Gastroenterology",
                "General Medicine",
                "General Surgery",
-               "Geriatrics",
                "Gynecology & Obstetrics",
-               "Hematology",
-               "Hepatology",
-               "Infectious Diseases",
-               "Internal Medicine",
-               "Nephrology",
                "Neurology",
-               "Neurosurgery",
-               "Nuclear Medicine",
                "Oncology",
-               "Ophthalmology",
                "Orthopedics",
-               "Otolaryngology (ENT)",
-               "Palliative Care",
-               "Pathology",
                "Pediatrics",
-               "Physical Medicine & Rehabilitation",
-               "Plastic Surgery",
                "Psychiatry",
                "Pulmonology",
                "Radiology",
-               "Rheumatology",
-               "Sports Medicine",
-               "Urology",
-               "Vascular Surgery"
-          ],
+               "Urology"
+          ]
      },
 
      createdBy: {

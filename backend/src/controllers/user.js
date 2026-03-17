@@ -2,6 +2,7 @@ import { sendOneTimePassword } from "../service/checkPhoneNumber.js";
 import checkPassword from "../service/checkPassword.js";
 import { generateToken } from "../service/auth.js";
 import userModel from "../models/userModel.js";
+import * as z from "zod";
 
 const userSchema = z.object({
      fullName: z.string().min(1).max(60),
@@ -166,7 +167,7 @@ export const handleUserUpdate = async (req, res) => {
      } catch (err) {
           console.log("error: ", err.message);
 
-          if (error.message === "ValidationError") {
+          if (err.message === "ValidationError") {
                return res.status(400).json({ err: "VALIDATION ERROR" });
           }
 

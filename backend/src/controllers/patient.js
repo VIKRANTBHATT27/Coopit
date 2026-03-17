@@ -1,32 +1,29 @@
 import cloudinary_Delete_pfp from "../service/cloudinaryImgDelete.js";
 import patientModel from "../models/patientModel.js";
-import bcrypt from "bcrypt";
+import userModel from "../models/userModel.js";
 import * as z from "zod";
 
 const patientSchema = z.object({
-     fullName: z.string().min(3),
-     emailId: z.string().email(),
-     password: z.string().min(6),
-     phoneNumber: z.string().regex(/^\+?[0-9]{10,15}$/, "Phone number must be 10–15 digits"),
-     gender: z.enum(['Male', 'Female', 'Others']),
-     dateofBirth: z.date().optional(),
-     weight: z.number().optional(),
-     height: z.number().optional(),
+     userId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
+     pfp_url: z.string().optional(),
+     weight: z.number().min(1).max(500).optional(),
+     height: z.number().min(30).max(300).optional(),
      bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
-     birthPlace: z.string().optional(),
+
 
      lifestyle: z.object({
           smoking: z.boolean().default(false),
           alcohol: z.boolean().default(false),
           tobacco: z.boolean().default(false),
           occupation: z.string().optional(),
-     }).optional(),
+     }),
 
-     allergies: z.array(z.string()).optional(),
+     allergies: z.array(z.string()).default([]),
+     chronicConditions: z.array(z.string()).default([]),
 
      location: z.object({
           type: z.literal('Point').default('Point'),
-          coordinates: z.array(z.number()).length(2).optional(),
+          coordinates: z.array(z.number()).length(2, "Coordinates must be [longitude, latitude]").optional(),
      }).optional(),
 });
 
@@ -35,17 +32,12 @@ export const handlePatientSignup = async (req, res) => {
           return res.status(400).json({ err: "no data is provided" });
 
      try {
-          const isAlreadyPatient = await patientModel.findOne({ emailId: req.body.emailId });
+          const isAlreadyPatient = await patientModel.findOne({ userId: req.body.userId });
           if (isAlreadyPatient) return res.status(400).json({ msg: "Patient already exist with this Email" });
 
-          const parsedData = patientSchema.parse(req.body);
+          const parsedData = patientSchema.parse(req.body.data);
 
-          const hashedPassword = await bcrypt.hash(parsedData.password, 13);
-
-          const patient = await patientModel.create({
-               ...parsedData,
-               password: hashedPassword,
-          });
+          const patient = await patientModel.create(parsedData);
 
           return res.status(201).json({
                msg: "✅ successfully created a patient",
@@ -62,48 +54,21 @@ export const handlePatientSignup = async (req, res) => {
      }
 };
 
-// send otp function is still left
-export const handlePatientLogin = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
-          return res.status(400).json({ err: "no data is provided!" });
-
-     // make a cookie and a otp during login in user email or phoneNo if password matched
-     const { emailId, password } = req.body;
-
-     if (!emailId || !password) return res.status(400).json({ err: "emailId and password are required!" });
-
-     try {
-          const token = await patientModel.matchPassword_and_GenerateToken(emailId, password);
-
-          console.log(token);
-
-          res.cookie("authToken", token, {
-               httpOnly: true,
-               secure: false,                //turn it to true on deployment
-          });
-     } catch (error) {
-          console.log("error: ", error.message);
-
-          if (error.message === "Password not matched") return res.status(400).json({ err: "Invalid Credientials" });
-
-          return null;
-     }
-     
-     return res.status(200).json({ msg: "✅successfully login" });
-};
-
-
 export const handleGetPatient = async (req, res) => {
      if (!req.params.id) res.status(400).json({ msg: "no patient Id provided!" });
 
      try {
-          const patient = await patientModel.findById(req.params.id);
+          const userId = req.params.Id;
+          if (!userId || isNaN(userId)) {
+               return res.status(400).send('Invalid or missing user ID');
+          }
+
+          const patient = await patientModel.findById({ userId });
 
           if (!patient) {
                return res.status(404).json({ msg: "Patient not found" });
           }
 
-          
           return res.status(200).json(patient);
      } catch (error) {
           console.log("error: ", error.message);
@@ -113,20 +78,52 @@ export const handleGetPatient = async (req, res) => {
 };
 
 
+// update current patient requires login first authentication etc.
+export const handleUpdatePatient = async (req, res) => {
+     if (!req.body || Object.keys(req.body).length === 0)
+          return res.status(400).json({ msg: "no data is provided" });
+
+     try {
+          const userId = req.params.Id;
+          if (!userId || isNaN(userId)) {
+               return res.status(400).send('Invalid or missing user ID');
+          }
+
+          const parsedData = patientSchema.parse(req.body);
+
+          const patient = await patientModel.findOneAndUpdate({ userId },
+               { $set: { ...parsedData } },
+               { returnDocument: "after" });
+
+          if (!patient) {
+               return res.status(404).json({ err: "No patient found with this userId" });
+          }
+
+          return res.status(200).json({ msg: "successfully updated" })
+     } catch (err) {
+          console.log("error: ", err.message);
+          return null;
+     }
+};
+
 export const handlePatientUploadImg = async (req, res) => {
      if (!req.file) return res.status(400).json({ err: "no image file uploaded" });
 
      try {
-          const response = await patientModel.findOneAndUpdate({ emailId: req.body.emailId },
-               {
-                    $set: {
-                         pfp_url: req.pfpImageURL,
-                         pfp_publicId: req.pfpImagePublicId
-                    }
-               }, { returnDocument: "after" });
+          const { emailId, userId } = req.body;
 
-          console.log(response);
-          return res.status(200).json({ msg: "successfully uploaded image" });
+          const user = await userModel.findOneAndUpdate({ emailId },
+               { $set: { pfp_publicId: req.pfpImagePublicId } });
+
+          if (!user) return res.status(404).json({ err: "No patient found with this emailId" })
+
+          const patient = await patientModel.findOneAndUpdate({ userId },
+               { $set: { pfp_url: req.pfpImageURL } },
+               { returnDocument: "after" });
+
+          if (!patient) return res.status(404).json({ err: "No patient found with this userId" });
+
+          return res.status(200).json({ msg: "successfully uploaded image", url: patient.pfp_url });
      } catch (error) {
           console.log("Patient image upload failed", error.message);
           return null;
@@ -139,27 +136,28 @@ export const handleDeletePfpImage = async (req, res) => {
           return res.status(400).json({ err: "no data is provided" });
 
      try {
-          const { emailId } = req.body;
+          const { emailId, userId } = req.body;
 
-          const patient = await patientModel.findOne({ emailId });
+          const user = await userModel.findOne({ emailId });
 
-          if (!patient) return res.status(404).json({ err: "no patient available with this emailId" });
+          if (!user) return res.status(404).json({ err: "no user available with this emailId" });
 
-          console.log(patient);
-
-          const result = await cloudinary_Delete_pfp(patient.pfp_publicId);
+          const result = await cloudinary_Delete_pfp(user.pfp_publicId);
 
           console.log(result);
 
           if (result) {
-               const response = await patientModel.findOneAndUpdate({ emailId }, {
-                    $set: {
-                         pfp_publicId: undefined,
-                         pfp_url: "/public/pfp/default-patient.png",
-                    }
+               const user = await userModel.findOneAndUpdate({ emailId }, {
+                    $set: { pfp_publicId: undefined, }
+               });
+
+               const patient = await patientModel.findOneAndUpdate({ userId }, {
+                    $set: { pfp_url: "/public/pfp/default-patient.png" }
                }, { returnDocument: "after" });
 
-               return res.status(202).json({ response });
+               if (!patient) return res.status(404).json({ err: "no patient available with this userId" });
+
+               return res.status(202).json({ msg: "deletion successfull" })
           }
      } catch (error) {
           console.log("patient deletion request Failed!");
@@ -170,7 +168,6 @@ export const handleDeletePfpImage = async (req, res) => {
 };
 
 
-// update current patient requires login first authentication etc.
 
 // // delete the user function or temp delete
 // export const handleDeletePatient = async (req, res) => {
@@ -183,5 +180,4 @@ export const handleDeletePfpImage = async (req, res) => {
 //      }
 // };
 
-// export const handleDeletePatient
 
