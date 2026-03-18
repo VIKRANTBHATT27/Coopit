@@ -156,15 +156,14 @@ export const handleDeletePfpImage = async (req, res) => {
                }, { returnDocument: "after" });
 
                if (!patient) return res.status(404).json({ err: "no patient available with this userId" });
-
-               return res.status(202).json({ msg: "deletion successfull" })
+               
+               return res.status(200).json({ msg: "successfully deleted image" });
           }
      } catch (error) {
           console.log("patient deletion request Failed!");
           return null;
      }
 
-     return res.status(200).json({ msg: "successfully deleted image" });
 };
 
 

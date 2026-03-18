@@ -78,8 +78,5 @@ const userSchema = new Schema({
 
 }, { timestamps: true });
 
-userSchema.index({ emailId: 1 });
-
-
 
 export default model('User', userSchema);

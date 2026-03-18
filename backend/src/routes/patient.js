@@ -7,7 +7,7 @@ import {
      handleUpdatePatient,
      handlePatientSignup,
      handlePatientUploadImg,
-     handleDeletePatientPfpImage,
+     handleDeletePfpImage,
 } from "../controllers/patient.js";
 
 const router = express.Router();
@@ -26,7 +26,7 @@ router.patch('/pfpImgUpload',
      handlePatientUploadImg
 );
 
-router.delete('/deletePfpImage', handleDeletePatientPfpImage);
+router.delete('/deletePfpImage', handleDeletePfpImage);
 
 // router.post('/:id/document-upload', handleDocumentUpload);
 

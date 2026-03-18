@@ -8,6 +8,7 @@ const labTechSchema = new Schema({
 
      pfp_url: {
           type: String,
+          required: false,
           default: "/pfp/default-lab-technician.png"
      },
 
@@ -15,37 +16,35 @@ const labTechSchema = new Schema({
           type: String,
           required: true,
           enum: [
-               "Anatomic Pathology",         // Tissue analysis/biopsies
-               "Biochemistry",               // Blood chemistry, hormones, electrolytes
-               "Cytology",                   // Cell-level screening (e.g., Pap smears)
-               "Genetics/Genomics",          // DNA sequencing and hereditary testing
-               "Hematology",                 // Blood counts and coagulation
-               "Histology",                  // Microscopic study of tissues
+               "Anatomic Pathology",
+               "Biochemistry",
+               "Cytology",
+               "Genetics/Genomics",
+               "Hematology",
+               "Histology",
                "Imaging (MRI/CT/X-Ray)",
-               "Immunology/Serology",        // Immune system and antibody testing
-               "Microbiology",               // Bacteria, fungi, and parasites
-               "Molecular Diagnostics",      // PCR and viral load testing
-               "Nuclear Medicine",           // Radioactive tracer diagnostics
-               "Phlebotomy",                 // Blood collection station
-               "Radiology",                  // General imaging
-               "Toxicology",                 // Drug and toxin screening
-               "Urinalysis",                 // Physical and chemical urine exam
-               "Virology"                    // Specific study of viruses
+               "Immunology/Serology",
+               "Microbiology",
+               "Molecular Diagnostics",
+               "Nuclear Medicine",
+               "Phlebotomy",
+               "Radiology",
+               "Toxicology",
+               "Urinalysis",
+               "Virology"
           ]
      },
-     
+
      qualification: {
-          type: String
+          type: String,
+          required: true
      },
-     qualification: {
-          type: String
-     },
-     
+
      shift: {
           type: String,
           enum: ["Morning", "Evening", "Night"]
      }
-     
+
 });
 
-export default model('labTechnician', labTechSchema, "labTechnicianModel");
+export default model('labTechnician', labTechSchema);
