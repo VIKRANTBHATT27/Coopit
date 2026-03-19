@@ -20,6 +20,18 @@ const userSchema = z.object({
      birthPlace: z.string(),
      isVerified: z.boolean(),
 });
+const userUpdationSchema = z.object({
+     fullName: z.string().min(1).max(60).optional(),
+     emailId: z.string().regex(/^\S+@\S+\.\S+$/, "Invalid email"),
+     phoneNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, "Phone number must be 10 digits").optional(),
+     gender: z.enum(['Male', 'Female', 'Others']).optional(),
+     dateofBirth: z.string().regex(/^(0?[1-9]|1[0-2])[\/](0?[1-9]|[12]\d|3[01])[\/](19|20)\d{2}$/, "Date of Birth must be in MM/DD/YYYY format").optional(),
+     role: z.string().optional(),
+     state: z.string().optional(),
+     districtName: z.string().optional(),
+     landmark: z.string().optional(),
+     birthPlace: z.string().optional(),
+});
 
 const loginSchema = userSchema.pick({
      emailId: true,
@@ -117,6 +129,8 @@ export const handleUserLoginCheckOtp = async (req, res) => {
           //create token: 
           const user = await userModel.findOne({ emailId: req.body.emailId });
 
+          // update is verified
+
           const token = generateToken(user, user.role);
 
           res.cookie("authToken", token, {
@@ -139,7 +153,7 @@ export const handleLogout = (req, res) => {
 //get User
 export const handleGetUser = async (req, res) => {
      try {
-          const user = await userModel.find(req.params.Id);
+          const user = await userModel.findById(Object(req.params.Id));
 
           if (!user) return res.status(404).json({ err: "No user found with this Id" });
 
@@ -161,7 +175,8 @@ export const handleGetUserFromToken = async (req, res) => {
           return res.status(200).json(user);
      } catch (err) {
           console.log("error: ", err.message);
-          return null;
+          
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 }
 
@@ -171,7 +186,7 @@ export const handleUserUpdate = async (req, res) => {
           return res.status(400).json({ err: "no data is provided!" });
 
      try {
-          const parsedData = userSchema.parse(req.body);
+          const parsedData = userUpdationSchema.parse(req.body);
 
           const updatedUser = await userModel.findOneAndUpdate(
                { emailId: req.body.emailId },
@@ -191,22 +206,21 @@ export const handleUserUpdate = async (req, res) => {
                return res.status(400).json({ err: "VALIDATION ERROR" });
           }
 
-          return null;
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
 // reset password, but first check the authentication of the user for this route
 export const handleUserPasswordReset = async (req, res) => {
-     if (!req.body || object.keys(req.body).length === 0)
+     if (!req.body || Object.keys(req.body).length === 0)
           return res.staus(400).json({ err: "no data is provided!" });
 
      try {
-          const parsedData = loginSchema.parse(req.body);
-
           // req.body => old and new password
           const { emailId, oldPass, newPass } = req.body;
+          if (!emailId || !oldPass || !newPass) return res.status(400).json({ err: "emailId, oldPassword and newPassword are required fields" });
 
-          const user = checkPassword(emailId, oldPass);
+          const user = await checkPassword(emailId, oldPass);
 
           const hashedPassword = await bcrypt.hash(newPass, 13);
 
@@ -215,7 +229,7 @@ export const handleUserPasswordReset = async (req, res) => {
                { returnDocument: "after" }
           );
 
-          return res.status(200).json({ msg: "✅ successfully updated the password" });
+          return res.status(200).json({ msg: "✅ successfully updated the password", Id: user._id });
      } catch (err) {
           console.log("error: ", err.message);
 
