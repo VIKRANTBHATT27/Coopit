@@ -17,4 +17,4 @@ const cloudinary_Delete_pfp = async (publicId) => {
      }
 };
 
-export default cloudinary_Delete_pfp
+export default cloudinary_Delete_pfp;

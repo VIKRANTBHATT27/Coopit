@@ -17,7 +17,8 @@ async function createMessage(phoneNo, oneTimePassword) {
                to: phoneNo,
           });
 
-          console.log(message.body);
+          console.log(oneTimePassword);
+
           return true;
      } catch (err) {
           console.error("Twilio error:", err.message);
@@ -32,7 +33,8 @@ export const sendOneTimePassword = async (phoneNo) => {
 
      const response = await createMessage(phoneNo, oneTimePassword);
      if (!response) throw new Error("OTP not sent");
-
+     
+     //req is on here
      setTimeout(() => {
           oneTimePassword = undefined;
      }, 1000 * 60 * 3);

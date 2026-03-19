@@ -1,16 +1,19 @@
-import { sendOneTimePassword } from "../service/checkPhoneNumber.js";
+import { checkOneTimePassword, sendOneTimePassword } from "../service/checkPhoneNumber.js";
 import checkPassword from "../service/checkPassword.js";
-import { generateToken } from "../service/auth.js";
+import { generateToken, getUserFromToken } from "../service/auth.js";
 import userModel from "../models/userModel.js";
+import bcrypt from "bcrypt";
 import * as z from "zod";
 
 const userSchema = z.object({
      fullName: z.string().min(1).max(60),
      emailId: z.string().regex(/^\S+@\S+\.\S+$/, "Invalid email"),
-     password: z.string().min(8).regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/, "Invalid Password"),
+     password: z.string().min(8, "Password must be at least 8 characters long")
+          .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
      phoneNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, "Phone number must be 10 digits"),
      gender: z.enum(['Male', 'Female', 'Others']),
      dateofBirth: z.string().regex(/^(0?[1-9]|1[0-2])[\/](0?[1-9]|[12]\d|3[01])[\/](19|20)\d{2}$/, "Date of Birth must be in MM/DD/YYYY format").optional(),
+     role: z.string(),
      state: z.string(),
      districtName: z.string(),
      landmark: z.string(),
@@ -72,7 +75,7 @@ export const handleUserLogin = async (req, res) => {
                secure: false,                //turn it to true on deployment
           });
 
-          return res.status(200).json({ ...token, msg: "✅successfully login" });
+          return res.status(200).json({ msg: "✅successfully login", token });
      } catch (error) {
           console.log("error: ", error.message);
 
@@ -87,11 +90,13 @@ export const handleUserSendOtp = async (req, res) => {
           return res.staus(400).json({ err: "no emailId is provided!" });
 
      try {
-          const user = await userModel.find({ emailId: req.body.emailId });
+          const user = await userModel.findOne({ emailId: req.body.emailId });
 
-          const response = sendOneTimePassword(user.phoneNumber);
+          if (!user) return res.status(400).json({ err: "no user exists" });
 
-          return response;
+          const response = await sendOneTimePassword(user.phoneNumber);
+
+          return res.status(200).json(response);
      } catch (err) {
           console.log("error: ", err.message);
           return null;
@@ -99,18 +104,18 @@ export const handleUserSendOtp = async (req, res) => {
 };
 
 export const handleUserLoginCheckOtp = async (req, res) => {
-     if (!req.body || object.keys(req.body).length === 0)
+     if (!req.body || Object.keys(req.body).length === 0)
           return res.staus(400).json({ err: "no data is provided!" });
 
      try {
           if (!req.body.emailId || !req.body.otp) return res.status(404).json({ err: "emailId and otp are not provided!" });
 
-          const response = checkOneTimePassword(req.body.otp);
-
+          const response = await checkOneTimePassword(req.body.otp);
+          console.log(response);
           if (!response) return res.status(401).json({ msg: "incorrect otp" });
 
           //create token: 
-          const user = await userModel.find({ emailId: req.body.emailId });
+          const user = await userModel.findOne({ emailId: req.body.emailId });
 
           const token = generateToken(user, user.role);
 
@@ -119,9 +124,9 @@ export const handleUserLoginCheckOtp = async (req, res) => {
                secure: false,                //turn it to true on deployment
           });
 
-          return res.status(200).json({ ...token, msg: "successfullly login" });
+          return res.status(200).json({ token, msg: "successfullly login" });
      } catch (err) {
-          console.log("error: ", error.message);
+          console.log("error: ", err.message);
           return null;
      }
 };
@@ -134,7 +139,7 @@ export const handleLogout = (req, res) => {
 //get User
 export const handleGetUser = async (req, res) => {
      try {
-          const user = await userModel.findById(req.params.Id);
+          const user = await userModel.find(req.params.Id);
 
           if (!user) return res.status(404).json({ err: "No user found with this Id" });
 
@@ -144,6 +149,21 @@ export const handleGetUser = async (req, res) => {
           return res.status(500).json({ error: "Error fetching user data" });
      }
 };
+
+export const handleGetUserFromToken = async (req, res) => {
+     try {
+          const token = req.body.token;
+
+          const user = await getUserFromToken(token)
+
+          console.log(user);
+
+          return res.status(200).json(user);
+     } catch (err) {
+          console.log("error: ", err.message);
+          return null;
+     }
+}
 
 // update controller
 export const handleUserUpdate = async (req, res) => {
