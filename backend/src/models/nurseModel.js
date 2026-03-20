@@ -17,28 +17,17 @@ const nurseSchema = new Schema({
           type: String,
           trim: true,
           enum: [
-               // Critical Care
                "ICU (Intensive Care Unit)",
-               "NICU (Neonatal ICU)",
-               "PICU (Pediatric ICU)",
+               "NICU/PICU (Neonatal/Pediatric ICU)",
                "CCU (Coronary Care Unit)",
-               "HDU (High Dependency Unit)",
-
-               // General & Specialty Wards
-               "General Ward - Male",
-               "General Ward - Female",
+               "General Ward",
+               "Maternity & Obstetrics",
                "Pediatric Ward",
-               "Maternity/Obstetrics Ward",
-               "Post-Surgical Ward",
-               "Orthopedic Ward",
+               "Surgical Ward",
                "Oncology Ward",
-               "Psychiatric Ward",
-
-               // Short Stay & Observation
-               "Emergency/ER Observation",
-               "Day Surgery Unit",
-               "Isolation Ward",
-               "Private/VIP Suite"
+               "Psychiatric Unit",
+               "Emergency/Observation",
+               "Isolation Unit"
           ],
      },
 
@@ -56,18 +45,10 @@ const nurseSchema = new Schema({
           start: {
                type: String,
                required: true,
-               validate: {
-                    validator: v => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v),
-                    message: props => `${props.value} is not a valid time (HH:MM)!`
-               }
           },
           end: {
                type: String,
                required: true,
-               validate: {
-                    validator: v => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v),
-                    message: props => `${props.value} is not a valid time (HH:MM)!`
-               }
           }
      },
 
@@ -76,7 +57,8 @@ const nurseSchema = new Schema({
           default: 0
      },
      qualification: {
-          type: String
+          type: String,
+          required: true
      },
 });
 

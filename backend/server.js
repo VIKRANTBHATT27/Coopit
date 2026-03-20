@@ -5,7 +5,7 @@ import script from './script.js';
 import { configDotenv } from 'dotenv';
 import { connectMongoDb } from "./connection.js";
 import { v2 as cloudinary } from "cloudinary";
-
+import cookieParser from "cookie-parser";
 configDotenv();
 connectMongoDb();
 
@@ -29,6 +29,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.resolve("./public")));
+app.use(cookieParser());
 
 app.get('/', (req, res) => {
   res.send('Backend is running 🚀');

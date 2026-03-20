@@ -32,7 +32,7 @@ export const handleAddReceptionist = async (req, res) => {
           return res.status(201).json({ msg: "created successfully" });
      } catch (err) {
           console.log("error: ", err.message);
-          return null;
+          return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
@@ -59,7 +59,7 @@ export const handleUploadImg = async (req, res) => {
           return res.status(200).json({ msg: "successfully uploaded image", url: patient.pfp_url });
      } catch (err) {
           console.log("error: ", err.message);
-          return null;
+          return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
@@ -92,7 +92,7 @@ export const handleDeleteUploadedImg = async (req, res) => {
           }
      } catch (error) {
           console.log("patient deletion request Failed!");
-          return null;
+          return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
@@ -119,6 +119,6 @@ export const handleUpdateLabTech = async (req, res) => {
           return res.status(200).json({ msg: "successfully updated" })
      } catch (error) {
           console.log("error: ", error.message);
-          return null;
+          return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
      }
 };

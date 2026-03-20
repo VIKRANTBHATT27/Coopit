@@ -18,7 +18,6 @@ const userSchema = z.object({
      districtName: z.string(),
      landmark: z.string(),
      birthPlace: z.string(),
-     isVerified: z.boolean(),
 });
 const userUpdationSchema = z.object({
      fullName: z.string().min(1).max(60).optional(),
@@ -33,10 +32,10 @@ const userUpdationSchema = z.object({
      birthPlace: z.string().optional(),
 });
 
-const loginSchema = userSchema.pick({
-     emailId: true,
-     password: true,
-});
+// const loginSchema = userSchema.pick({
+//      emailId: true,
+//      password: true,
+// });
 
 export const handleUserSignup = async (req, res) => {
      if (!req.body || Object.keys(req.body).length === 0)
@@ -86,6 +85,10 @@ export const handleUserLogin = async (req, res) => {
                httpOnly: true,
                secure: false,                //turn it to true on deployment
           });
+
+          await userModel.findOneAndUpdate({ emailId },
+               { $set: { isVerified: true } }
+          );
 
           return res.status(200).json({ msg: "✅successfully login", token });
      } catch (error) {
@@ -138,6 +141,11 @@ export const handleUserLoginCheckOtp = async (req, res) => {
                secure: false,                //turn it to true on deployment
           });
 
+          await userModel.findOneAndUpdate({ emailId },
+               { $set: { isVerified: true } }
+          );
+
+
           return res.status(200).json({ token, msg: "successfullly login" });
      } catch (err) {
           console.log("error: ", err.message);
@@ -145,9 +153,18 @@ export const handleUserLoginCheckOtp = async (req, res) => {
      }
 };
 
-export const handleLogout = (req, res) => {
-     res.clearCookie("token");
-     return res.status(200).json({ msg: "✅ successfully logged out" });
+export const handleLogout = async (req, res) => {
+     try {
+          getUserFromToken(req.cookies.authToken);
+
+          res.clearCookie("authToken");
+
+          return res.status(200).json({ msg: "✅ successfully logged out" });
+     } catch (error) {
+          console.log("error: ", error.message);
+
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     }
 }
 
 //get User
@@ -166,16 +183,14 @@ export const handleGetUser = async (req, res) => {
 
 export const handleGetUserFromToken = async (req, res) => {
      try {
-          const token = req.body.token;
-
-          const user = await getUserFromToken(token)
+          const user = getUserFromToken(req.cookies.authToken)
 
           console.log(user);
 
           return res.status(200).json(user);
      } catch (err) {
           console.log("error: ", err.message);
-          
+
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 }
@@ -220,6 +235,8 @@ export const handleUserPasswordReset = async (req, res) => {
           const { emailId, oldPass, newPass } = req.body;
           if (!emailId || !oldPass || !newPass) return res.status(400).json({ err: "emailId, oldPassword and newPassword are required fields" });
 
+          if (oldPass !== newPass) return res.status(404).json({ msg: "new password matches old password" });
+
           const user = await checkPassword(emailId, oldPass);
 
           const hashedPassword = await bcrypt.hash(newPass, 13);
@@ -241,6 +258,6 @@ export const handleUserPasswordReset = async (req, res) => {
                return res.status(401).json({ err: err.message });
           }
 
-          return null;
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
