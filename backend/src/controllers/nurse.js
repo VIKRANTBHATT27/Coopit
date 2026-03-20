@@ -119,6 +119,7 @@ export const handleUpdateNurse = async (req, res) => {
                { $set: { ...parsedData } },
                { returnDocument: "after" });
 
+          return res.status(200).json({ msg: "✅ successfull updated", nurseId: nurse._id });
      } catch (err) {
           console.log("error: ", err.message);
           return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
@@ -129,7 +130,7 @@ export const handleUploadImg = async (req, res) => {
      if (!req.file)
           return res.status(400).json({ err: "no file is provided!" });
 
-     if (!req.body || Object.keys(req.body).length === 0)
+     if (!req.body.emailId || !req.body.staffId)
           return res.status(400).json({ err: "emailId and userId are not provided!" });
 
      try {
