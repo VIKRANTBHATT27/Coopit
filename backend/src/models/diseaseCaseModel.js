@@ -6,11 +6,19 @@ const diseaseCase_Schema = new Schema({      //help in analyse of cases in parti
           required: true,
           ref: "Patient"
      },
+
+     createdBy: {
+          type: Schema.Types.ObjectId,
+          ref: "Nurse",
+          required: true
+     },
+
      diagnosedBy: {
           type: Schema.Types.ObjectId,
           required: true,
           ref: "Doctor"
      },
+
      diseaseName: {
           type: String,
           required: true,
@@ -45,13 +53,19 @@ const diseaseCase_Schema = new Schema({      //help in analyse of cases in parti
      },
      diseaseCategory: {
           type: String,
-          enum: ['Infectious', 'NonCommunicable', 'Genetic', 'Deficiency']
+          enum: ['Infectious', 'NonCommunicable', 'Genetic', 'Deficiency'],
+          required: false
      },
-     
+
      possibleCause: {
           type: String,
           required: false
      },
+
+     isApproved: {
+          type: Boolean,
+          default: false
+     }
 
 }, { timestamps: true });
 

@@ -50,7 +50,7 @@ const checkupSchema = new Schema({
      vaccinationsGiven: {
           type: [
                {
-                    vaccineName: String,
+                    vaccineName: { type: String, required: true },
                     doseNumber: Number,
                     administeredAt: { type: Date, default: Date.now },
                     administeredBy: {
@@ -74,27 +74,35 @@ const checkupSchema = new Schema({
           }
      ],
 
-     labResults: [
-          {
-               testName: String,
-               result: String,
-               normalRange: String,
+     labResults: {
+          type: [
+               {
+                    testName: String,
+                    result: String,
+                    normalRange: String,
 
-               fileUrl: String,
+                    fileUrl: String,
 
-               uploadedAt: {
-                    type: Date,
-                    default: Date.now
-               },
+                    uploadedAt: {
+                         type: Date,
+                         default: Date.now
+                    },
 
-               uploadedBy: {
-                    type: Schema.Types.ObjectId,
-                    ref: "labTechnician",
-                    required: true
+                    uploadedBy: {
+                         type: Schema.Types.ObjectId,
+                         ref: "labTechnician",
+                         required: true
+                    }
                }
+          ],
+          default: undefined,
+          required: false,
+          isApproved: {
+               type: Boolean,
+               default: false
           }
-     ],
-     attachments: [      
+     },
+     attachments: [
           {
                type: {
                     type: String,

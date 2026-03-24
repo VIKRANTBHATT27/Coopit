@@ -131,3 +131,7 @@ export const handleUpdateLabTech = async (req, res) => {
           return null;
      }
 };
+
+export const handleAddReport = async (req, res) => {
+     if (!req.body || Object.keys(req.body).length === 0)
+};

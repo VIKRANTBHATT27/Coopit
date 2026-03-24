@@ -52,8 +52,8 @@ const visitSchema = new Schema({
      },
 
      visitDate: {
-          type: Date,
-          default: Date.now
+          type: String,
+          required: true,
      }
 
 }, { timestamps: true });

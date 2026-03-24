@@ -13,7 +13,9 @@ import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
 import {
      handleUploadImg,
      handleAddReceptionist,
-     handleDeleteUploadedImg
+     handleDeleteUploadedImg,
+     handleAddPatientVisit,
+     handleUpdateReceptionist,
 } from "../controllers/receptionist.js";
 
 
@@ -34,6 +36,10 @@ router.patch("/pfpImgUpload",
      deleteLocalImgFile,
      handleUploadImg
 );
+
 router.delete("/deletePfpImage", handleDeleteUploadedImg);
+
+router.post("/update/:Id", handleUpdateReceptionist)
+router.post("/add-patient-visit/:Id", handleAddPatientVisit);
 
 export default router;

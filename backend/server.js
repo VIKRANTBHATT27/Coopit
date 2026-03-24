@@ -3,7 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import script from './script.js';
 import { configDotenv } from 'dotenv';
-import { connectMongoDb } from "./connection.js";
+import { connectMongoDb } from "./config/mongoose-connection.js";
 import { v2 as cloudinary } from "cloudinary";
 import cookieParser from "cookie-parser";
 configDotenv();
