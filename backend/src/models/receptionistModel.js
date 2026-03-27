@@ -22,7 +22,7 @@ const receptionistSchema = new Schema({
      pfp_url: {
           type: String,
           required: false,
-          default: "/pfp/default-receptionist.png"
+          default: "/default-pfp/default-receptionist.png"
      },
 
      department: {

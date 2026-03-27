@@ -4,16 +4,10 @@ import bcrypt from "bcrypt";
 import * as z from "zod";
 
 const doctorSchema = z.object({
-     fullName: z.string().min(3),
-     emailId: z.string().email(),
-     password: z.string().min(6),
-     phoneNumber: z.string().regex(/^\+?[0-9]{10,15}$/, "Phone number must be 10–15 digits"),
-     gender: z.enum(['Male', 'Female', 'Others']),
-     dateOfBirth: z.date().optional(),
-     districtName: z.string(),
-     state: z.string(),
-     clinicName: z.string(),
-     clinicLocation: z.string(),
+     userId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
+     staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
+     pfp_url: z.string().default("/default-pfp/default-nurse.png"),
+
 
      specialization: z.array(z.string()),
      experienceYears: z.number().min(0).max(50),
@@ -25,11 +19,6 @@ const doctorSchema = z.object({
           eveningTime: z.object({ startTime: z.string(), endTime: z.string() }),
           closedOn: z.string(),
      }),
-
-     location: z.object({
-          type: z.literal('Point').default('Point'),
-          coordinates: z.array(z.number()).length(2).optional(),
-     }).optional(),
 });
 
 
@@ -99,7 +88,7 @@ export const handleGetDoctor = async (req, res) => {
      try {
           const doctor = await doctorModel.findById(req.params.id);
 
-          if(!doctor) return res.json(404).json({ msg: "Patient not found" });
+          if (!doctor) return res.json(404).json({ msg: "Patient not found" });
 
           return res.status(200).json(doctor);
      } catch (err) {
@@ -150,9 +139,9 @@ export const handleDeletePfpImage = async (req, res) => {
                     {
                          $set: {
                               pfp_publicId: undefined,
-                              pfp_url: "/public/pfp/default-avatar-doctor.png",
+                              pfp_url: "/public/default-pfp/default-avatar-doctor.png",
                          }
-                    },{ returnDocument: "after" })
+                    }, { returnDocument: "after" })
 
                return res.status(202).json({ response });
           }

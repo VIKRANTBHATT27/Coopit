@@ -10,7 +10,7 @@ const nurseSchema = new Schema({
      pfp_url: {
           type: String,
           required: false,
-          default: "/pfp/default-nurse.png"
+          default: "/default-pfp/default-nurse.png"
      },
 
      wardAssigned: {

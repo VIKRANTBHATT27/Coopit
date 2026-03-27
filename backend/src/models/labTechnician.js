@@ -9,7 +9,7 @@ const labTechSchema = new Schema({
      pfp_url: {
           type: String,
           required: false,
-          default: "/pfp/default-lab-technician.png"
+          default: "/default-pfp/default-lab-technician.png"
      },
 
      labType: {

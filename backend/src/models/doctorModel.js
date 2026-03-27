@@ -15,7 +15,7 @@ const doctorSchema = new Schema({
     pfp_url: {
         type: String,
         required: true,
-        default: "/pfp/default-doctor.png"
+        default: "/default-pfp/default-doctor.png"
     },
 
     specialization: {

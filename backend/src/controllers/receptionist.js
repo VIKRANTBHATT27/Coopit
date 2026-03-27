@@ -11,7 +11,7 @@ const receptionistSchema = z.object({
      hospitalId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
      staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
 
-     pfp_url: z.string().optional(),
+     pfp_url: z.string().default("/default-pfp/default-receptionist.png"),
      department: z.enum(["Front Desk", "Billing Desk", "Emergency Desk"]),
      shift: z.enum(["Morning", "Evening", "Night"]),
 
@@ -99,7 +99,7 @@ export const handleDeleteUploadedImg = async (req, res) => {
                });
 
                const receptionist = await receptionistModel.findOneAndUpdate({ userId }, {
-                    $set: { pfp_url: "/pfp/default-receptionist.png" }
+                    $set: { pfp_url: "/default-pfp/default-receptionist.png" }
                }, { returnDocument: "after" });
                if (!receptionist) return res.status(404).json({ err: "no receptionist found with this user ID" });
 

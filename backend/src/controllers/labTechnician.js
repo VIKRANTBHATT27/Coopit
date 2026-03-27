@@ -4,7 +4,7 @@ import * as z from "zod";
 
 const labTechSchema = z.object({
      staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     pfp_url: z.string().default("/pfp/default-lab-technician.png"),
+     pfp_url: z.string().default("/default-pfp/default-lab-technician.png"),
      labType: z.enum([
           "Anatomic Pathology",
           "Biochemistry",
@@ -95,7 +95,7 @@ export const handleDeletePfpImage = async (req, res) => {
                });
 
                const labTechi = await labTechModel.findOneAndUpdate({ staffId }, {
-                    $set: { pfp_url: "/pfp/default-lab-technician.png" }
+                    $set: { pfp_url: "/default-pfp/default-lab-technician.png" }
                }, { returnDocument: "after" });
                if (!labTechi) return res.status(404).json({ err: "no receptionist found with this user ID" });
 
@@ -133,5 +133,5 @@ export const handleUpdateLabTech = async (req, res) => {
 };
 
 export const handleAddReport = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
+     // if (!req.body || Object.keys(req.body).length === 0)
 };

@@ -5,7 +5,7 @@ import * as z from "zod";
 
 const patientSchema = z.object({
      userId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     pfp_url: z.string().optional(),
+     pfp_url: z.string().default("/default-pfp/default-patient.png"),
      weight: z.number().min(1).max(500).optional(),
      height: z.number().min(30).max(300).optional(),
      bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
@@ -152,7 +152,7 @@ export const handleDeletePfpImage = async (req, res) => {
                });
 
                const patient = await patientModel.findOneAndUpdate({ userId }, {
-                    $set: { pfp_url: "/public/pfp/default-patient.png" }
+                    $set: { pfp_url: "/public/default-pfp/default-patient.png" }
                }, { returnDocument: "after" });
 
                if (!patient) return res.status(404).json({ err: "no patient available with this userId" });

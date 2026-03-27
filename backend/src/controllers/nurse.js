@@ -9,7 +9,7 @@ import checkupModel from "../models/checkupModel.js";
 
 const nurseSchema = z.object({
      staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     pfp_url: z.string().default("/pfp/default-nurse.png"),
+     pfp_url: z.string().default("/default-pfp/default-nurse.png"),
      wardAssigned: z.enum([
           "ICU (Intensive Care Unit)",
           "NICU/PICU (Neonatal/Pediatric ICU)",
@@ -265,7 +265,7 @@ export const handleDeleteUploadedImg = async (req, res) => {
                });
 
                const nurse = await nurseModel.findOneAndUpdate({ staffId }, {
-                    $set: { pfp_url: "/pfp/default-nurse.png" }
+                    $set: { pfp_url: "/default-pfp/default-nurse.png" }
                }, { returnDocument: "after" });
                if (!nurse) return res.status(404).json({ err: "no nurse found with this staff ID" });
 

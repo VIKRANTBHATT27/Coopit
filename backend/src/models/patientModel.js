@@ -10,7 +10,7 @@ const patientSchema = new Schema({
      pfp_url: {
           type: String,
           required: false,
-          default: "/pfp/default-patient.png"
+          default: "/default-pfp/default-patient.png"
      },
 
      weight: {

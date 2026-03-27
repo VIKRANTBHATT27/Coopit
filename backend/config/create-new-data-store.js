@@ -35,7 +35,7 @@ export const createDicomStore = async (dicomStoreName) => {
     }
 };
 
-export const dicomWebStoreInstance = async (dcmFilePath) => {
+export const dicomWebStoreInstance = async (dicomStoreName, dcmFilePath) => {
     try {
         const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
         const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
@@ -69,3 +69,35 @@ export const dicomWebStoreInstance = async (dcmFilePath) => {
     }
 };
 
+
+export const dicomWebSearchForInstances = async (dicomStoreName) => {
+    try {
+        const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
+        const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
+        const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
+
+        const dicomStoreId = `Coopit-${dicomStoreName}`;
+
+        const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
+        const dicomWebPath = 'instances';
+
+        const request = {
+            parent,
+            dicomWebPath
+        };
+
+        const instances = await healthcare.projects.locations.datasets.dicomStores.searchForInstances(
+            request,
+            {
+                headers: {
+                    Accept: 'application/dicom+json,multipart/related'
+                },
+            }
+        );
+
+        console.log(`Found ${instances.data.length} instances:`);
+        console.log(JSON.stringify(instances.data));
+    } catch (err) {
+        console.error("❌ GaxiosError:", err.response?.data?.error?.message || err.message);
+    }
+};
