@@ -3,20 +3,20 @@ import { model, Schema } from "mongoose";
 const checkupSchema = new Schema({
      diseaseCaseId: {
           type: Schema.Types.ObjectId,
-          required: true,
-          ref: "DiseaseCase"
+          ref: "DiseaseCase",
+          required: false,
      },
 
      patientId: {
           type: Schema.Types.ObjectId,
-          required: true,
-          ref: "Patient"
+          ref: "Patient",
+          required: true
      },
 
      doctorId: {
           type: Schema.Types.ObjectId,
-          required: true,
-          ref: "Doctor"
+          ref: "Doctor",
+          required: true
      },
 
      visitDate: {
@@ -102,26 +102,50 @@ const checkupSchema = new Schema({
                default: false
           }
      },
-     attachments: [
-          {
-               type: {
-                    type: String,
-                    enum: ["XRay", "MRI", "Prescription", "Scan", "Other"]
-               },
 
-               fileUrl: String,
+     dicomFiles: {
+          type: [
+               {
+                    fileName: {
+                         type: String,
+                         required: true
+                    },
 
-               uploadedAt: {
-                    type: Date,
-                    default: Date.now
-               },
-               uploadedBy: {
-                    type: Schema.Types.ObjectId,
-                    ref: "labTechnician",
-                    required: true
+                    fileUrl: {
+                         type: String,
+                         required: true
+                    },
+                    
+                    studyInstanceId: {       // unique ID for the study (GCP returns this)
+                         type: String,
+                         required: true
+                    },
+
+                    modality: {
+                         type: String,
+                         enum: ["XRay", "MRI", "UltraSound", "CT-Scan",  "PT-scan", "Diagnostic Imaging", "Others"],
+                         required: true
+                    },
+
+                    bodyPart: {
+                         type: String,
+                         required: false
+                    },
+
+                    uploadedAt: {
+                         type: Date,
+                         default: Date.now
+                    },
+                    uploadedBy: {
+                         type: Schema.Types.ObjectId,
+                         ref: "labTechnician",
+                         required: true
+                    }
                }
-          }
-     ],
+          ],
+          default: undefined,
+          required: false,
+     },
 
      notes: {
           type: String,

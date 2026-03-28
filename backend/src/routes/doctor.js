@@ -1,5 +1,5 @@
 import express from "express";
-import upload from "../middlewares/multer.js";
+import { uploadImg } from "../middlewares/multer.js";
 import deleteLocalImgFile from "../middlewares/deleteLocalFile.js";
 import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
 import {
@@ -19,7 +19,7 @@ router.post("/login", handleDoctorLogin);
 router.get("/:id", handleGetDoctor);
 
 router.patch('/pfpImgUpload', 
-     upload.single("profilePic"), 
+     uploadImg.single("profilePic"), 
      cloudinary_pfpUploader, 
      deleteLocalImgFile, 
      handleUploadImg

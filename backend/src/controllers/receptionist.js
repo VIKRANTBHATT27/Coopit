@@ -29,7 +29,9 @@ const appointmentSchema = z.object({
      assignedNurse: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId").optional(),
      reasonForVisit: z.string(),
      status: z.string().default("WAITING"),
-     visitDate: z.string().regex(/^(0?[1-9]|1[0-2])[\/](0?[1-9]|[12]\d|3[01])[\/](19|20)\d{2}$/, "Visit Date must be in MM/DD/YYYY format"),
+     visitDate: z.string()
+          .regex(/^(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])\/(19|20)\d{2}$/)
+          .transform(val => new Date(val))
 });
 
 export const handleAddReceptionist = async (req, res) => {
@@ -152,7 +154,7 @@ export const handleAddPatientVisit = async (req, res) => {
 
           const receptionist = await receptionistModel.findOne({ createdBy });
           if (!receptionist) return res.status(400).json({ err: "invalid receptionist id" });
-          
+
           const diseaseCase = await diseaseCaseModel.findOne({ patientId });
 
           // DOES THEY ALREADY EXIST TO VERIFY 

@@ -1,4 +1,6 @@
+import failedDicomFilesModel from "../models/failedDicomFilesModel.js";
 import labTechModel from "../models/labTechnician.js";
+import checkupModel from "../models/checkupModel.js";
 import userModel from "../models/userModel.js";
 import * as z from "zod";
 
@@ -42,7 +44,7 @@ export const handleAddLabTech = async (req, res) => {
           return res.status(201).json({ msg: "created successfully" });
      } catch (err) {
           console.log("error: ", err.message);
-          return null;
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
@@ -70,7 +72,7 @@ export const handleUploadPfpImg = async (req, res) => {
           return res.status(200).json({ msg: "successfully uploaded image", url: patient.pfp_url });
      } catch (err) {
           console.log("error: ", err.message);
-          return null;
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
@@ -103,7 +105,7 @@ export const handleDeletePfpImage = async (req, res) => {
           }
      } catch (error) {
           console.log("pfp deletion request Failed! ", error.message);
-          return null;
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
@@ -113,7 +115,7 @@ export const handleUpdateLabTech = async (req, res) => {
 
      try {
           const staffId = req.params.Id;
-          if (!staffId || isNaN(staffId)) {
+          if (!staffId || !mongoose.Types.ObjectId.isValid(patientId)) {
                return res.status(400).send('Invalid or missing user ID');
           }
 
@@ -128,10 +130,68 @@ export const handleUpdateLabTech = async (req, res) => {
           return res.status(200).json({ msg: "successfully updated" })
      } catch (error) {
           console.log("error: ", error.message);
-          return null;
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
-export const handleAddReport = async (req, res) => {
-     // if (!req.body || Object.keys(req.body).length === 0)
+export const handleAddDicomReport = async (req, res) => {
+     if (!req.body || Object.keys(req.body).length === 0)
+          return res.status(400).json({ err: "no data is provided!" });
+
+     const { checkUpId } = req.params;
+     if (!checkUpId || !mongoose.Types.ObjectId.isValid(checkUpId))
+          return res.status(400).json({ err: "invalid patient Id" });
+
+     const results = req.dicomResults;
+     if (!results) return res.status(400).json({ msg: "no dicom files is provided!" });
+
+     try {
+          const successfullyUploads = results.reduce((acc, currentFile, index) => {
+               if (currentFile.status === "fulfilled") {
+                    acc.push({
+                         fileUrl: currentFile.value.data["00081190"]?.Value?.[0],         //have a secondary look to this one => extract URL from DICOM tag
+                         fileName: req.dicomFiles[index].entryName,
+                         studyInstanceId: req.parsedBody.studyInstanceId,
+                         modality: req.parsedBody.modality,
+                         bodyPart: req.parsedBody.bodyPart,
+                         uploadedBy: req.user._id                                         // from auth middleware
+                    })
+               }
+
+               return acc;
+          }, []);
+
+          console.log(successfullyUploads);
+
+          const checkUp = await checkupModel.findOneAndUpdate(
+               { _id: checkUpId },
+               { $push: { dicomFiles: { $each: successfullyUploads } } },
+               { returnDocument: "after" }
+          );
+          if (!checkUp)
+               return res.status(404).json({ err: "no data is exist with this patient Id" });
+
+          return res.status(200).json({
+               msg: "Upload complete",
+               stats: {
+                    total: req.dicomResults.length,
+                    success: successfullyUploads.length,
+                    failed: req.dicomResults.filter(r => r.status === 'rejected').length
+               }
+          });
+
+     } catch (err) {
+          console.log("error: ", err.message);
+
+          await failedDicomFilesModel.create({
+               orphanedUrls: successfullyUploads.map(f => f.fileUrl),
+               checkUpId,
+               reason: err.message,
+               resolved: false
+          })
+
+          return res.status(500).json({
+               err: "INTERNAL SERVER ERROR while saving your files. Please try again or contact support."
+          });
+     }
 };

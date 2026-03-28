@@ -12,7 +12,9 @@ const userSchema = z.object({
           .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
      phoneNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, "Phone number must be 10 digits"),
      gender: z.enum(['Male', 'Female', 'Others']),
-     dateofBirth: z.string().regex(/^(0?[1-9]|1[0-2])[\/](0?[1-9]|[12]\d|3[01])[\/](19|20)\d{2}$/, "Date of Birth must be in MM/DD/YYYY format").optional(),
+     dateofBirth: z.string()
+          .regex(/^(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])\/(19|20)\d{2}$/)
+          .transform(val => new Date(val)).optional(),
      role: z.string(),
      state: z.string(),
      districtName: z.string(),
@@ -24,7 +26,9 @@ const userUpdationSchema = z.object({
      emailId: z.string().regex(/^\S+@\S+\.\S+$/, "Invalid email"),
      phoneNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, "Phone number must be 10 digits").optional(),
      gender: z.enum(['Male', 'Female', 'Others']).optional(),
-     dateofBirth: z.string().regex(/^(0?[1-9]|1[0-2])[\/](0?[1-9]|[12]\d|3[01])[\/](19|20)\d{2}$/, "Date of Birth must be in MM/DD/YYYY format").optional(),
+     dateofBirth: z.string()
+          .regex(/^(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])\/(19|20)\d{2}$/)
+          .transform(val => new Date(val)).optional(),
      role: z.string().optional(),
      state: z.string().optional(),
      districtName: z.string().optional(),

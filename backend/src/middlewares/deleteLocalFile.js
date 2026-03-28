@@ -1,6 +1,6 @@
 import fs from "fs";
 
-const deleteLocalImgFile = async (req, res, next) => {
+export const deleteLocalImgFile = async (req, res, next) => {
      if (!req.file || !req.body.emailId) return next();
 
      await fs.rm(req.file.path, { force: true }, (err) => {
@@ -10,4 +10,8 @@ const deleteLocalImgFile = async (req, res, next) => {
      return next();
 };
 
-export default deleteLocalImgFile;
+export const cleanupDICOMFile = (req, res, next) => {
+     if (req.file?.path && fs.existsSync(req.file.path))
+          fs.unlinkSync(req.file.path);
+     return next();
+};

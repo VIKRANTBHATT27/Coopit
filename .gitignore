@@ -3,3 +3,5 @@ backend/node_modules/
 frontend/.env
 backend/.env
 backend/google-cloud-config-keys/
+backend/public/uploaded-dicom-files/file-1
+backend/public/uploaded-dicom-files/daae3df7f522b56724aed7e3e544c0fe.zip
