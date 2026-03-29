@@ -2,6 +2,8 @@ import cloudinary_Delete_pfp from "../service/cloudinaryImgDelete.js";
 import patientModel from "../models/patientModel.js";
 import userModel from "../models/userModel.js";
 import * as z from "zod";
+import mongoose from "mongoose";
+import checkupModel from "../models/checkupModel.js";
 
 const patientSchema = z.object({
      userId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
@@ -179,4 +181,31 @@ export const handleDeletePfpImage = async (req, res) => {
 //      }
 // };
 
+export const handleDownloadDicom = async(req, res) => {
+     const { checkUpId, studyInstanceId } = req.body;
 
+     if (!checkUpId || !mongoose.Types.ObjectId.isValid(checkUpId) 
+          || !studyInstanceId || !mongoose.Types.ObjectId.isValid(studyInstanceId)) {
+               return res.status(404).json({ msg: "checkUpId and studyInstanceId are required fields" });
+     }
+          
+     try {
+
+          const checkUps = await checkupModel.findOne({ _id: checkUpId });
+          if (!checkUps) return res.status(404).json({ err: "Check up not found" });
+
+          const dicomFile = checkUps.dicomFiles.find(file => file.studyInstanceId == studyInstanceId);
+          if (!dicomFile) return res.status(404).json({ err: "DICOM file not found" });
+
+          await dicomWebRetrieveInstance(
+               fileName, 
+               dicomFile.studyInstanceId, 
+               dicomFile.seriesInstanceId, 
+               dicomFile.sopInstanceUid
+          );
+          
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: 'INTERNAL SERVER ERROR' });
+     }
+};

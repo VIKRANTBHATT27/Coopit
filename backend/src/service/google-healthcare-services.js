@@ -43,7 +43,7 @@ const healthcareClient = google.healthcare({
 // store
 const dicomWebStoreInstance = async ( 
     dicomStoreName="x-rays",
-    dcmFilePath="C:/Users/Lenovo/OneDrive/Desktop/CODING FOLDER/project/backend/public/uploaded-dicom-files/file-1/series-000001/image-000005.dcm"
+    dcmFilePath="C:/Users/Lenovo/OneDrive/Desktop/CODING FOLDER/project/backend/public/uploaded-dicom-files/file-1/series-000002/image-000001.dcm"
 ) => {
     try {
         const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;

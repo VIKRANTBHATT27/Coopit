@@ -13,7 +13,7 @@ const router = express.Router();
 router.post("/add-nurse", handleAddNurse);
 router.route("/:Id")
      .get(handleGetNurse)
-     .post(handleUpdateNurse);
+     .patch(handleUpdateNurse);
 
 router.post("/upload-pfp-img", handleUploadImg);
 router.post("/delete-pfp-Img", handleDeleteUploadedImg);

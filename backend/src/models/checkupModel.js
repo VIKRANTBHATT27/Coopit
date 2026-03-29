@@ -121,6 +121,16 @@ const checkupSchema = new Schema({
                          required: true
                     },
 
+                    seriesInstanceId: {
+                         type: String,
+                         required: true
+                    },
+
+                    sopInstanceUid: {             //or instanceUid
+                         type: String,
+                         required: true
+                    },
+
                     modality: {
                          type: String,
                          enum: ["XRay", "MRI", "UltraSound", "CT-Scan",  "PT-scan", "Diagnostic Imaging", "Others"],
