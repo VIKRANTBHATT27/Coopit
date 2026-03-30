@@ -4,6 +4,7 @@ const labTechSchema = new Schema({
      staffId: {
           type: Schema.Types.ObjectId,
           ref: "Staff",
+          unique: true
      },
 
      pfp_url: {

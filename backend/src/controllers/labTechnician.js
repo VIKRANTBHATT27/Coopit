@@ -1,70 +1,19 @@
+import { previewDicomInstance, dicomWebDeleteStudy } from "../service/dicomFileService.js";
 import failedDicomFilesModel from "../models/failedDicomFilesModel.js";
 import labTechModel from "../models/labTechnician.js";
 import checkupModel from "../models/checkupModel.js";
 import userModel from "../models/userModel.js";
-import * as z from "zod";
-
-const labTechSchema = z.object({
-     staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     pfp_url: z.string().default("/default-pfp/default-lab-technician.png"),
-     labType: z.enum([
-          "Anatomic Pathology",
-          "Biochemistry",
-          "Cytology",
-          "Genetics/Genomics",
-          "Hematology",
-          "Histology",
-          "Imaging (MRI/CT/X-Ray)",
-          "Immunology/Serology",
-          "Microbiology",
-          "Molecular Diagnostics",
-          "Nuclear Medicine",
-          "Phlebotomy",
-          "Radiology",
-          "Toxicology",
-          "Urinalysis",
-          "Virology"
-     ]),
-     qualification: z.string(),
-     shift: z.enum(["Morning", "Evening", "Night"])
-});
-
-const labTechiUpdateSchema = z.object({
-     labType: z.enum([
-          "Anatomic Pathology",
-          "Biochemistry",
-          "Cytology",
-          "Genetics/Genomics",
-          "Hematology",
-          "Histology",
-          "Imaging (MRI/CT/X-Ray)",
-          "Immunology/Serology",
-          "Microbiology",
-          "Molecular Diagnostics",
-          "Nuclear Medicine",
-          "Phlebotomy",
-          "Radiology",
-          "Toxicology",
-          "Urinalysis",
-          "Virology"
-     ]).optional(),
-     
-     qualification: z.string().optional(),
-     
-     shift: z.enum(["Morning", "Evening", "Night"]).optional()
-});
+import mongoose from "mongoose";
 
 export const handleAddLabTech = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
+     if (!req.parsedBody || Object.keys(req.parsedBody).length === 0)
           return res.status(400).json({ err: "no data is provided!" });
 
      try {
-          const alreadyRegistered = await labTechModel.findOne({ staffId: req.body.staffId });
+          const alreadyRegistered = await labTechModel.findOne({ staffId: req.parsedBody.staffId });
           if (alreadyRegistered) return res.status(400).json({ msg: "Lab Technician already registered with this staffId" });
 
-          const parsedData = labTechSchema.parse(req.body);
-
-          const response = await labTechModel.create(parsedData);
+          const response = await labTechModel.create(req.parsedBody);
 
           return res.status(201).json({ msg: "created successfully", Id: response._id });
      } catch (err) {
@@ -73,15 +22,12 @@ export const handleAddLabTech = async (req, res) => {
      }
 };
 
-
 export const handleGetLabTech = async (req, res) => {
-     if (!req.params.Id) return res.status(400).json({ msg: "no id is provided!" });
+     const staffId = req.params.Id;
+     if (!staffId) return res.status(400).json({ msg: "no staff Id is provided!" });
 
      try {
-          const staffId = req.params.Id;
-
           const labTechi = await labTechModel.findOne(staffId);
-
           if (!labTechi) return res.status(400).json({ msg: "no lab technician found with this staffId" });
 
           return res.status(200).json(labTechi);
@@ -91,45 +37,17 @@ export const handleGetLabTech = async (req, res) => {
      }
 };
 
-// export const handleUpdateLabTech = async (req, res) => {
-//      if (!req.body || Object.keys(req.body).length === 0)
-//           return res.status(400).json({ err: "no data is provided!" });
-
-//      const staffId = req.params.Id;
-//      if (!staffId || !mongoose.Types.ObjectId.isValid(staffId)) {
-//           return res.status(400).send('Invalid or missing user ID');
-//      }
-
-//      try {
-//           const parsedData = labTechSchema.parse(req.body);
-
-//           const labTechi = await labTechModel.findOneAndUpdate({ staffId },
-//                { $set: { ...parsedData } },
-//                { returnDocument: "after" });
-
-//           if (!labTechi) return res.status(404).json({ err: "No lab-technician found with this staffId" });
-
-//           return res.status(200).json({ msg: "successfully updated" })
-//      } catch (error) {
-//           console.log("error: ", error.message);
-//           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
-//      }
-// };
-
-export const handleUpdateLabTech  = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
+export const handleUpdateLabTech = async (req, res) => {
+     if (!req.parsedBody || Object.keys(req.parsedBody).length === 0)
           return res.status(400).json({ err: "no data is provided!" });
 
-     if (!req.params.Id || !mongoose.Types.ObjectId.isValid(req.params.Id))
+     const staffId = req.params.Id;
+     if (!staffId || !mongoose.Types.ObjectId.isValid(staffId))
           return res.status(400).json({ err: "no staff Id is provided" });
 
      try {
-          const staffId = req.params.Id;
-
-          const parsedData = labTechiUpdateSchema.parse(req.body);
-
           const labTechi = await labTechModel.findOneAndUpdate({ staffId },
-               { $set: { ...parsedData } },
+               { $set: { ...req.parsedBody } },
                { returnDocument: "after" });
 
           return res.status(200).json({ msg: "✅ successfull updated", Id: labTechi._id });
@@ -141,14 +59,11 @@ export const handleUpdateLabTech  = async (req, res) => {
 
 export const handleUploadPfpImg = async (req, res) => {
      if (!req.file)
-          return res.status(400).json({ err: "no file is provided!" });
+          return res.status(400).json({ err: "no Img file is provided!" });
 
-     if (!req.body || Object.keys(req.body).length === 0)
-          return res.status(400).json({ err: "emailId and staffId are not provided!" });
+     const { emailId, staffId } = req.parsedBody;
 
      try {
-          const { emailId, staffId } = req.body;
-
           const user = await userModel.findOneAndUpdate({ emailId }, {
                $set: { pfp_publicId: req.pfpImagePublicId }
           });
@@ -160,7 +75,7 @@ export const handleUploadPfpImg = async (req, res) => {
 
           if (!labTechi) return res.status(404).json({ err: "no lab techinician found with this user ID" });
 
-          return res.status(200).json({ msg: "successfully uploaded image", url: patient.pfp_url });
+          return res.status(200).json({ msg: "successfully uploaded image", url: labTechi.pfp_url });
      } catch (err) {
           console.log("error: ", err.message);
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
@@ -168,41 +83,62 @@ export const handleUploadPfpImg = async (req, res) => {
 };
 
 export const handleDeletePfpImage = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
-          return res.status(400).json({ err: "no data is provided" });
+     const { emailId, staffId } = req.parsedBody;
 
      try {
-          const { emailId, staffId } = req.body;
-
           const user = await userModel.findOne({ emailId });
+          if (!user) 
+               return res.status(404).json({ err: "no user available with this emailId" });
 
-          if (!user) return res.status(404).json({ err: "no user available with this emailId" });
+          const labTechi = await labTechModel.findOne({ staffId });
+          if (!labTechi) 
+               return res.status(404).json({ err: "no lab-techinician found with that staffId" });
 
           const result = await cloudinary_Delete_pfp(user.pfp_publicId);
-
           console.log(result);
 
-          if (result) {
-               await userModel.findOneAndUpdate({ emailId }, {
-                    $set: { pfp_publicId: undefined, }
-               });
+          if (!result) 
+               return res.status(500).json({ err: "Failed to delete image from cloudinary" });
 
-               const labTechi = await labTechModel.findOneAndUpdate({ staffId }, {
-                    $set: { pfp_url: "/default-pfp/default-lab-technician.png" }
-               }, { returnDocument: "after" });
-               if (!labTechi) return res.status(404).json({ err: "no receptionist found with this user ID" });
+          await Promise.all([
+               userModel.findOneAndUpdate(
+                    { emailId },
+                    { $set: { pfp_publicId: undefined, } }
+               ),
+               
+               labTechModel.findOneAndUpdate(
+                    { staffId },
+                    { $set: { pfp_url: "/default-pfp/default-lab-technician.png" } },
+                    { returnDocument: "after" }
+               )
+          ]);
 
-               return res.status(200).json({ msg: "successfully deleted image" });
-          }
+          return res.status(200).json({ msg: "successfully deleted image" });
      } catch (error) {
           console.log("pfp deletion request Failed! ", error.message);
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
 
+export const handleGetDicomFiles = async (req, res) => {
+     const { patientId } = req.parsedBody;
+     if (!patientId || !mongoose.Types.ObjectId.isValid(patientId))
+          return res.status(400).json({ err: "either patientId not provided or patientId is incorrect" });
+
+     try {
+          const checkUpArr = await checkupModel.find({ patientId });
+
+          const dicomFiles = checkUpArr.map(obj => obj.dicomFiles);
+
+          return res.status(200).json({ dicomFiles });
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     }
+};
 
 export const handleAddDicomReport = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
+     if (!req.parsedBody || Object.keys(req.parsedBody).length === 0)
           return res.status(400).json({ err: "no data is provided!" });
 
      const { checkUpId } = req.params;
@@ -262,5 +198,44 @@ export const handleAddDicomReport = async (req, res) => {
           return res.status(500).json({
                err: "INTERNAL SERVER ERROR while saving your files. Please try again or contact support."
           });
+     }
+};
+
+export const handleDeleteDicomFile = async (req, res) => {
+     if (!req.params.studyUid)
+          return res.status(400).json({ err: "no study instance Id is provided!" });
+
+     try {
+          const result = await dicomWebDeleteStudy(req.params.studyUid);
+
+          console.log(result);
+
+          return res.status(400).json({ err: "successfully deleted the dicom file" });
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(400).json({ err: "wrong studyInstanceId is provided!" });
+     }
+};
+
+export const handlePreviewDicomFile = async (req, res) => {
+     const { studyInstanceId, seriesInstanceId, sopInstanceUid } = req.parsedBody;
+
+     if (!studyInstanceId)
+          return res.status(400).json({ err: "no study instance Id is provided!" });
+
+     if (!seriesInstanceId)
+          return res.status(400).json({ err: "no series instance Id is provided!" });
+
+     if (!sopInstanceUid)
+          return res.status(400).json({ err: "no sop instance Id is provided!" });
+
+     try {
+          const buffer = await previewDicomInstance(studyInstanceId, seriesInstanceId, sopInstanceUid);
+
+          res.set('Content-Type', 'application/dicom');
+          return res.send(buffer);
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };

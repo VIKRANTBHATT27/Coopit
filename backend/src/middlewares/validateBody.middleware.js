@@ -1,13 +1,8 @@
-import * as z from "zod";
+import { ZodError } from "zod";
 
-export const validateReportBody = (req, res, next) => {
-     const dicomBodySchema = z.array(z.object({
-          fileName: z.string(),
-          uploadedBy: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     }));
-
+const validateBody = (schema) => (req, res, next) => {
      try {
-          req.parsedBody = dicomBodySchema.parse(req.body); 
+          req.parsedBody = schema.parse(req.body);
           return next();
      } catch (err) {
           if (err instanceof ZodError) {
@@ -22,3 +17,5 @@ export const validateReportBody = (req, res, next) => {
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 };
+
+export default validateBody;

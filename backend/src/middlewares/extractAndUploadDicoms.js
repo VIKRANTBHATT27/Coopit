@@ -67,7 +67,6 @@ export const extractAndUploadDICOMs = async (req, res, next) => {
           req.dicomFiles = dicomFiles;
 
           return next();
-
      } catch (err) {
           console.error("DICOM file upload middleware error: ", err.message);
           return res.status(500).json({ err: "Failed to process DICOM files" });

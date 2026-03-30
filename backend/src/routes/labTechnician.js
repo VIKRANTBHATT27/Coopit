@@ -8,34 +8,61 @@ import {
      handleUpdateLabTech,
      handleUploadPfpImg,
      handleAddDicomReport,
+     handleGetDicomFiles,
+     handleDeleteDicomFile,
+     handlePreviewDicomFile,
 } from "../controllers/labTechnician.js";
+
 import { extractAndUploadDICOMs } from "../middlewares/extractAndUploadDicoms.js";
-import { validateReportBody } from "../middlewares/validateDicomBody.js";
+import validateBody from "../middlewares/validateBody.middleware.js";
+import {
+     labTechSchema,
+     labTechiUpdateSchema,
+     labTechImgUploadSchema
+} from "../zodSchemas/labTech.schema.js";
 
 const router = express.Router();
 
-router.post('/create-labTech', handleAddLabTech);
-router.route(':Id')
-     .get(handleGetLabTech)
-     .patch(handleUpdateLabTech);
+router.post('/create',
+     validateBody(labTechSchema),
+     handleAddLabTech
+);
 
-router.post('/upload-pfp', 
+router.route('/:Id')
+     .get(handleGetLabTech)
+     .patch(validateBody(labTechiUpdateSchema), handleUpdateLabTech
+     );
+
+router.post('/upload-pfp',
      uploadImg.single("pfpImage"),
      cloudinary_pfpUploader,
      deleteLocalImgFile,
+     validateBody(labTechImgUploadSchema),
      handleUploadPfpImg
 );
 
-router.delete('/delete-pfp', handleDeletePfpImage);
+router.delete('/delete-pfp',
+     handleDeletePfpImage
+);
 
-router.post('/upload-dicom/:checkUpId', 
+router.get('/get-dicom',
+     handleGetDicomFiles
+)
+
+router.post('/upload-dicom/:checkUpId',
      uploadDicomFile.single("dicom"),
-     validateReportBody,
      extractAndUploadDICOMs,
      cleanupDICOMFile,
      handleAddDicomReport
 );
 
+router.delete('/delete-dicom/:studyUid',
+     handleDeleteDicomFile
+);
+
+router.get('/preview-dicom',
+     handlePreviewDicomFile
+);
 
 
 export default router;
