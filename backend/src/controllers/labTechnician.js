@@ -50,7 +50,7 @@ export const handleUpdateLabTech = async (req, res) => {
                { $set: { ...req.parsedBody } },
                { returnDocument: "after" });
 
-          return res.status(200).json({ msg: "✅ successfull updated", Id: labTechi._id });
+          return res.status(200).json({ msg: "successfull updated", Id: labTechi._id });
      } catch (err) {
           console.log("error: ", err.message);
           return res.status(400).json({ err: "INTERNAL SERVER ERROR" });

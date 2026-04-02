@@ -1,7 +1,6 @@
 import { model, Schema } from "mongoose";
 
 const doctorSchema = new Schema({
-
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -51,7 +50,6 @@ const doctorSchema = new Schema({
         },
         closedOn: String,       //sundays or wednesday
     },
-
 }, { timestamps: true });
 
 export default model('Doctor', doctorSchema);

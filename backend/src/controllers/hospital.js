@@ -1,81 +1,16 @@
 import hospitalModel from "../models/hospitalModel.js";
-import * as z from "zod";
-
-const hospitalSchema = z.object({
-     name: z.string().min(1).max(100),
-     city: z.string(),
-     landmark: z.string().optional(),
-
-     address: z.object({
-          street: z.string(),
-          locality: z.string(),
-          city: z.string(),
-          state: z.string(),
-          pincode: z.string().regex(/^[1-9][0-9]{5}$/, "invalid pincode"),
-     }),
-
-     hospitalType: z.enum(["Government", "Private", "Clinic", "Speciality"]),
-
-     phones: z.array(
-          z.string().regex(/^\+?[1-9]\d{9,14}$/, "Invalid Phone")
-     ).nonempty(),
-
-     departments: z.array(
-          z.enum([
-               "Anesthesiology",
-               "Cardiology",
-               "Dermatology",
-               "Emergency Medicine",
-               "Endocrinology",
-               "Gastroenterology",
-               "General Medicine",
-               "General Surgery",
-               "Gynecology & Obstetrics",
-               "Neurology",
-               "Oncology",
-               "Orthopedics",
-               "Pediatrics",
-               "Psychiatry",
-               "Pulmonology",
-               "Radiology",
-               "Urology"
-          ])
-     ).nonempty(),
-
-     createdBy: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-
-     location: z.object({
-          type: z.literal("Point").default("Point"),
-          coordinates: z.array(z.number()).length(2, "Coordinates must be [longitude, latitude]").optional()
-     })
-});
-
-const phoneNumberSchema = z.array( z.string().regex(/^\+?[1-9]\d{9,14}$/, "Invalid phone number") ).nonempty()
-     .refine(
-          phones => new Set(phones).size === phones.length,
-          { message: "Phone numbers must be unique" }
-     )
+import userModel from "../models/userModel.js";
 
 export const handleAddHospital = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
-          return res.status(400).json({ error: "no data is provided!" });
-
      try {
-          const isAlreadyRegistered = await userModel.findOne({ name: req.body?.name });
+          const isAlreadyRegistered = await userModel.findOne({ name: req.parsedBody?.name });
           if (isAlreadyRegistered) return res.status(400).json({ msg: "Hospital is already registered" });
 
-          const parsedData = hospitalSchema.parse(req.body);
+          const response = await hospitalModel.create(req.parsedBody);
 
-          const response = await hospitalModel.create(parsedData);
-
-          return res.status(201).json({ msg: "✅ successfully created a user" });
+          return res.status(201).json({ msg: "successfully created a user", Id: response._id });
      } catch (err) {
           console.log("error: ", err.message);
-
-          if (error.message === "ValidationError") {
-               return res.status(400).json({ err: "VALIDATION ERROR" });
-          }
-
           return null;
      }
 };
@@ -86,11 +21,10 @@ export const handleUpdateHospital = async (req, res) => {
           return res.status(400).json({ err: "no data is provided!" });
 
      try {
-          const parsedData = hospitalSchema.parse(req.body.data);
-
-          const updatedData = await hospitalModel({ name: req.body.name },
-               { $set: { ...parsedData } },
-               { returnDocument: "after" });
+          const updatedData = await hospitalModel({ name: req.parsedBody.name },
+               { $set: { ...req.parsedBody } },
+               { returnDocument: "after" }
+          );
 
           if (!updatedData) return res.status(400).json({ err: "No hospital found!" });
 
@@ -98,39 +32,31 @@ export const handleUpdateHospital = async (req, res) => {
      } catch (err) {
           console.log("error: ", err.message);
 
-          if (err.message === "ValidationError") {
-               return res.status(400).json({ err: "VALIDATION ERROR" });
-          }
-
-          return null;
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
 
 };
 
 // add new phone number
 export const handleAddHospitalPhone = async (req, res) => {
-     if (!req.body || Object.keys(req.body).length === 0)
-          return res.status(400).json({ err: 'no data is provided' });
-
      try {
-          const parsedPhone = phoneNumberSchema.parse(req.body.phones);
-
-          const hospital = await hospitalModel.findOne({ name: req.body.name });
+          const hospital = await hospitalModel.findOne({ name: req.parsedBody.name });
           if (!hospital)
                return res.status(400).json({ err: "no hospital found" });
 
           const newPhone = [];
 
-          parsedData.map((phone) => {
+          req.parsedData.map((phone) => {
                if (!phone in hospital.phones) 
                     newPhone.push(phone);
           });
 
-          const response = await hospitalModel.updateOne({ name: req.body.name },
+          const response = await hospitalModel.updateOne({ name: req.parsedBody.name },
                { $addToSet: { phone: { $each: newPhone } } },
-               { returnDocument: "after" });
+               { returnDocument: "after" }
+          );
 
-          return res.status(204).json({ msg: "✅ successfully updated phones" }, response.phones);
+          return res.status(204).json({ msg: "successfully updated phones" }, response.phones);
      } catch (err) {
           console.log("error: ", err.message);
 

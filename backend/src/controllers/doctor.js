@@ -1,26 +1,187 @@
 import cloudinary_Delete_pfp from "../service/cloudinaryImgDelete.js";
 import doctorModel from "../models/doctorModel.js";
 import bcrypt from "bcrypt";
-import * as z from "zod";
-
-const doctorSchema = z.object({
-     userId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     pfp_url: z.string().default("/default-pfp/default-nurse.png"),
+import mongoose from "mongoose";
+import diseaseCaseModel from "../models/diseaseCaseModel.js";
+import checkupModel from "../models/checkupModel.js";
+import { previewDicomInstance } from "../service/dicomFileService.js";
 
 
-     specialization: z.array(z.string()),
-     experienceYears: z.number().min(0).max(50),
-     doctorDescription: z.string(),
-     licenseNumber: z.string(),
+export const handleAddDoctor = async (req, res) => {
+     try {
+          const response = await doctorModel(req.parsedBody);
+          return res.status(201).json({ msg: "successfully created doctor", Id: response._id });
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     }
+};
 
-     availability: z.object({
-          morningTime: z.object({ startTime: z.string(), endTime: z.string() }),
-          eveningTime: z.object({ startTime: z.string(), endTime: z.string() }),
-          closedOn: z.string(),
-     }),
-});
+export const handleGetDoctor = async (req, res) => {
+     const staffId = req.params.Id;
+     if (!staffId || !mongoose.Types.ObjectId.isValid(staffId))
+          return res.status(400).json({ msg: "invalid staff Id provided!" });
 
+     try {
+          const doctor = await doctorModel.findOne(staffId);
+          if (!doctor) return res.status(400).json({ msg: "no doctor found with this staffId" });
+
+          return res.status(200).json(labTechi);
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
+     }
+};
+
+export const handleUpdateDoctor = async (req, res) => {
+     if (!req.parsedBody || Object.keys(req.parsedBody).length === 0)
+          return res.status(400).json({ msg: "no data is provided" });
+
+     const staffId = req.params.Id;
+     if (!staffId || !mongoose.Types.ObjectId.isValid(staffId))
+          return res.status(400).json({ err: "no staff Id is provided" });
+
+     try {
+          const doctor = await doctorModel.findOneAndUpdate({ staffId },
+               { $set: { ...req.parsedBody } },
+               { returnDocument: "after" }
+          );
+
+          return res.status(400).json({ msg: "successfully updated", Id: doctor._id });
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ msg: "INTERNAL SERVER ERROR" });
+     }
+};
+
+
+export const handleUploadImg = async (req, res) => {
+     if (!req.file) return res.status(400).json({ err: "no image file uploaded" });
+
+     if (!req.body.emailId) return res.status(400).json({ err: "no emailId is provided" });
+
+     try {
+          const response = await doctorModel.findOneAndUpdate({ emailId: req.body.emailId },
+               {
+                    $set: {
+                         pfp_url: req.pfpImageURL,
+                         pfp_publicId: req.pfpImagePublicId
+                    }
+               }, { returnDocument: "after" });
+
+          console.log(response);
+          return res.status(200).json({ msg: "successfully uploaded image" });
+     } catch (error) {
+          console.log("Doctor image upload failed", error.message);
+          return null;
+     }
+};
+
+export const handleDeletePfpImage = async (req, res) => {
+     if (!req.body.emailId) return res.status(400).json({ err: "no emailId is provided!" });
+
+     try {
+          const { emailId } = req.body;
+
+          const doctor = await doctorModel.findOne({ emailId });
+
+          if (!doctor) return res.status(404).json({ err: "no doctor available with this emailId" });
+
+          const result = await cloudinary_Delete_pfp(doctor.pfp_publicId);
+
+          console.log(result);
+
+          if (result) {
+               const response = await doctorModel.findOneAndUpdate({ emailId },
+                    {
+                         $set: {
+                              pfp_publicId: undefined,
+                              pfp_url: "/public/default-pfp/default-avatar-doctor.png",
+                         }
+                    }, { returnDocument: "after" })
+
+               return res.status(202).json({ response });
+          }
+
+     } catch (err) {
+          console.log("error: ", err.message);
+          return null;
+     }
+};
+
+// show all the disease case
+export const handleGetDiseaseCase = async (req, res) => {
+     const doctorId = req.params.Id;
+     if (!doctorId || !mongoose.Types.ObjectId.isValid(doctorId))
+          return res.status(400).json({ err: "invalid doctorId" });
+
+     try {
+          const allDiseaseCase = await diseaseCaseModel.find({ diagnosedBy: doctorId });
+
+          return res.status(200).json(allDiseaseCase);
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     }
+
+};
+
+// approve and disapprove the disease 
+export const handleApproveDiseaseCase = async (req, res) => {
+     const diseaseId = req.params.Id;
+     if (!diseaseId || !mongoose.Types.ObjectId.isValid(diseaseId))
+          return res.status(400).json({ err: "invalid diseaseId" });
+
+     try {
+          const diseaseCase = await diseaseCaseModel.findByIdAndUpdate(diseaseId,
+               { $set: { status: "Approved" } },
+               { returnDocument: "after" }
+          );
+
+          return res.status(204).json({ msg: "successfully updated", Id: diseaseCase._id });
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     }
+};
+
+// pick those only checkups which have labResults
+export const handleGetAllCheckUps = async (req, res) => {
+     const doctorId = req.params.Id;
+     if (!doctorId || !mongoose.Types.ObjectId.isValid(doctorId))
+          return res.status(400).json({ err: "invalid doctorId" });
+
+     try {
+          const allCheckUps = await checkupModel.find({ doctorId });
+
+          return res.status(200).json(allCheckUps);
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     }
+};
+
+// see the dicom files 
+export const handlePreviewDicomFile = async (req, res) => {
+     const { studyInstanceId: studyUid, seriesInstanceId: seriesUid, sopInstanceUid: instanceUid  } = req.body;
+     
+     if (!studyUid)
+          return res.status(400).json({ err: "study instance Id is not provided" });
+
+     if (!seriesUid)
+          return res.status(400).json({ err: "series instance Id is not provided" });
+
+     if (!instanceUid)
+          return res.status(400).json({ err: "sop Instance Uid is not provided" });
+
+     try {
+          await previewDicomInstance(res, studyUid, seriesUid, instanceUid);
+
+     } catch (err) {
+          console.log("error: ", err.message);
+          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     }
+};
 
 export const handleDoctorSignup = async (req, res) => {
      if (!req.body || Object.keys(req.body).length === 0) {
@@ -78,76 +239,6 @@ export const handleDoctorLogin = async (req, res) => {
 
           if (error.message === "Password not matched") return res.status(400).json({ err: "Invalid Credientials" });
 
-          return null;
-     }
-};
-
-export const handleGetDoctor = async (req, res) => {
-     if (!req.params.id) return res.status(400).json({ err: "Doctor Id is not provided!" });
-
-     try {
-          const doctor = await doctorModel.findById(req.params.id);
-
-          if (!doctor) return res.json(404).json({ msg: "Patient not found" });
-
-          return res.status(200).json(doctor);
-     } catch (err) {
-          console.log("error: ", error.message);
-
-          return null;
-     }
-};
-
-export const handleUploadImg = async (req, res) => {
-     if (!req.file) return res.status(400).json({ err: "no image file uploaded" });
-
-     if (!req.body.emailId) return res.status(400).json({ err: "no emailId is provided" });
-
-     try {
-          const response = await doctorModel.findOneAndUpdate({ emailId: req.body.emailId },
-               {
-                    $set: {
-                         pfp_url: req.pfpImageURL,
-                         pfp_publicId: req.pfpImagePublicId
-                    }
-               }, { returnDocument: "after" });
-
-          console.log(response);
-          return res.status(200).json({ msg: "successfully uploaded image" });
-     } catch (error) {
-          console.log("Doctor image upload failed", error.message);
-          return null;
-     }
-};
-
-export const handleDeletePfpImage = async (req, res) => {
-     if (!req.body.emailId) return res.status(400).json({ err: "no emailId is provided!" });
-
-     try {
-          const { emailId } = req.body;
-
-          const doctor = await doctorModel.findOne({ emailId });
-
-          if (!doctor) return res.status(404).json({ err: "no doctor available with this emailId" });
-
-          const result = await cloudinary_Delete_pfp(doctor.pfp_publicId);
-
-          console.log(result);
-
-          if (result) {
-               const response = await doctorModel.findOneAndUpdate({ emailId },
-                    {
-                         $set: {
-                              pfp_publicId: undefined,
-                              pfp_url: "/public/default-pfp/default-avatar-doctor.png",
-                         }
-                    }, { returnDocument: "after" })
-
-               return res.status(202).json({ response });
-          }
-
-     } catch (err) {
-          console.log("error: ", err.message);
           return null;
      }
 };

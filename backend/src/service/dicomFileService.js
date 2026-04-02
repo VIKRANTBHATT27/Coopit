@@ -57,10 +57,10 @@ export const dicomWebDeleteStudy = async (studyUid) => {
   const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
   const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
   const dicomStoreId = process.env.GOOGLE_CLOUD_CONSOLE_DICOM_STORE_ID;
-  
+
   const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
   const dicomWebPath = `studies/${studyUid}`;
-  const request = {parent, dicomWebPath};
+  const request = { parent, dicomWebPath };
 
   await healthcareClient.projects.locations.datasets.dicomStores.studies.delete(
     request
@@ -69,21 +69,21 @@ export const dicomWebDeleteStudy = async (studyUid) => {
 };
 
 export const previewDicomInstance = async (res, studyUid, seriesUid, instanceUid) => {
-    const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
-    const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
-    const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
-    const dicomStoreId = process.env.GOOGLE_CLOUD_CONSOLE_DICOM_STORE_ID;
+  const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
+  const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
+  const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
+  const dicomStoreId = process.env.GOOGLE_CLOUD_CONSOLE_DICOM_STORE_ID;
 
-    const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
-    const dicomWebPath = `studies/${studyUid}/series/${seriesUid}/instances/${instanceUid}`;
+  const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
+  const dicomWebPath = `studies/${studyUid}/series/${seriesUid}/instances/${instanceUid}`;
 
-    const instance = await healthcareClient.projects.locations.datasets.dicomStores.studies.series.instances.retrieveInstance(
-        { parent, dicomWebPath },
-        {
-            headers: { Accept: 'application/dicom; transfer-syntax=*' },
-            responseType: 'arraybuffer',
-        }
-    );
+  const instance = await healthcareClient.projects.locations.datasets.dicomStores.studies.series.instances.retrieveInstance(
+    { parent, dicomWebPath },
+    {
+      headers: { Accept: 'application/dicom; transfer-syntax=*' },
+      responseType: 'arraybuffer',
+    }
+  );
 
-    return Buffer.from(instance.data);
+  return Buffer.from(instance.data);
 };
