@@ -8,7 +8,7 @@ export const handleAddHospital = async (req, res) => {
 
           const response = await hospitalModel.create(req.parsedBody);
 
-          return res.status(201).json({ msg: "successfully created a user", Id: response._id });
+          return res.status(201).json({ msg: "successfully created a Hospital", Id: response._id });
      } catch (err) {
           console.log("error: ", err.message);
           return null;
