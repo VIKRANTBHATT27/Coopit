@@ -1,11 +1,12 @@
 import express from "express";
+import {validateBody} from "../middlewares/validateReq.middleware.js";
+
 import {
      handleAddHospital,
      handleUpdateHospital,
      handleAddHospitalPhone
 } from "../controllers/hospital.js";
 
-import validateBody from "../middlewares/validateBody.middleware.js";
 import {
      hospitalSchema,
      phoneNumberSchema,
@@ -18,8 +19,8 @@ router.post('/add',
      validateBody(hospitalSchema),
      handleAddHospital
 );
-router.patch('/update', 
-     validateBody(hospitalUpdateSchema),     
+router.patch('/update',
+     validateBody(hospitalUpdateSchema),
      handleUpdateHospital
 );
 router.patch('/update-phone',

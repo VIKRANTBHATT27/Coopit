@@ -11,10 +11,11 @@ import {
      handleGetDicomFiles,
      handleDeleteDicomFile,
      handlePreviewDicomFile,
+     handleDeletePfpImage
 } from "../controllers/labTechnician.js";
 
 import { extractAndUploadDICOMs } from "../middlewares/extractAndUploadDicoms.js";
-import validateBody from "../middlewares/validateBody.middleware.js";
+import {validateBody} from "../middlewares/validateReq.middleware.js";
 import {
      labTechSchema,
      labTechiUpdateSchema,

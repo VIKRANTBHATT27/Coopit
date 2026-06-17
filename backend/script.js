@@ -1,10 +1,10 @@
 import express from "express";
 
-import userRoutes from "./src/routes/user.js";
-import staffRoutes from "./src/routes/staff.js";
+import userRoutes from "./src/routes/user.route.js";
+import staffRoutes from "./src/routes/staff.route.js";
 import adminRoutes from "./src/routes/admin.js";
 import nurseRoutes from "./src/routes/nurse.js";
-import doctorRoutes from "./src/routes/doctor.js";
+import doctorRoutes from "./src/routes/doctor.route.js";
 import patientRoutes from "./src/routes/patient.js";
 import serviceRoutes from "./src/routes/service.js";
 import hospitalRoutes from "./src/routes/hospital.js";

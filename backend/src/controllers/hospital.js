@@ -1,5 +1,5 @@
 import hospitalModel from "../models/hospitalModel.js";
-import userModel from "../models/userModel.js";
+import userModel from "../models/user.models.js";
 
 export const handleAddHospital = async (req, res) => {
      try {

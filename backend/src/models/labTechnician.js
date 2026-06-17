@@ -12,6 +12,11 @@ const labTechSchema = new Schema({
           required: false,
           default: "/default-pfp/default-lab-technician.png"
      },
+     
+     pfp_publicId: {
+          type: String,
+          required: false,
+     },
 
      labType: {
           type: String,
@@ -48,4 +53,5 @@ const labTechSchema = new Schema({
 
 });
 
-export default model('labTechnician', labTechSchema);
+const LabTechnician = model('LabTechnician', labTechSchema);
+export default LabTechnician;

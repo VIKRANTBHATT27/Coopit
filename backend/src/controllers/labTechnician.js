@@ -2,7 +2,7 @@ import { previewDicomInstance, dicomWebDeleteStudy } from "../service/dicomFileS
 import failedDicomFilesModel from "../models/failedDicomFilesModel.js";
 import labTechModel from "../models/labTechnician.js";
 import checkupModel from "../models/checkupModel.js";
-import userModel from "../models/userModel.js";
+import userModel from "../models/user.models.js";
 import mongoose from "mongoose";
 
 export const handleAddLabTech = async (req, res) => {
@@ -87,17 +87,17 @@ export const handleDeletePfpImage = async (req, res) => {
 
      try {
           const user = await userModel.findOne({ emailId });
-          if (!user) 
+          if (!user)
                return res.status(404).json({ err: "no user available with this emailId" });
 
           const labTechi = await labTechModel.findOne({ staffId });
-          if (!labTechi) 
+          if (!labTechi)
                return res.status(404).json({ err: "no lab-techinician found with that staffId" });
 
           const result = await cloudinary_Delete_pfp(user.pfp_publicId);
           console.log(result);
 
-          if (!result) 
+          if (!result)
                return res.status(500).json({ err: "Failed to delete image from cloudinary" });
 
           await Promise.all([
@@ -105,7 +105,7 @@ export const handleDeletePfpImage = async (req, res) => {
                     { emailId },
                     { $set: { pfp_publicId: undefined, } }
                ),
-               
+
                labTechModel.findOneAndUpdate(
                     { staffId },
                     { $set: { pfp_url: "/default-pfp/default-lab-technician.png" } },
