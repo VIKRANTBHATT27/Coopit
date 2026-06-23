@@ -47,7 +47,6 @@ export const generateAndSendPhoneOtp = async ({ _id: userId, phoneNumberEnc, pho
 
 export const checkPhoneOtpAndGenerateToken = async (userId, otpCode) => {
      const otpRecord = await Otp.findOne({ userId });
-
      if (!otpRecord) throw new APIError(404, "OTP expired or not found");
 
      if (otpCode !== otpRecord.otpCode) throw new APIError(401, "Incorrect OTP");
@@ -58,11 +57,9 @@ export const checkPhoneOtpAndGenerateToken = async (userId, otpCode) => {
           { returnDocument: "after" }
      );
 
-     const { staffId, roleDoc } = resolveRoleReferences(user);
+     const roleRefDetails = resolveRoleReferences(user);
 
-     const token = generateToken(user, staffId, roleDoc);
-
-     return token;
+     return generateToken(user, roleRefDetails);
 };
 
 export const generateAndSendEmailOtp = async ({ _id: userId, emailId }) => {

@@ -3,22 +3,17 @@ import { validateBody } from "../middlewares/validateReq.middleware.js";
 
 import {
      handleUserLogin,
-     handleUserLoginCheckOtp,
-     handleUserPasswordCheck,
-     handleUserSendOtp,
      handleUserSignup,
      handleVerifyEmailId,
+     handleVerifyUserLogin,
 } from "../controllers/user.controller.js";
 
 import {
-     emailIdSchema,
      loginSchema,
      signUpSchema,
-     checkOTPSchema,
-     userUpdationSchema,
-     verifyEmailIdSchema,
-     updatePasswordSchema,
+     verificationSchema
 } from "../zodSchemas/user.schema.js";
+
 import { checkForAuthentication } from "../middlewares/authCheck.middleware.js";
 
 const router = express.Router();
@@ -29,7 +24,7 @@ router.post('/signup',
 );
 
 router.post('/verify/emailId',
-     validateBody(verifyEmailIdSchema),
+     validateBody(verificationSchema),
      handleVerifyEmailId
 );
 
@@ -37,9 +32,9 @@ router.post('/login',
      validateBody(loginSchema),
      handleUserLogin
 );
-router.post('/send-otp',
-     validateBody(emailIdSchema),
-     handleUserSendOtp
+router.post('/verify/login',
+     validateBody(verificationSchema),
+     handleVerifyUserLogin
 );
 
 router.post('/otp-login',

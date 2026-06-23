@@ -8,24 +8,23 @@ const roleModelMap = {
      LAB_TECH: LabTechnician,
 };
 
-const resolveRoleReferences = async (user) => {
-     if (user.role === "PATIENT") {
-          const patient = await Patient.findOne({ userId: user._id });
-          if (!patient) throw new APIError(400, "Patient profile record missing");
+const resolveRoleReferences = async ({ role, _id: userId }) => {
+     if (role === "PATIENT") {
+          const patient = await Patient.findOne({ userId });
 
-          return { staffId: null, roleDoc: patient };
+          return { staffId: null, roleDocId: patient?._id || null };
      }
 
-     const staff = await Staff.findOne({ userId: user._id });
-     if (!staff) throw new APIError(404, "Core Staff base account record missing");
+     const staff = await Staff.findOne({ userId });
+     if (!staff) return { staffId: null, roleDocId: null };
 
-     const roleModel = roleModelMap[user.role];
-     if (!roleModel) throw new APIError(400, `Invalid or unmapped user role: ${user.role}`);
+     const roleModel = roleModelMap[role];
+     if (!roleModel) throw new APIError(400, `Invalid user role: ${role}`);
 
      const roleDoc = await roleModel.findOne({ staffId: staff?._id });
-     if (!roleDoc) throw new APIError(404, `Specific sub-role profile (${user.role}) missing`);
+     if (!roleDoc) throw new APIError(404, `Specific sub-role profile (${role}) missing`);
 
-     return { staffId: staff?._id, roleDoc };
+     return { staffId: staff?._id, roleDocId: roleDoc?._id };
 };
 
 export default resolveRoleReferences;

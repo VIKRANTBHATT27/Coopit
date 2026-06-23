@@ -6,12 +6,12 @@ config();
 
 const secretKey = process.env.JWT_SECRET_KEY;
 
-export const generateToken = (user, staffId = null, roleDoc = null) => {
+export const generateToken = ({ _id: userId, role }, { staffId = null, roleDocId = null }) => {
      return jwt.sign({
-          userId: user._id,
-          role: user.role,
-          roleRefId: roleDoc?._id || null,
-          staffId
+          userId,
+          role,
+          staffId,
+          roleRefId
      }, secretKey, { expiresIn: "24h" });
 };
 

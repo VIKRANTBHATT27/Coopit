@@ -10,9 +10,9 @@ import {
 
 
 import {
-     checkOtpAndGenerateToken,
+     checkPhoneOtpAndGenerateToken,
      generateAndSendEmailOtp,
-     generateAndSendOtp
+     generateAndSendPhoneOtp
 } from "../utils/otp.utils.js";
 
 import { config } from "dotenv";
@@ -76,8 +76,13 @@ export const handleUserLogin = async (req, res) => {
      try {
           const { emailId, password } = req.parsedBody;
 
-          const isVerified = await User.matchPassword(emailId, password);
+          const user = await User.findOne({ emailId });
+          if (!user) return res.status(404).json({ err: "user not found" });
+
+          const isVerified = await argon2.verify(user.passwordHash, password);
           if (!isVerified) return res.status(401).json({ err: "invalid password" });
+
+          await generateAndSendPhoneOtp(user);
 
           return res.status(200).json({ success: true, emailId: user.emailId });
      } catch (err) {
@@ -89,28 +94,12 @@ export const handleUserLogin = async (req, res) => {
 
 export const handleVerifyUserLogin = async (req, res) => {
      try {
-          const { emailId } = req.parsedBody;
+          const { emailId, otpCode } = req.parsedBody;
 
           const user = await User.findOne({ emailId });
-          if (!user) return res.status(400).json({ err: "no user exists" });
-
-          await generateAndSendOtp(user);
-
-          return res.status(200).json({ success: true, msg: "otp send successfully" });
-     } catch (err) {
-          console.error("Cannot Send OTP\n", err.message);
-          return res.status(500).json({ success: false, err: 'INTERNAL SERVER ERROR' });
-     }
-};
-
-export const handleUserLoginCheckOtp = async (req, res) => {
-     try {
-          const { otpCode, emailId } = req.parsedBody;
-
-          const user = await userModel.findOne({ emailId });
           if (!user) return res.status(404).json({ err: "invalid emailId" });
 
-          const token = await checkOtpAndGenerateToken(user.phoneNumberHash, otpCode, emailId);
+          const token = await checkPhoneOtpAndGenerateToken(user._id, otpCode);
 
           res.cookie("authToken", token, {
                httpOnly: true,
@@ -132,7 +121,7 @@ export const handleLogout = async (req, res) => {
 
           return res.status(200).json({ success: true, msg: "logout successful" });
      } catch (err) {
-          console.err("Failed Logout", err);
+          console.error("Failed Logout", err);
 
           return res.status(500).json({ success: false, err: "INTERNAL SERVER ERROR" });
      }
