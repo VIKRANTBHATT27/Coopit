@@ -22,7 +22,7 @@ export const emailIdSchema = signUpSchema.pick({
      emailId: true
 });
 
-export const checkOTPSchema = signUpSchema.pick({
+export const verifyEmailIdSchema = signUpSchema.pick({
      emailId: true,
      otp: z.string().regex(/^\d{6}$/, { message: "OTP must be exactly 6 digits" })
 });

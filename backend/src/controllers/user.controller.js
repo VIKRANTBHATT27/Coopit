@@ -72,15 +72,12 @@ export const handleVerifyEmailId = async (req, res) => {
      }
 };
 
-export const handleUserPasswordCheck = async (req, res) => {
+export const handleUserLogin = async (req, res) => {
      try {
           const { emailId, password } = req.parsedBody;
 
-          const user = await User.findOne({ emailId });
-          if (!user) return res.status(404).json({ err: "User not found" });
-
-          const isPassMatched = await passwordMatch(user.password, password);
-          if (!isPassMatched) return res.status(400).json({ err: "Invalid Credientials" });
+          const isVerified = await User.matchPassword(emailId, password);
+          if (!isVerified) return res.status(401).json({ err: "invalid password" });
 
           return res.status(200).json({ success: true, emailId: user.emailId });
      } catch (err) {
@@ -90,7 +87,7 @@ export const handleUserPasswordCheck = async (req, res) => {
      }
 };
 
-export const handleUserSendOtp = async (req, res) => {
+export const handleVerifyUserLogin = async (req, res) => {
      try {
           const { emailId } = req.parsedBody;
 

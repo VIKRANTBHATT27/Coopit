@@ -98,10 +98,9 @@ userSchema.methods.getPhoneNumber = function () {
 
 userSchema.statics.matchPassword = async function (emailId, password) {
      const user = await this.findOne({ emailId });
+     if (!user) throw new Error(404, "User not found");
 
-     const isVerified = await argon2.verify(user.passwordHash, password);
-     
-     return isVerified;
+     return await argon2.verify(user.passwordHash, password);;
 };
 
 userSchema.index({ emailId: 1 });

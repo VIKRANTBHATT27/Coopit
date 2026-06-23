@@ -2,6 +2,7 @@ import express from "express";
 import { validateBody } from "../middlewares/validateReq.middleware.js";
 
 import {
+     handleUserLogin,
      handleUserLoginCheckOtp,
      handleUserPasswordCheck,
      handleUserSendOtp,
@@ -15,6 +16,7 @@ import {
      signUpSchema,
      checkOTPSchema,
      userUpdationSchema,
+     verifyEmailIdSchema,
      updatePasswordSchema,
 } from "../zodSchemas/user.schema.js";
 import { checkForAuthentication } from "../middlewares/authCheck.middleware.js";
@@ -26,14 +28,14 @@ router.post('/signup',
      handleUserSignup
 );
 
-
 router.post('/verify/emailId',
+     validateBody(verifyEmailIdSchema),
      handleVerifyEmailId
 );
 
 router.post('/login',
      validateBody(loginSchema),
-     handleUserPasswordCheck
+     handleUserLogin
 );
 router.post('/send-otp',
      validateBody(emailIdSchema),
