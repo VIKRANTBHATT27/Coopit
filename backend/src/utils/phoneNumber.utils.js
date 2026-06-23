@@ -1,6 +1,7 @@
 import crypto from "crypto";
-import dotenv from "dotenv";
-dotenv.config();
+
+import { config } from "dotenv";
+config();
 
 const SECRET_KEY = Buffer.from(process.env.PHONE_ENCRYPTION_KEY, 'hex');
 

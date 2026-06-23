@@ -27,22 +27,9 @@ export const checkOTPSchema = signUpSchema.pick({
      otp: z.string().regex(/^\d{6}$/, { message: "OTP must be exactly 6 digits" })
 });
 
-export const userUpdationSchema = signUpSchema.pick({
-     emailId: true,
-     fullName: true,
-     phoneNumber: true,
-     gender: true,
-     dateOfBirth: true,
-     role: true,
-     state: true,
-     districtName: true,
-     landmark: true
-}).partial().extend({
-     emailId: z.string().regex(/^\S+@\S+\.\S+$/, "Invalid email")
-}).refine(data => data.emailId, {
-     message: "emailId is required",
-     path: ["emailId"]
-});
+export const userUpdationSchema = signUpSchema.omit({
+     password: true
+}).partial();
 
 export const  updatePasswordSchema = z.object({
      emailId: z.string().regex(/^\S+@\S+\.\S+$/, "Invalid email"),

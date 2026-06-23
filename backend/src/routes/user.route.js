@@ -1,16 +1,12 @@
 import express from "express";
-import {validateBody} from "../middlewares/validateReq.middleware.js";
+import { validateBody } from "../middlewares/validateReq.middleware.js";
 
 import {
-     handleLogout,
-     handleGetUser,
-     handleUserLogin,
-     handleUserSignup,
-     handleUserUpdate,
-     handleUserSendOtp,
      handleUserLoginCheckOtp,
-     handleUserPasswordReset,
-     handleGetUserFromToken
+     handleUserPasswordCheck,
+     handleUserSendOtp,
+     handleUserSignup,
+     handleVerifyEmailId,
 } from "../controllers/user.controller.js";
 
 import {
@@ -21,6 +17,7 @@ import {
      userUpdationSchema,
      updatePasswordSchema,
 } from "../zodSchemas/user.schema.js";
+import { checkForAuthentication } from "../middlewares/authCheck.middleware.js";
 
 const router = express.Router();
 
@@ -29,24 +26,33 @@ router.post('/signup',
      handleUserSignup
 );
 
+
+router.post('/verify/emailId',
+     handleVerifyEmailId
+);
+
 router.post('/login',
      validateBody(loginSchema),
-     handleUserLogin
+     handleUserPasswordCheck
 );
 router.post('/send-otp',
      validateBody(emailIdSchema),
      handleUserSendOtp
 );
+
 router.post('/otp-login',
      validateBody(checkOTPSchema),
      handleUserLoginCheckOtp
 );
 router.post('/logout', handleLogout);
 
-router.post("/check", handleGetUserFromToken);
+router.use(checkForAuthentication());
 
-router.get('/getUser/:Id',
-     handleGetUser
+//why this route ?
+// router.post("/check/:Id", handleGetUser);
+
+router.get('/getUser',
+     handleGetUserFromToken
 );
 
 router.patch('/updateUser',

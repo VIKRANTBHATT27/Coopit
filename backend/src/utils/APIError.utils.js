@@ -1,7 +1,7 @@
 class APIError extends Error {
      constructor(
-          statusCode,
-          message = "Something went wrong",
+          statusCode = 500,
+          message = "Internal Server Error",
           errors = [],
           stack = ""
      ) {
@@ -15,7 +15,7 @@ class APIError extends Error {
           if(stack) {
                this.stack = stack;         // custom stack trace if provided
           } else {
-               Error.captureStackTrace(this, this.constructor); // auto-generate stack trace
+               Error.captureStackTrace(this, this.constructor);       // auto-generate stack trace
           }
      }
 };

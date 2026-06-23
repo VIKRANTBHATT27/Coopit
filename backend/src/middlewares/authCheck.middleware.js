@@ -1,4 +1,4 @@
-import { getUserFromToken } from "../utils/token.utils.js";
+import { getDataFromToken } from "../utils/token.utils.js";
 
 export const checkForAuthentication = (req, res, next) => {
      const tokenCookie = req.cookies?.token;
@@ -6,7 +6,7 @@ export const checkForAuthentication = (req, res, next) => {
 
      if (!tokenCookie) return next();
 
-     const user = getUserFromToken(tokenCookie);
+     const user = getDataFromToken(tokenCookie);
      req.user = user;
 
      return next(); 

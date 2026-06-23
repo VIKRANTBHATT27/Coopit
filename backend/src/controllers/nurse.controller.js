@@ -15,7 +15,7 @@ export const handleCreateNurse = async (req, res) => {
 
           const nurse = await Nurse.create(req.parsedBody);
 
-          return res.status(201).json({ status: "created", data: nurse });
+          return res.status(201).json({ data: nurse });
      } catch (err) {
           console.error("failed nurse creation controller\n", err.message);
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
@@ -30,7 +30,7 @@ export const handleGetNurse = async (req, res) => {
 
           if (!nurse) return res.status(400).json({ msg: "no nurse found with this staffId" });
 
-          return res.status(200).json({ status: "ok", data: nurse });
+          return res.status(200).json({ data: nurse });
      } catch (err) {
           console.log("failed getting details for nusre form db\n", err.message);
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
@@ -72,7 +72,7 @@ export const handleUploadImg = async (req, res) => {
           );
           if (!nurse) return res.status(404).json({ err: "no nurse found with this staff ID" });
 
-          return res.status(200).json({ status: "ok", data: nurse });
+          return res.status(200).json({ data: nurse });
      } catch (err) {
           console.log("image upload failedn\n", err.message);
           return res.status(400).json({ err: "INTERNAL SERVER ERROR" });

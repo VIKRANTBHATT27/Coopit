@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { Doctor, LabTechnician, Nurse } from "../models/index.js";
+import { Doctor, LabTechnician, Nurse } from "./index.js";
 
 const timelineEventSchema = new Schema({
      patientId: {

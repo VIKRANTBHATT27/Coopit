@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 import { config } from "dotenv";
+import APIError from "./APIError.utils";
 config();
 
 
 const secretKey = process.env.JWT_SECRET_KEY;
 
-export const generateToken = (user, staffId = null,  roleDoc = null) => {
+export const generateToken = (user, staffId = null, roleDoc = null) => {
      return jwt.sign({
-          _id: user.id,
+          userId: user._id,
           role: user.role,
           roleRefId: roleDoc?._id || null,
           staffId
@@ -15,13 +16,8 @@ export const generateToken = (user, staffId = null,  roleDoc = null) => {
 };
 
 // token verify
-export const getUserFromToken = (token) => {
-     if (!token) return null;
+export const getDataFromToken = (token) => {
+     if (!token) throw new APIError(401, "NO AUTHENTICATION TOKEN");
 
-     try {
-          return jwt.verify(token, secretKey);
-     } catch (err) {
-          console.log("error: ", err);
-          return { error: "INTERNAL SERVER ERROR", response: err.message };
-     }
+     return jwt.verify(token, secretKey);
 };

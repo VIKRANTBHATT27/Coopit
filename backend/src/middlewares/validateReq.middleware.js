@@ -1,4 +1,5 @@
-import { ZodError } from "zod";
+import { formatError, ZodError } from "zod";
+import APIError from "../utils/APIError.utils.js";
 
 export const validateBody = (schema) => (req, res, next) => {
      try {
@@ -6,39 +7,45 @@ export const validateBody = (schema) => (req, res, next) => {
           return next();
      } catch (err) {
           if (err instanceof ZodError) {
-               return res.status(400).json({
-                    err: "Validation failed",
-                    details: err.errors.map(e => ({
-                         field: e.path.join("."),
-                         message: e.message
-                    }))
-               });
+               const formattedError = err.errors.map(e => ({
+                    field: e.path.join("."),
+                    message: e.message
+               }));
+
+               return next(new APIError(
+                    400,
+                    "Validation Constraints failed",
+                    formattedError
+               ));
           };
 
-          console.error("request body validation failed\nerrorMessage => ", err.message);
+          console.error("critical error in validating body\nerrorMessage => ", err.message);
 
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          return next(err);
      }
 };
 
 export const validateParams = (schema) => (req, res, next) => {
      try {
-          req.parsedParams = schema.parse(req.params); 
+          req.parsedParams = schema.parse(req.params);
           return next();
      } catch (err) {
           if (err instanceof ZodError) {
-               return res.status(400).json({
-                    err: "Validation failed",
-                    details: err.errors.map(e => ({
-                         field: e.path.join("."),
-                         message: e.message
-                    }))
-               });
+               const formattedError = err.errors.map(e => ({
+                    field: e.path.join("."),
+                    message: e.message
+               }));
+
+               return next(new APIError(
+                    400,
+                    "Validation Constraints failed",
+                    formattedError
+               ));
           };
 
-          console.error("request params validation failed\nerrorMessage => ", err.message);
+          console.error("critical error in validating params\nerrorMessage => ", err.message);
 
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          return next(err);
      }
 };
 
@@ -48,17 +55,20 @@ export const validateQuery = (schema) => (req, res, next) => {
           return next();
      } catch (err) {
           if (err instanceof ZodError) {
-               return res.status(400).json({
-                    err: "Validation failed",
-                    details: err.errors.map(e => ({
-                         field: e.path.join("."),
-                         message: e.message
-                    }))
-               });
+               const formattedError = err.errors.map(e => ({
+                    field: e.path.join("."),
+                    message: e.message
+               }));
+
+               return next(new APIError(
+                    400,
+                    "Validation Constraints failed",
+                    formattedError
+               ));
           };
 
-          console.error("request query validation failed\nerrorMessage => ", err.message);
+          console.error("critical error in validating query\nerrorMessage => ", err.message);
 
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          return next(err);
      }
 };

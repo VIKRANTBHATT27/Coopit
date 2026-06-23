@@ -8,11 +8,13 @@ import LabTechnician from "./LabTechnician.js";
 import MedicalCase from "./MedicalCase.js";
 import Nurse from "./Nurse.js";
 import Patient from "./Patient.js";
+import PendingUser from "./PendingUser.model.js";
 import Receptionist from "./Receptionist.js";
 import Staff from "./Staff.js";
 import TimelineEvent from "./TimelineEvent.js";
-import User from "./User.js";
+import User from "./User.model.js";
 import Visit from "./Visit.js";
+import Otp from "./OTP.model.js";
 
 export {
      CheckUp,
@@ -25,9 +27,11 @@ export {
      MedicalCase,
      Nurse,
      Patient,
+     PendingUser,
      Receptionist,
      Staff,
      TimelineEvent,
      User,
-     Visit
+     Visit,
+     Otp
 };

@@ -1,5 +1,6 @@
-import { hashPhone, encryptPhoneFn, decryptPhoneFn } from "../utils/crypto.utils.js";
+import { hashPhone, encryptPhoneFn, decryptPhoneFn } from "../utils/phoneNumber.utils.js";
 import { model, Schema } from "mongoose";
+import argon2 from "argon2";
 
 const userSchema = new Schema({
      fullName: {
@@ -13,10 +14,11 @@ const userSchema = new Schema({
           unique: true,
           trim: true,
      },
-     password: {
+     passwordHash: {
           type: String,
           required: true,
      },
+
      phoneNumberHash: {
           type: String,
           required: true,
@@ -73,21 +75,36 @@ const userSchema = new Schema({
 }, { timestamps: true });
 
 userSchema.pre('save', function (next) {
-     if (this.isModified('phoneNumberEnc')) {
-          const phone = this.phoneNumberEnc;
-          this.phoneNumberHash = hashPhone(phone);
-          
-          const { encryptedPhone, iv, authTag } = encryptPhoneFn(phone);
-          this.phoneNumberEnc = encryptedPhone;
-          this.phoneIV = iv;
-          this.phoneAuthTag = authTag;
-     }
-     next();
+     if (!this.isModified('phoneNumberEnc')) return next();
+
+     const phone = this.phoneNumberEnc;
+     this.phoneNumberHash = hashPhone(phone);
+
+     const { encryptedPhone, iv, authTag } = encryptPhoneFn(phone);
+     this.phoneNumberEnc = encryptedPhone;
+     this.phoneIV = iv;
+     this.phoneAuthTag = authTag;
+});
+
+userSchema.pre('save', async function (next) {
+     if (!this.isModified('passwordHash')) return next();
+
+     this.passwordHash = await argon2.hash(this.passwordHash);
 });
 
 userSchema.methods.getPhoneNumber = function () {
      return decryptPhoneFn(this.phoneNumberEnc, this.phoneIV, this.phoneAuthTag);
-}
+};
+
+userSchema.statics.matchPassword = async function (emailId, password) {
+     const user = await this.findOne({ emailId });
+
+     const isVerified = await argon2.verify(user.passwordHash, password);
+     
+     return isVerified;
+};
+
+userSchema.index({ emailId: 1 });
 
 const User = model('User', userSchema);
 export default User;
