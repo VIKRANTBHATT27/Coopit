@@ -1,7 +1,8 @@
 import express from "express";
 import { uploadImg } from "../middlewares/multer.js";
 import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.js";
-import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
+import cloudinary_pfpUploader from "../middlewares/cloudinary.middleware.js";
+
 import {
      handleGetPatient,
      handleUpdatePatient,
@@ -10,8 +11,17 @@ import {
      handleDeletePfpImage,
      handleDownloadDicom,
 } from "../controllers/patient.controller.js";
-import { validateBody, validateParams } from "../middlewares/validateReq.middleware.js";
-import { patientSchema, userIdSchema, downloadDicomSchema } from "../zodSchemas/patient.schema.js";
+
+import {
+     validateBody,
+     validateParams
+} from "../middlewares/validateReq.middleware.js";
+
+import {
+     patientSchema,
+     userIdSchema,
+     downloadDicomSchema
+} from "../zodSchemas/patient.schema.js";
 
 const router = express.Router();
 

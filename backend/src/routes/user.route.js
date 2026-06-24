@@ -15,7 +15,8 @@ import {
      verificationSchema
 } from "../zodSchemas/user.schema.js";
 
-import { checkForAuthentication } from "../middlewares/authCheck.middleware.js";
+import { checkForAuthentication } from "../middlewares/authenticate.middleware.js";
+import { checkForAuthorization } from "../middlewares/authorize.middleware.js";
 
 const router = express.Router();
 
@@ -39,7 +40,7 @@ router.post('/verify/login',
 );
 
 router.use(checkForAuthentication());
-router.use(checkForAuthentication(["PATIENT", "DOCTOR", "RECEPTIONIST", "NURSE", "LAB_TECH"]));
+router.use(checkForAuthorization(["PATIENT", "DOCTOR", "RECEPTIONIST", "NURSE", "LAB_TECH"]));
 
 router.post('/logout', handleLogout);
 
