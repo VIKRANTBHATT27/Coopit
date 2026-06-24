@@ -11,6 +11,7 @@ import {
 import {
      loginSchema,
      signUpSchema,
+     userUpdationSchema,
      verificationSchema
 } from "../zodSchemas/user.schema.js";
 
@@ -37,28 +38,21 @@ router.post('/verify/login',
      handleVerifyUserLogin
 );
 
-router.post('/otp-login',
-     validateBody(checkOTPSchema),
-     handleUserLoginCheckOtp
-);
+router.use(checkForAuthentication());
+router.use(checkForAuthentication(["PATIENT", "DOCTOR", "RECEPTIONIST", "NURSE", "LAB_TECH"]));
+
 router.post('/logout', handleLogout);
 
-router.use(checkForAuthentication());
 
 //why this route ?
 // router.post("/check/:Id", handleGetUser);
 
-router.get('/getUser',
-     handleGetUserFromToken
-);
-
-router.patch('/updateUser',
-     validateBody(userUpdationSchema),
-     handleUserUpdate
-);
-router.patch('/pass-reset',
-     validateBody(updatePasswordSchema),
-     handleUserPasswordReset
-);
+// router => /user
+router.route('/')
+     .get(handleGetUserFromToken)
+     .patch(
+          validateBody(userUpdationSchema),
+          handleUserUpdate
+     );
 
 export default router;

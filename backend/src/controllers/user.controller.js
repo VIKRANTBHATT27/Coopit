@@ -110,13 +110,15 @@ export const handleVerifyUserLogin = async (req, res) => {
 
           return res.status(200).json({ success: true, msg: "login successful" });
      } catch (err) {
-          console.error("failed during user otp check\n", err);
+          console.error("failed during user login verification\n", err.message);
           return res.status(500).json({ success: false, err: 'INTERNAL SERVER ERROR' });
      }
 };
 
 export const handleLogout = async (req, res) => {
      try {
+          if (!req.user) return res.status(401).json({ success: false, err: "unauthorized" });
+
           res.clearCookie("authToken");
 
           return res.status(200).json({ success: true, msg: "logout successful" });
@@ -136,7 +138,7 @@ export const handleGetUserFromToken = async (req, res) => {
 
           return res.status(200).json({ success: true, data: user });
      } catch (err) {
-          console.error("error: ", err.message);
+          console.error("failed getting user data from authToken\n", err.message);
 
           return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
      }
@@ -145,15 +147,22 @@ export const handleGetUserFromToken = async (req, res) => {
 
 export const handleUserUpdate = async (req, res) => {
      try {
+          const { password, phoneNumber } = req.parsedBody;
           const { userId } = req.user;
 
           const updatedUser = await User.findByIdAndUpdate(
                userId,
-               { $set: { ...req.parsedBody } },
+               {
+                    $set: {
+                         ...req.parsedBody,
+                         passwordHash: password,
+                         phoneNumberEnc: phoneNumber
+                    }
+               },
                { returnDocument: "after" }
           );
 
-          if (!updatedUser) return res.status(400).json({ err: "Invalid userId" });
+          if (!updatedUser) return res.status(400).json({ err: "Invalid user" });
 
           return res.status(200).json({ success: true, data: updatedUser });
      } catch (err) {

@@ -57,7 +57,7 @@ router.post("/",
 );
 
 router.use(checkForAuthentication());
-router.use(checkForAuthorization(['nurse']));
+router.use(checkForAuthorization(['NURSE']));
 
 router.route('/')
      .get(

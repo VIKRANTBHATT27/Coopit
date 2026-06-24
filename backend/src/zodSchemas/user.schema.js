@@ -18,9 +18,6 @@ export const loginSchema = signUpSchema.pick({
      password: true
 });
 
-export const emailIdSchema = signUpSchema.pick({
-     emailId: true
-});
 
 export const verificationSchema = signUpSchema.pick({
      emailId: true,
