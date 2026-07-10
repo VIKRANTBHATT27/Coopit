@@ -1,18 +1,18 @@
 import * as z from "zod";
 import mongoose from "mongoose";
 
-const mongooseObjectId = (fieldName) => z.string()
+const mongooseObjectIdValidator = (fieldName) => z.string()
      .refine((val) => mongoose.Types.ObjectId.isValid(val), {
           message: `Invalid ObjectId for field ${fieldName}`
      });
 
 export const patientSchema = z.object({
-     userId: mongooseObjectId("userId"),
+     userId: mongooseObjectIdValidator("userId"),
      pfp_url: z.string().default("/default-pfp/default-patient.png"),
+     
      weight: z.number().min(1).max(500).optional(),
      height: z.number().min(30).max(300).optional(),
      bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
-
 
      lifestyle: z.object({
           smoking: z.boolean().default(false),
@@ -30,9 +30,10 @@ export const patientSchema = z.object({
      // }).optional(),
 });
 
-export const userIdSchema = patientSchema.pick({ userId: true });
+export const userIdSchema = mongooseObjectIdValidator("userId");
 
-export const downloadDicomSchema = z.object({
-     checkUpId: mongooseObjectId("checkUpId"),
-     studyInstanceId: z.string().min(1, "studyInstanceId is required")
-})
+export const patientUpdationSchema = patientSchema.omit({
+     userId: true,
+     pfp_url: true,
+     pfp_publicId: true,
+}).partial();

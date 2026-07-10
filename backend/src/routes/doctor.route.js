@@ -80,4 +80,9 @@ router.get('/preview-dicomFiles',
 //      }
 // };
 
+router.post("/view/dicom-file/:checkUpId",
+     validateParams(checkUpIdSchema),
+     handleViewDicomFile
+);
+
 export default router;

@@ -72,3 +72,10 @@ export const validateQuery = (schema) => (req, res, next) => {
           return next(err);
      }
 };
+
+export const validateFilePresence = (req, res, next) => {
+     if (!req.file) {
+          return res.status(400).json({ error: 'No files were uploaded.' });
+     }
+     return next();
+};

@@ -1,7 +1,7 @@
 import { Promise } from "mongoose";
 import { Staff, Nurse } from "../models/index.js";
 
-export const handleCreateNurse = async (req, res) => {
+export const handleCreateNurse = async (req, res, next) => {
      try {
           const { staffId } = req.user;
 
@@ -13,31 +13,34 @@ export const handleCreateNurse = async (req, res) => {
           if (!staff) return res.status(404).json({ err: "no staff found with this staffId" });
           if (alreadyRegistered) return res.status(409).json({ err: "nurse already exist with this staffId" });
 
-          const nurse = await Nurse.create(req.parsedBody);
+          const newNurse = await Nurse.create(req.parsedBody);
 
-          return res.status(201).json({ data: nurse });
+          return res.status(201).json({
+               success: true,
+               message: "Nurse profile created successfully",
+               data: newNurse
+          });
      } catch (err) {
           console.error("failed nurse creation controller\n", err.message);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
-export const handleGetNurse = async (req, res) => {
+export const handleGetNurse = async (req, res, next) => {
      try {
           const { staffId } = req.user;
-
           const nurse = await Nurse.findOne({ staffId });
 
           if (!nurse) return res.status(400).json({ msg: "no nurse found with this staffId" });
 
-          return res.status(200).json({ data: nurse });
+          return res.status(200).json({ success: true, data: nurse });
      } catch (err) {
           console.log("failed getting details for nusre form db\n", err.message);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
-export const handleUpdateNurse = async (req, res) => {
+export const handleUpdateNurse = async (req, res, next) => {
      try {
           const { staffId } = req.user;
 
@@ -49,14 +52,18 @@ export const handleUpdateNurse = async (req, res) => {
 
           if (!nurse) return res.status(400).json({ msg: "no nurse found with this staffId" });
 
-          return res.status(200).json({ msg: " successfull updated", nurseId: nurse._id });
+          return res.status(200).json({
+               success: true,
+               msg: "nurse updated successfully",
+               data: nurse
+          });
      } catch (err) {
           console.log("failed nurse updation\n", err.message);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
-export const handleUploadImg = async (req, res) => {
+export const handleUploadImg = async (req, res, next) => {
      if (!req.file)
           return res.status(400).json({ err: "no file is provided!" });
 
@@ -75,11 +82,11 @@ export const handleUploadImg = async (req, res) => {
           return res.status(200).json({ data: nurse });
      } catch (err) {
           console.log("image upload failedn\n", err.message);
-          return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
-export const handleDeleteUploadedImg = async (req, res) => {
+export const handleDeleteUploadedImg = async (req, res, next) => {
      try {
           const { staffId } = req.user;
 
@@ -105,7 +112,7 @@ export const handleDeleteUploadedImg = async (req, res) => {
           return res.status(200).json({ msg: "successfully deleted profile picture" });
      } catch (err) {
           console.error("image deletion request Failed\n", err.message);
-          return res.status(400).json({ err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 

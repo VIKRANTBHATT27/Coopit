@@ -30,7 +30,7 @@ const labReportSchema = new Schema({
           required: false
      },
 
-     fileUrl: {
+     s3Key: {
           type: String,
           required: false
      },
@@ -51,12 +51,6 @@ const labReportSchema = new Schema({
           type: Date,
           default: Date.now
      },
-
-     timelineEventId: {
-          type: Schema.Types.ObjectId,
-          ref: "TimeLineEvent",
-          required: false,
-     }
 });
 
 const LabReport = model("LabReport", labReportSchema);

@@ -1,10 +1,9 @@
-import CheckUp from "./CheckUp.js";
-import DicomFile from "./DicomFile.js";
+import CheckUp from "./CheckUp.model.js";
+import DicomFile from "./DicomFile.model.js";
 import Doctor from "./Doctor.js";
-import FailedDicomFiles from "./FailledDicomFiles.js";
 import Hospital from "./Hospital.js";
-import LabReport from "./LabReport.js";
-import LabTechnician from "./LabTechnician.js";
+import LabReport from "./LabReport.model.js";
+import LabTechnician from "./LabTechnician.model.js";
 import MedicalCase from "./MedicalCase.js";
 import Nurse from "./Nurse.js";
 import Patient from "./Patient.js";
@@ -20,7 +19,6 @@ export {
      CheckUp,
      DicomFile,
      Doctor,
-     FailedDicomFiles,
      Hospital,
      LabReport,
      LabTechnician,

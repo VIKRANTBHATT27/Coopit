@@ -11,7 +11,7 @@ export const createPatientTimelineSchema = z.object({
      startedAt: z.date().default(Date.now),
      enededAt: z.date().optional(),
      currentStatus: z.enum(['Active', 'Recovered', 'Chronic', 'Deceased']).default("Active"),
-     note: z.string().optional(),
+     patientId: mongooseObjectIdValidator('patient'),
      eventData: z.array({
           eventType: z.enum([
                'CHECKUP_CREATED',
@@ -25,16 +25,16 @@ export const createPatientTimelineSchema = z.object({
           ]),
           performedByRole: z.enum(['DOCTOR', 'NURSE', 'LAB_TECHNICIAN']).nonoptional(),
           performedBy: mongooseObjectIdValidator(performedByRole),
-          performedByReference: z.enum(['DOCTOR', 'NURSE', 'LAB_TECHNICIAN']),
+          performedByReference: z.enum(["Doctor", "LabTechnician", "Nurse"]).nonoptional(),
           eventReferenceType: z.enum(['CheckUp', 'MedicalCase', 'DicomFile', 'LabReport', 'FailedDicomFiles']),
           eventReferenceId: mongooseObjectIdValidator(eventReferenceType),
+          note: z.string().optional(),
      }).default([]).nonoptional(),
 });
 
 export const addNewEventDataSchema = createPatientTimelineSchema.pick({
+     patientId: true,
      eventData: true,
 })
 
 export const checkTimelineEventIdSchema = mongooseObjectIdValidator('timelineEvent');
-
-export const checkpatientIdSchema = mongooseObjectIdValidator('patientId');

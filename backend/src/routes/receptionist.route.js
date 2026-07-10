@@ -51,6 +51,12 @@ router.post("/patients/:userId",
      handleCreatePatient
 );
 
+//    .patch(
+//           validateBody(patientUpdationSchema),
+//           handleUpdatePatient
+//      );
+
+
 router.get("/nurses",
      handleGetAllNurse
 );

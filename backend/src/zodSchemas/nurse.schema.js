@@ -10,6 +10,8 @@ export const staffIdSchema = mongooseObjectIdValidator("staffId");
 
 
 export const nurseSchema = z.object({
+     staffId: mongooseObjectIdValidator('staffId'),
+     
      pfp_url: z.string().default('/default-pfp/default-nurse.png'),
 
      wardAssigned: z.enum([
@@ -28,7 +30,7 @@ export const nurseSchema = z.object({
 
      assignedPatients: z.array(mongooseObjectIdValidator("patientId")).unique().default([]),
 
-     nurseDescription: z.string(),
+     nurseDescription: z.string().optional(),
 
      shift: z.enum(["DAY", "NIGHT"]),
 
@@ -41,3 +43,5 @@ export const nurseSchema = z.object({
 
      qualification: z.string()
 });
+
+export const nurseUpdationSchema = nurseSchema.omit({ staffId: true }).partial();

@@ -6,15 +6,19 @@ const dicomFileSchema = new Schema({
           ref: "Patient",
           required: true,
           index: true,
-          unique: true
      },
 
      checkUpId: {
           type: Schema.Types.ObjectId,
           ref: "CheckUp",
           required: true,
-          index: true,
-          unique: true
+          index: true
+     },
+
+     medicalCaseId: {
+          type: Schema.Types.ObjectId,
+          ref: "medicalCase",
+          required: true,
      },
 
      fileName: {
@@ -61,14 +65,12 @@ const dicomFileSchema = new Schema({
      uploadedAt: {
           type: Date,
           default: Date.now
-     },
-
-     timelineEventId: {
-          type: Schema.Types.ObjectId,
-          ref: "TimeLineEvent",
-          required: false,
      }
 });
+
+dicomFileSchema.index({ patientId: 1 });
+dicomFileSchema.index({ checkUpId: 1 });
+dicomFileSchema.index({ medicalCaseId: 1, checkUpId: 1 });
 
 const DicomFile = model("dicomFile", dicomFileSchema);
 export default DicomFile;

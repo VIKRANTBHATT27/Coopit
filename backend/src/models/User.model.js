@@ -17,24 +17,29 @@ const userSchema = new Schema({
      passwordHash: {
           type: String,
           required: true,
+          select: false,
      },
 
      phoneNumberHash: {
           type: String,
           required: true,
-          unique: true
+          unique: true,
+          select: false,
      },
      phoneNumberEnc: {
           type: String,
           required: true,
+          select: false,
      },
      phoneIV: {
           type: String,
           required: false,
+          select: false,
      },
      phoneAuthTag: {
           type: String,
-          required: false
+          required: false,
+          select: false,
      },
 
      gender: {

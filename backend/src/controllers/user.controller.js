@@ -18,7 +18,7 @@ import {
 import { config } from "dotenv";
 config();
 
-export const handleUserSignup = async (req, res) => {
+export const handleUserSignup = async (req, res, next) => {
      try {
           const { emailId } = req.parsedBody;
 
@@ -44,12 +44,11 @@ export const handleUserSignup = async (req, res) => {
           });
      } catch (err) {
           console.error("User signup failed\n", err.message);
-
-          return res.status(500).json({ success: false, err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
-export const handleVerifyEmailId = async (req, res) => {
+export const handleVerifyEmailId = async (req, res, next) => {
      try {
           const { emailId, otpCode } = req.parsedBody;
 
@@ -67,12 +66,11 @@ export const handleVerifyEmailId = async (req, res) => {
           return res.status(201).json({ success: true, message: "user has successfully registered" });
      } catch (err) {
           console.error("Failed during user email verification\n", err.message);
-
-          return res.status(500).json({ success: false, err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
-export const handleUserLogin = async (req, res) => {
+export const handleUserLogin = async (req, res, next) => {
      try {
           const { emailId, password } = req.parsedBody;
 
@@ -87,12 +85,11 @@ export const handleUserLogin = async (req, res) => {
           return res.status(200).json({ success: true, emailId: user.emailId });
      } catch (err) {
           console.error("User Login Failed\n", err.message);
-
-          return res.status(500).json({ success: false, err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
-export const handleVerifyUserLogin = async (req, res) => {
+export const handleVerifyUserLogin = async (req, res, next) => {
      try {
           const { emailId, otpCode } = req.parsedBody;
 
@@ -111,11 +108,11 @@ export const handleVerifyUserLogin = async (req, res) => {
           return res.status(200).json({ success: true, msg: "login successful" });
      } catch (err) {
           console.error("failed during user login verification\n", err.message);
-          return res.status(500).json({ success: false, err: 'INTERNAL SERVER ERROR' });
+          next(err);
      }
 };
 
-export const handleLogout = async (req, res) => {
+export const handleLogout = async (req, res, next) => {
      try {
           if (!req.user) return res.status(401).json({ success: false, err: "unauthorized" });
 
@@ -124,12 +121,11 @@ export const handleLogout = async (req, res) => {
           return res.status(200).json({ success: true, msg: "logout successful" });
      } catch (err) {
           console.error("Failed Logout", err);
-
-          return res.status(500).json({ success: false, err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 }
 
-export const handleGetUserFromToken = async (req, res) => {
+export const handleGetUserFromToken = async (req, res, next) => {
      try {
           const { userId } = req.user;
 
@@ -140,12 +136,12 @@ export const handleGetUserFromToken = async (req, res) => {
      } catch (err) {
           console.error("failed getting user data from authToken\n", err.message);
 
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 
 
-export const handleUserUpdate = async (req, res) => {
+export const handleUserUpdate = async (req, res, next) => {
      try {
           const { password, phoneNumber } = req.parsedBody;
           const { userId } = req.user;
@@ -167,8 +163,7 @@ export const handleUserUpdate = async (req, res) => {
           return res.status(200).json({ success: true, data: updatedUser });
      } catch (err) {
           console.log("failed to update user query\n", err.message);
-
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          next(err);
      }
 };
 

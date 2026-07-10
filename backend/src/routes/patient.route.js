@@ -1,15 +1,14 @@
 import express from "express";
-import { uploadImg } from "../middlewares/multer.js";
-import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.js";
-import cloudinary_pfpUploader from "../middlewares/cloudinary.middleware.js";
+import { uploadAvatar } from "../middlewares/multer.js";
+import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.middleware.js";
+import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
 import {
      handleGetPatient,
      handleUpdatePatient,
      handlePatientSignup,
-     handlePatientUploadImg,
-     handleDeletePfpImage,
-     handleDownloadDicom,
+     handleUploadPatientAvatar,
+     handleDeleteAvatar,
 } from "../controllers/patient.controller.js";
 
 import {
@@ -20,38 +19,39 @@ import {
 import {
      patientSchema,
      userIdSchema,
-     downloadDicomSchema
+     checkUpIdSchema,
+     patientUpdationSchema,
 } from "../zodSchemas/patient.schema.js";
+
+import checkForAuthentication from "../middlewares/authenticate.middleware.js";
+
+import checkForAuthorization from "../middlewares/authorize.middleware.js";
+
 
 const router = express.Router();
 
 
-router.route("/:userId", validateParams(userIdSchema))
-     .get(handleGetPatient)
+router.use(checkForAuthentication());
+router.use(checkForAuthorization('PATIENT'));
+
+router.get("/:userId",
+     validateParams(userIdSchema),
+     handleGetPatient
+);
+
+router.route('/avatar/:userId',
+     validateParams(userIdSchema),
+)
      .patch(
-          validateBody(patientSchema.partial()),
-          handleUpdatePatient
+          uploadAvatar.single("profilePic"),
+          uploadUserAvatar,
+          deleteLocalImgFile,
+          handleUploadPatientAvatar
+     )
+     .delete(
+          handleDeleteAvatar
      );
 
-
-router.patch('/pfp-image-upload/:userId',
-     uploadImg.single("profilePic"),
-     cloudinary_pfpUploader,
-     deleteLocalImgFile,
-     validateParams(userIdSchema),
-     handlePatientUploadImg
-);
-
-router.delete('/deletePfpImage', 
-     validateParams(userIdSchema),
-     handleDeletePfpImage
-);
-
 // router.post('/:id/document-upload', handleDocumentUpload);
-
-router.post("/download-dicom", 
-     validateBody(downloadDicomSchema),
-     handleDownloadDicom
-);
 
 export default router;

@@ -12,7 +12,7 @@ const generateOTP = async (type, userId) => {
      if (!['EMAIL', 'PHONE'].includes(type)) {
           throw new APIError(400, "Invalid OTP type. Must be EMAIL or PHONE");
      }
-     if (!userId || !mongoose.Schema.Types.ObjectId(userId)) {
+     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
           throw new APIError(400, "Invalid mongoose Id");
      }
 

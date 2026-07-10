@@ -49,11 +49,16 @@ const timelineEventSchema = new Schema({
                     refPath: "eventReferenceType"
                },
 
-               eventReferenceType: {
+               eventReferenceModel: {
                     type: String,
                     enum: ['CheckUp', 'MedicalCase', 'DicomFile', 'LabReport', 'FailedDicomFiles'],
                     required: true
-               }
+               },
+
+               note: {
+                    type: String,
+                    required: false
+               },
           }],
           default: [],
           required: true
@@ -77,13 +82,7 @@ const timelineEventSchema = new Schema({
           type: String,
           enum: ['Active', 'Recovered', 'Chronic', 'Deceased'],
           default: 'Active',
-     },
-
-     note: {
-          type: String,
-          required: false
-     },
-
+     }
 });
 
 const TimelineEvent = model("TimelineEvent", timelineEventSchema);

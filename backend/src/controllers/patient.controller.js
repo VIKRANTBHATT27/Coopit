@@ -1,14 +1,10 @@
- import cloudinary_Delete_pfp from "../service/cloudinaryImgDelete.js";
-
-import Patient from "../models/patient.model.js";
-import userModel from "../models/user.models.js";
-import { dicomWebRetrieveInstance } from "../service/dicomFile.services.js";
-import checkupModel from "../models/checkup.model.js";
+import { Patient } from "../models/index.js";
+import deleteUserAvatar from "../services/cloudinary.service.js";
 
 
-export const handleCreatePatient = async (req, res) => {
+export const handleCreatePatient = async (req, res, next) => {
      try {
-          const { userId } = req.params;
+          const { userId } = req.parsedParams;
 
           const isAlreadyPatient = await Patient.findOne({ userId });
           if (isAlreadyPatient) return res.status(409).json({ msg: "Patient already exist with this Email" });
@@ -20,81 +16,82 @@ export const handleCreatePatient = async (req, res) => {
                patientId: patient._id
           });
      } catch (err) {
-          console.log("Patient signup failed\n", err.message);
-
-          if (err.message === "ValidationError") {
-               return res.status(400).json({ err: "VALIDATION ERROR" });
-          }
-
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          console.error("Patient signup failed\n", err.message);
+          next(err);
      }
 };
 
-export const handleGetPatient = async (req, res) => {
+export const handleGetPatient = async (req, res, next) => {
      try {
-          const patient = await Patient.findOne({ userId: req.params.userId });
+          const { userId } = req.parsedParams;
 
+          const patient = await Patient.findOne({ userId });
           if (!patient) return res.status(404).json({ msg: "Patient not found" });
 
-          return res.status(200).json(patient);
+          return res.status(200).json({ success: true, data: patient });
      } catch (err) {
-          console.log("error: ", err);
-
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+          console.error("failed during getting patient detials\n", err.message);
+          next(err);
      }
 };
 
-// update current patient requires login first authentication etc.
-export const handleUpdatePatient = async (req, res) => {
+export const handleUpdatePatient = async (req, res, next) => {
      try {
+          const { userId } = req.parsedParams;
+
           const patient = await Patient.findOneAndUpdate(
-               { userId: req.params.userId },
+               { userId },
                { $set: { ...req.parsedBody } },
                { returnDocument: "after" }
           );
-
           if (!patient) return res.status(404).json({ err: "No patient found with this userId" });
 
-          return res.status(200).json({ msg: "successfully updated" })
+          return res.status(200).json({ success: true, msg: "successfully updated patient data" });
      } catch (err) {
-          console.log("error: ", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+          console.error("failed during patient updation\n", err.message);
+          next(err);
      }
 };
 
-export const handlePatientUploadImg = async (req, res) => {
+export const handleUploadPatientAvatar = async (req, res, next) => {
      if (!req.file) return res.status(400).json({ err: "no image file uploaded" });
 
      try {
+          const { userId } = req.parsedParams;
+
           const patient = await Patient.findOneAndUpdate(
-               { userId: req.parsedBody.userId },
+               { userId },
                {
                     $set: {
                          pfp_url: req.pfpImageURL,
                          pfp_publicId: req.pfpImagePublicId
                     }
                },
-               { returnDocument: "after" });
-
+               { returnDocument: "after" }
+          );
           if (!patient) return res.status(404).json({ err: "No patient found with this userId" });
 
-          return res.status(200).json({ msg: "successfully uploaded image", url: patient.pfp_url });
+          return res.status(200).json({
+               success: true,
+               msg: "successfully uploaded image",
+               url: patient.pfp_url
+          });
      } catch (err) {
-          console.log("Patient image upload failed!\n", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+          console.log("Patient image upload failed!\n", err.message);
+          next(err);
      }
 };
 
 // fix the null issue here 
-export const handleDeletePfpImage = async (req, res) => {
+export const handleDeleteAvatar = async (req, res, next) => {
      try {
-          const { userId } = req.params;
+          const { userId } = req.parsedParams;
 
           const patient = await Patient.findOne({ userId });
-          
+
           if (!patient) return res.status(404).json({ err: "no patient available with this userId" });
 
-          const result = await cloudinary_Delete_pfp(patient.pfp_publicId);
+          const result = await deleteUserAvatar(patient.pfp_publicId);
 
           console.log(result);
 
@@ -112,11 +109,10 @@ export const handleDeletePfpImage = async (req, res) => {
           return res.status(200).json({ msg: "successfully deleted image" });
      } catch (err) {
           console.log("patient deletion request failed!\n", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+          next(err);
      }
 
 };
-
 
 
 // // delete the user function or temp disable the user for 30 days
@@ -129,27 +125,3 @@ export const handleDeletePfpImage = async (req, res) => {
 
 //      }
 // };
-
-export const handleDownloadDicom = async (req, res) => {
-     const { checkUpId, studyInstanceId } = req.parsedBody;
-
-     try {
-          const checkUp = await checkupModel.findById(checkUpId);
-          if (!checkUp) return res.status(404).json({ err: "Check up not found" });
-
-          const dicomFile = checkUp.dicomFiles.find(file => file.studyInstanceId == studyInstanceId);
-
-          if (!dicomFile) return res.status(404).json({ err: "DICOM file not found" });
-
-          await dicomWebRetrieveInstance(
-               fileName,
-               dicomFile.studyInstanceId,
-               dicomFile.seriesInstanceId,
-               dicomFile.sopInstanceUid
-          );
-
-     } catch (err) {
-          console.log("error: ", err);
-          return res.status(500).json({ err: 'INTERNAL SERVER ERROR', errorMsg: err.message });
-     }
-};

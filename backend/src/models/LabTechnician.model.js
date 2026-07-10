@@ -12,7 +12,7 @@ const labTechSchema = new Schema({
           required: false,
           default: "/default-pfp/default-lab-technician.png"
      },
-     
+
      pfp_publicId: {
           type: String,
           required: false,
@@ -49,8 +49,17 @@ const labTechSchema = new Schema({
      shift: {
           type: String,
           enum: ["Morning", "Evening", "Night"]
-     }
+     },
 
+     assignedCheckUps: {
+          type: [{
+               type: mongoose.Types.ObjectId,
+               ref: "CheckUp",
+               required: true,
+               unique: true
+          }],
+          default: []
+     },
 });
 
 const LabTechnician = model('LabTechnician', labTechSchema);

@@ -8,6 +8,7 @@ import script from './script.js';
 import { connectMongoDb } from "./config/mongoose-connection.js";
 import { v2 as cloudinary } from "cloudinary";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./src/middlewares/errorHandler.middleware.js";
 
 // import pkg from 'express-openid-connect';
 // const { auth, requiresAuth  } = pkg;
@@ -121,3 +122,6 @@ app.use('/api', script);
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+
+app.use(errorHandler);

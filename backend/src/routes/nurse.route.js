@@ -20,20 +20,28 @@ import {
      validateBody
 } from "../middlewares/validateReq.middleware.js";
 
-import { staffIdSchema, nurseSchema } from "../zodSchemas/nurse.schema.js";
 import {
      medicalCaseSchema,
      medicalCaseUpdationSchema
 } from "../zodSchemas/medicalCase.schema.js";
-import {
-     checkForAuthentication,
-     checkForAuthorization
-} from "../middlewares/authCheck.middleware.js";
+
+import checkForAuthentication from "../middlewares/authenticate.middleware.js";
+import checkForAuthorization from "../middlewares/authorize.middleware.js";
 
 import { uploadImg } from "../middlewares/multer.js";
 import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
 import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.js";
 
+
+
+
+import {
+     handleViewDicomFile
+} from "../controllers/dicom.controller.js";
+
+import {
+     handleCreateNurse
+} from "../controllers/nurse.controller.js";
 
 import {
      handleAddNewEventData,
@@ -42,6 +50,17 @@ import {
      handleCreatePatientTimeline,
      handleUpdatePatientTimeline,
 } from "../controllers/timelineEvent.controller.js";
+
+
+
+import {
+     checkUpIdSchema
+} from "../zodSchemas/checkUp.schema.js";
+
+import {
+     nurseSchema,
+     nurseUpdationSchema
+} from "../zodSchemas/nurse.schema.js";
 
 import {
      addNewEventDataSchema,
@@ -52,27 +71,26 @@ import {
 
 const router = express.Router();
 
-router.post("/",
-     handleCreateNurse
-);
-
 router.use(checkForAuthentication());
 router.use(checkForAuthorization(['NURSE']));
 
-router.route('/')
-     .get(
+router.post("/",
 
-          handleGetNurse
+);
+
+router.route('/')
+     .get( handleGetNurse )
+     .post(
+          validateBody(nurseSchema),
+          handleCreateNurse
      )
      .patch(
-
-          validateBody(nurseSchema.partial()),
+          validateBody(nurseUpdationSchema),
           handleUpdateNurse
      );
 
 router.route('/profile-picture')
      .post(
-
           uploadImg.single("profilePic"),
           cloudinary_pfpUploader,
           deleteLocalImgFile,
@@ -120,5 +138,10 @@ router.route('/timeline-event/:timelineEventId',
      .delete(
           handleDeleteTimelimeEvent
      );
+
+router.get("/view/dicom-file/:checkUpId",
+     validateParams(checkUpIdSchema),
+     handleViewDicomFile
+);
 
 export default router;

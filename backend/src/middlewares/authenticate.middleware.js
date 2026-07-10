@@ -1,6 +1,6 @@
 import { getDataFromToken } from "../utils/token.utils.js";
 
-export const checkForAuthentication = (req, res, next) => {
+const checkForAuthentication = (req, res, next) => {
      const tokenCookie = req.cookies?.token;
      req.user = null;
 
@@ -11,3 +11,5 @@ export const checkForAuthentication = (req, res, next) => {
 
      return next(); 
 };
+
+export default checkForAuthentication;

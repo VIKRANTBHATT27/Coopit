@@ -5,7 +5,13 @@ const checkupSchema = new Schema({
           type: Schema.Types.ObjectId,
           ref: "medicalCase",
           required: true,
-          unique: true,
+          index: true
+     },
+
+     patientId: {
+          type: Schema.Types.ObjectId,
+          ref: "Patient",
+          required: true,
           index: true
      },
 
@@ -13,7 +19,6 @@ const checkupSchema = new Schema({
           type: String,
           required: true
      },
-
 
      symptoms: {
           type: [String],
@@ -89,7 +94,7 @@ const checkupSchema = new Schema({
 });
 
 checkupSchema.index({ patientId: 1 });
-checkupSchema.index({ diseaseCaseId: 1 });
+checkupSchema.index({ medicalCaseId: 1 });
 
 const CheckUp = model("Checkup", checkupSchema);
 export default CheckUp;
