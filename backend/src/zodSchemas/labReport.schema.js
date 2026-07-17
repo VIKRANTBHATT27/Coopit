@@ -8,10 +8,10 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
 
 export const labReportUploadSchema = z.object({
     patientId: mongooseObjectIdValidator('patient'),
-    checkUpId: mongooseObjectIdValidator('checkup'),
     medicalCaseId: mongooseObjectIdValidator('medicalCase'),
-    s3Key: z.string().nonoptional(),
     testName: z.string(),
     result: z.string(),
     normalRange: z.string().optional(),
 });
+
+export const labReportIdSchema = mongooseObjectIdValidator("labReport");

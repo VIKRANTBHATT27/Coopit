@@ -4,19 +4,19 @@ import APIError from "../utils/APIError.utils.js";
 import dotenv from "dotenv";
 dotenv.config();
 
+const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
+const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
+const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
+const dicomStoreId = process.env.GOOGLE_CLOUD_CONSOLE_DICOM_STORE_ID;
+
+const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
+
 export const previewDicomInstance = async (
     studyUid,
     seriesUid,
     instanceUid,
 ) => {
     try {
-        const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
-        const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
-        const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
-        const dicomStoreId = process.env.GOOGLE_CLOUD_CONSOLE_DICOM_STORE_ID;
-
-        const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
-
         const dicomWebPath = `studies/${studyUid}/series/${seriesUid}/instances/${instanceUid}`;
 
         const instance = await healthcareClient.projects.locations.datasets.dicomStores.studies.series.instances.retrieveInstance(
@@ -42,14 +42,7 @@ export const uploadDicomInstance = async (
     dicomFilePath,
 ) => {
     try {
-        const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
-        const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
-        const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
-        const dicomStoreId = process.env.GOOGLE_CLOUD_CONSOLE_DICOM_STORE_ID;
-
         const fileBuffer = fs.readFileSync(dcmFilePath);
-
-        const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
 
         const request = {
             parent,
@@ -83,22 +76,21 @@ export const deleteDicomInstance = async (
     studyUid
 ) => {
     try {
-        const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;
-        const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
-        const datasetId = process.env.GOOGLE_CLOUD_CONSOLE_DATASET_ID;
-        const dicomStoreId = process.env.GOOGLE_CLOUD_CONSOLE_DICOM_STORE_ID;
-
-
-        const parent = `projects/${projectId}/locations/${cloudRegion}/datasets/${datasetId}/dicomStores/${dicomStoreId}`;
-
         const dicomWebPath = `studies/${studyUid}`;
 
-        const response = await healthcareClient.projects.locations.datasets.dicomStores.studies.deleteStudy({ parent, dicomWebPath });
+        const response = await healthcareClient.projects.locations.datasets.dicomStores.studies.deleteStudy(
+            { parent, dicomWebPath }
+        );
 
-        console.log(`Deleted DICOM study with UID ${studyUid}:`, response.data);
+        if (response.status === 204) {
+            console.log(`[CLOUD STORAGE] Successfully dropped study UID container: ${studyUid}`);
+            return true;
+        }
+
+        return false;
     } catch (err) {
-        console.error("failed during deleting dicom instance\n", err.response?.data || err.message);
+        console.error("Google Cloud Healthcare API deletion operation failed:\n", err.response?.data || err.message);
 
-        throw new APIError(500, "Failed to delete DICOM instance");
+        throw new APIError(500, "Failed to clear target medical imaging resources from cloud infrastructure.");
     }
 };

@@ -1,5 +1,5 @@
-import CheckUp from "./CheckUp.model.js";
-import DicomFile from "./DicomFile.model.js";
+import Checkup from "./Checkup.model.js";
+import DicomStudy from "./DicomStudy.model.js";
 import Doctor from "./Doctor.js";
 import Hospital from "./Hospital.js";
 import LabReport from "./LabReport.model.js";
@@ -10,14 +10,14 @@ import Patient from "./Patient.js";
 import PendingUser from "./PendingUser.model.js";
 import Receptionist from "./Receptionist.js";
 import Staff from "./Staff.js";
-import TimelineEvent from "./TimelineEvent.js";
+import TimelineEvent from "./TimelineEvent.model.js";
 import User from "./User.model.js";
 import Visit from "./Visit.js";
 import Otp from "./OTP.model.js";
 
 export {
-     CheckUp,
-     DicomFile,
+     Checkup,
+     DicomStudy,
      Doctor,
      Hospital,
      LabReport,

@@ -1,7 +1,7 @@
 import multer from "multer";
 import path from "path";
 
-const customStorageAvatar = multer.diskStorage({
+const customStorageAvatars = multer.diskStorage({
      destination: (req, file, cb) => {
           cb(null, path.resolve("./public/uploaded-avatar"))
      },
@@ -13,26 +13,26 @@ const customStorageAvatar = multer.diskStorage({
      }
 });
 
-export const uploadAvatar = multer({ storage: customStorageImage });
+export const uploadAvatar = multer({ storage: customStorageAvatars });
 
-const customStoragePdf = multer.diskStorage({
+const customStorageReports = multer.diskStorage({
      destination: (req, file, cb) => {
-          cb(null, path.resolve("./public/uploaded-pdf-files"));
+          cb(null, path.resolve("./public/uploaded-report"));
      },
      filename: (req, file, cb) => {
           cb(null, "pdf-" + Date.now() + file.originalname);
      }
 });
 
-export const uploadPdf = multer({ storage: customStoragePdf });
+export const uploadReport = multer({ storage: customStorageReports });
 
-const customStorageDicomFiles = multer.diskStorage({
+const customStorageDicoms = multer.diskStorage({
      destination: (req, file, cb) => {
           cb(null, path.resolve("./public/uploaded-dicom-files"));
      },
      filename: (req, file, cb) => {
-          cb(null, "DICOM-file-" + Date.now() + file.originalname);
+          cb(null, "DICOM-file-" + Date.now() + file?.originalname);
      }
 });
 
-export const uploadDicomFile = multer({ storage: customStorageDicomFiles });
+export const uploadDicom = multer({ storage: customStorageDicoms });

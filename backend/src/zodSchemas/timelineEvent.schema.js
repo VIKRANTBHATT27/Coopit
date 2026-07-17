@@ -32,7 +32,7 @@ export const createPatientTimelineSchema = z.object({
      }).default([]).nonoptional(),
 });
 
-export const addNewEventDataSchema = createPatientTimelineSchema.pick({
+export const addEventDataSchema = createPatientTimelineSchema.pick({
      patientId: true,
      eventData: true,
 })

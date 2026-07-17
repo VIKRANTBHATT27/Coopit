@@ -8,6 +8,23 @@ const timelineEventSchema = new Schema({
           required: true,
      },
 
+     medicalCaseId: {
+          type: Schema.Types.ObjectId,
+          ref: "medicalCase",
+          required: true,
+     },
+
+     medicalConditionName: {
+          type: String,
+          required: true,
+     },
+
+     currentStatus: {
+          type: String,
+          enum: ['Active', 'Recovered', 'Chronic', 'Deceased'],
+          default: 'Active',
+     },
+     
      eventData: {
           type: [{
                eventType: {
@@ -64,11 +81,6 @@ const timelineEventSchema = new Schema({
           required: true
      },
 
-     medicalConditionName: {
-          type: String,
-          required: true,
-     },
-
      startedAt: {
           type: Date,
           default: Date.now
@@ -77,12 +89,6 @@ const timelineEventSchema = new Schema({
           type: Date,
           default: null
      },
-
-     currentStatus: {
-          type: String,
-          enum: ['Active', 'Recovered', 'Chronic', 'Deceased'],
-          default: 'Active',
-     }
 });
 
 const TimelineEvent = model("TimelineEvent", timelineEventSchema);

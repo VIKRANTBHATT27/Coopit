@@ -1,27 +1,24 @@
 import fs from "fs/promises";
+import APIError from "../utils/APIError.utils";
 
-export const deleteLocalImgFile = async (req, res, next) => {
-     if (!req.file) return next();
+const cleanupTempFiles = (req, res, next) => {
+     let isCleanedUp = false;
 
-     try {
-          await fs.rm(req.file.path, { force: true });
-     } catch (err) {
-          console.warn(`[CLEANUP WARNING] Failed to delete file ${req.file.path}:`, err.message);
-     }
+     const cleanup = async () => {
+          if (isCleanedUp || !req.file?.path) return;
+          isCleanedUp = true;
 
-     return next();
-};
+          try {
+               await fs.rm(req.file.path, { force: true });
+          } catch (err) {
+               console.warn(`[DISK CRISIS] Hard permissions failure for path ${req.file.path}:`, err.message);
+          }
+     };
 
-export const cleanupDICOM = (req, res, next) => {
-     if (!req.file?.path) return next();
-
-     try {
-          await fs.access(req.file.path);
-
-          await fs.unlink(req.file.path);
-     } catch (err) {
-          console.warn(`[DICOM WARNING] Could not clear file ${req.file.path}:`, err.message);
-     }
+     res.on("finish", cleanup);
+     res.on("close", cleanup);
 
      return next();
 };
+
+export default cleanupTempFiles;

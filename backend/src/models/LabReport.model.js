@@ -5,16 +5,18 @@ const labReportSchema = new Schema({
           type: Schema.Types.ObjectId,
           ref: "Patient",
           required: true,
-          index: true,
-          unique: true
      },
 
      checkUpId: {
           type: Schema.Types.ObjectId,
           ref: "CheckUp",
           required: true,
-          index: true,
-          unique: true
+     },
+
+     medicalCaseId: {
+          type: Schema.Types.ObjectId,
+          ref: "medicalCase",
+          required: true,
      },
 
      testName: {
@@ -52,6 +54,11 @@ const labReportSchema = new Schema({
           default: Date.now
      },
 });
+
+labReportSchema.index({ checkUpId: 1 });
+labReportSchema.index({ medicalCaseId: 1 });
+labReportSchema.index({ patientId: 1, uploadedAt: -1 });
+
 
 const LabReport = model("LabReport", labReportSchema);
 export default LabReport;

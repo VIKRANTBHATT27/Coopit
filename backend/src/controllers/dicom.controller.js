@@ -1,16 +1,16 @@
-import { DicomFile } from "../models/index.js";
+import { DicomStudy } from "../models/index.js";
 import { previewDicomInstance } from "../services/dicom.service.js";
 
-export const handleViewDicomFile = async (req, res) => {
+export const handleViewDicom = async (req, res) => {
     const { checkUpId } = req.parsedParams;
 
     try {
-        const dicomFileRecord = await DicomFile.findOne({ checkUpId });
-        if (!dicomFileRecord) return res.status(404).json({ success: false, err: "no record found with this check-up" });
+        const dicomStudyRecord = await DicomStudy.findOne({ checkUpId });
+        if (!dicomStudyRecord) return res.status(404).json({ success: false, err: "no record found with this check-up" });
 
-        const studyUid = dicomFileRecord.studyInstanceId;
-        const seriesUid = dicomFileRecord.seriesInstanceId;
-        const instanceUid = dicomFileRecord.sopInstanceUid;
+        const studyUid = dicomStudyRecord.studyInstanceId;
+        const seriesUid = dicomStudyRecord.seriesInstanceId;
+        const instanceUid = dicomStudyRecord.sopInstanceUid;
 
         const dicomBuffer = await previewDicomInstance(
             studyUid, seriesUid, instanceUid
@@ -21,7 +21,7 @@ export const handleViewDicomFile = async (req, res) => {
         res.send(dicomBuffer);
 
     } catch (err) {
-        console.log("failed viewing dicom file\n", err.message);
+        console.log("failed viewing dicom\n", err.message);
         return res.status(500).json({ success: false, err: 'INTERNAL SERVER ERROR' });
     }
 };

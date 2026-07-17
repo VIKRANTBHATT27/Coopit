@@ -5,14 +5,12 @@ const checkupSchema = new Schema({
           type: Schema.Types.ObjectId,
           ref: "medicalCase",
           required: true,
-          index: true
      },
 
      patientId: {
           type: Schema.Types.ObjectId,
           ref: "Patient",
           required: true,
-          index: true
      },
 
      doctorName: {
@@ -94,7 +92,8 @@ const checkupSchema = new Schema({
 });
 
 checkupSchema.index({ patientId: 1 });
+checkupSchema.index({ checkUpId: 1 });
 checkupSchema.index({ medicalCaseId: 1 });
 
-const CheckUp = model("Checkup", checkupSchema);
-export default CheckUp;
+const Checkup = model("Checkup", checkupSchema);
+export default Checkup;
