@@ -16,7 +16,7 @@ const ZIP_FILE_TYPES = [
     "application/octet-stream"
 ];
 
-export const createDicomSchema = z.object({
+export const dicomUploadSchema = z.object({
     file: z.object({
         originalname: z.string()
             .min(1, "Original filename is required"),
@@ -30,9 +30,12 @@ export const createDicomSchema = z.object({
         error: "Medical imaging file upload is mandatory"
     }),
 
+    params: z.object({
+        checkupId: mongooseObjectIdValidator('checkup')
+    }),
+
     body: z.object({
         patientId: mongooseObjectIdValidator('patient'),
-        checkupId: mongooseObjectIdValidator('checkup'),
         medicalCaseId: mongooseObjectIdValidator('medicalCase')
     }),
 });
@@ -52,7 +55,7 @@ export const dicomZIPSchema = z.object({
     }),
 
     params: z.object({
-        checkUpId: mongooseObjectIdValidator('checkUp')
+        checkupId: mongooseObjectIdValidator('checkup')
     }),
 
     body: z.object({

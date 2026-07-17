@@ -13,7 +13,7 @@ import {
      handlePreviewDicomFile,
      handleDeletePfpImage,
      handleUploadPDF,
-     handleAddDicomFile,
+     handleAddDicomStudy,
      handleGetPDF,
      handleGetAllLabReports
 } from "../controllers/labTechnician.controller.js";
@@ -28,7 +28,7 @@ import {
 import { checkUpIdSchema } from "../zodSchemas/checkUp.schema.js";
 import { uploadReport } from "../middlewares/multer.middleware.js";
 import { labReportIdSchema, labReportUploadSchema } from "../zodSchemas/labReport.schema.js";
-import { dicomZIPSchema } from "../zodSchemas/dicom.schema.js";
+import { dicomZIPSchema, dicomUploadSchema } from "../zodSchemas/dicom.schema.js";
 
 import { validateData } from "../middlewares/dbCheck.middleware.js";
 
@@ -72,11 +72,13 @@ router.post('/dicom/zip/:checkUpId',
      handleDicomZip
 );
 
-router.post('/dicom/:checkUpId',
+router.post('/dicom/:checkupId',
      uploadDicom.single("dicom"),
+     cleanupTempFiles,
+     parseIncomingReq(dicomUploadSchema),
+     validateData,
      uploadDicomToGoogleCloud,
-     cleanupDICOM,
-     handleAddDicomFile
+     handleAddDicomStudy
 );
 
 // router.delete('/dicom/:studyUid',

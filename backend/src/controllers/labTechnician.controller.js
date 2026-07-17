@@ -184,36 +184,60 @@ export const handleGetAllDicomStudys = async (req, res, next) => {
 
 export const handleAddDicomStudy = async (req, res, next) => {
      try {
-          const { patientId, checkUpId, medicalCaseId } = req.parsedBody;
-
-          const { studyUid, seriesUid, instanceUid, modality, bodyPartExamined } = req.dicomResults;
-
           const { BASE_API_URL } = process.env;
+          const { checkup } = req.parsedParams;
+          const { patientId, medicalCaseId } = req.parsedBody;
+
+          const { studyUid, seriesUid, instanceUid, modality, bodyPartExamined } = req.dicomPayload;
 
           const generatedFileUrl = `${BASE_API_URL}/dicom/study/${studyUid}/series/${seriesUid}/instance/${instanceUid}`;
 
-          await DicomStudy.create({
+          const sliceArray = [{
+               fileName,
+               fileUrl,
+               sopInstanceUid: instanceUid,
+               seriesInstanceId: seriesUid,
+               bodyPart: bodyPartExamined || "Unknown"
+          }];
+
+          const newDicomStudy = await createDicomStudy({
                patientId,
                checkUpId,
                medicalCaseId,
                uploadedBy: req.user.userId,
-               fileName: file.originalname,
-               fileUrl: generatedFileUrl,
-               studyInstanceId: studyUid,
-               seriesInstanceId: seriesUid,
-               sopInstanceUid: instanceUid,
-               modality: modality || "Others",
-               bodyPart: bodyPartExamined || "Unknown"
+               studyInstanceId: req.dicomPayload.studyUid,
+               modality: req.dicomPayload.modality || "Others",
+               slices: sliceArray
+          });
+
+          const timelineEvent = await logTimelineEvent({
+               patientId,
+               eventData: {
+                    eventType: 'DICOM_UPLOADED',
+                    performedByRole: req.user.role,
+                    performedBy: req.user.roleRefId,
+                    eventReferenceId: newDicomStudy._id,
+                    referenceModel: 'DicomStudy',
+                    note: `${sliceArray.length} DICOM files uploaded`
+               }
           });
 
           return res.status(201).json({
                msg: "successfully uploaded dicom file",
                recordId: newDicomRecord._id
-
           });
      } catch (err) {
           console.error("failed during dicom file upload\n", err.message);
-          next(err);
+
+          if (newDicomStudy) {
+               await DicomStudy.findByIdAndDelete(newDicomStudy._id);
+          }
+
+          if (req.dicomPayload.studyUid) {
+               await deleteDicomInstance(req.dicomPayload.studyUid);
+          }
+
+          return next(err);
      }
 };
 
@@ -223,7 +247,7 @@ export const handleDicomZip = async (req, res, next) => {
           const { patientId, medicalCaseId } = req.parsedBody;
 
           const { BASE_API_URL } = process.env;
-          const { dicomResults } =  req.dicomPayload;
+          const { dicomResults } = req.dicomPayload;
 
           const sliceArray = [];
           const failedUploads = [];
@@ -258,7 +282,7 @@ export const handleDicomZip = async (req, res, next) => {
                checkUpId,
                medicalCaseId,
                uploadedBy: req.user.userId,
-               studyInstanceId:  req.dicomPayload.studyUid,
+               studyInstanceId: req.dicomPayload.studyUid,
                modality: req.dicomPayload.modality || "Others",
                slices: sliceArray
           });
@@ -281,6 +305,8 @@ export const handleDicomZip = async (req, res, next) => {
                failedCount: failedUploads.length,
                failedFiles: failedUploads,
                msg: `Successfully processed and stored ${sliceArray.length} DICOM instances.`,
+               timelineEventId: timelineEvent._id,
+               recordId: newDicomStudy._id
           });
 
      } catch (err) {

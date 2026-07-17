@@ -110,16 +110,12 @@ export const extractAndUploadDicoms = async (req, res, next) => {
 };
 
 export const uploadDicomToGoogleCloud = async (req, res, next) => {
-     if (!req.file || !req.file.originalname.toLowerCase().endsWith('.dcm'))
-          throw new APIError(400, "Given file is not a valid DICOM file");
-
-
      try {
-          const filePath = req.file.path;
-          const fileBuffer = fs.readFileSync(filePath);
+          const fileBuffer = fs.readFileSync(req.file.path);
 
           const dataset = dicomParser.parseDicom(fileBuffer);
-          req.dicomFileMetaData = {
+
+          req.dicomPayload = {
                studyUid: dataset.string('x0020000d'),
                seriesUid: dataset.string('x0020000e'),
                instanceUid: dataset.string('x00080018'),
@@ -134,6 +130,8 @@ export const uploadDicomToGoogleCloud = async (req, res, next) => {
                     'Content-Type': 'multipart/related; type="application/dicom"',
                },
           });
+
+
 
           return next();
      } catch (err) {
