@@ -31,16 +31,21 @@ import { dicomZIPSchema, dicomUploadSchema } from "../zodSchemas/dicom.schema.js
 
 import { validateData } from "../middlewares/dbCheck.middleware.js";
 import { staffIdSchema } from "../zodSchemas/staff.schema.js";
+import checkForAuthentication from "../middlewares/authenticate.middleware.js";
+import checkForAuthorization from "../middlewares/authorize.middleware.js";
 
 const router = express.Router();
 
+router.use(checkForAuthentication());
+router.use(checkForAuthorization(['LAB_TECH']));
+
 router.route('/:staffId')
      .get(
-          staffIdSchema,
+          parseIncomingReq(staffIdSchema),
           handleGetLabTechnician
      )
      .patch(
-          validateBody(labTechinicianUpdateSchema),
+          parseIncomingReq(labTechinicianUpdateSchema),
           handleUpdateLabTechnician
      );
 
