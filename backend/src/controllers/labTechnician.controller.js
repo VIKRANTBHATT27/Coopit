@@ -1,60 +1,80 @@
-import { previewDicomInstance, dicomWebDeleteStudy, deleteDicomInstance } from "../services/dicom.service.js";
-import { CheckUp, User, LabTechnician, Patient, LabReport, DicomStudy } from "../models/index.js";
+import { previewDicomInstance, deleteDicomInstance } from "../services/dicom.service.js";
+import { Checkup, User, LabTechnician, Patient, LabReport, DicomStudy, Staff } from "../models/index.js";
 import { Promise } from "mongoose";
 import { getSignedUrlFromS3, uploadFileToS3 } from "../infrastructure/aws.js";
 import { logTimelineEvent } from "../services/timelineEvent.service.js";
 import crypto from 'node:crypto';
 import APIError from "../utils/APIError.utils.js";
+import { createDicomStudy } from "../services/dicomStudy.service.js";
+import deleteUserAvatar from "../infrastructure/cloudinary.js";
 
 import dotenv from "dotenv";
-import { createDicomStudy } from "../services/dicomStudy.service.js";
 dotenv.config();
 
-export const handleAddLabTechnician = async (req, res, next) => {
-     try {
-          const { staffId } = req.parsedBody;
 
-          const alreadyRegistered = await LabTechnician.findOne({ staffId: req.parsedBody.staffId });
+// export const handleAddLabTechnician = async (req, res, next) => {
+//      try {
+//           const { staffId } = req.parsedBody;
 
-          if (alreadyRegistered)
-               return res.status(400).json({
+//           const alreadyRegistered = await LabTechnician.findOne({ staffId: req.parsedBody.staffId });
 
-                    err: "Lab Technician already registered with this staffId"
-               });
+//           if (alreadyRegistered)
+//                return res.status(400).json({
 
-          const labTechnician = await LabTechnician.create(req.parsedBody);
+//                     err: "Lab Technician already registered with this staffId"
+//                });
 
-          return res.status(201).json({ msg: "created successfully", labTechId: labTechnician._id });
-     } catch (err) {
-          console.error("failed during creation of lab technician\n", err.message);
-          next(err);
-     }
-};
+//           const labTechnician = await LabTechnician.create(req.parsedBody);
+
+//           return res.status(201).json({ msg: "created successfully", labTechId: labTechnician._id });
+//      } catch (err) {
+//           console.error("failed during creation of lab technician\n", err.message);
+//           next(err);
+//      }
+// };
 
 export const handleGetLabTechnician = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
 
-          const labTehnician = await LabTechnician.findOne({ staffId });
-          if (!labTehnician)
+          const staffRecord = await Staff.exists({ _id: staffId });
+          if (!staffRecord)
+               return next(
+                    new APIError(
+                         400,
+                         "No staff record present with this staffId."
+                    )
+               );
+
+          const labTechnician = await LabTechnician.findOne({ staffId });
+          if (!labTechnician)
                return res.status(400).json({
                     sucess: false,
                     msg: "no lab technician found with this staffId"
                });
 
-          return res.status(200).json({
-
-               data: labTehnician
-          });
+          return res.status(200).json({ data: labTechnician });
      } catch (err) {
           console.error("failed to get lab technician\n", err.message);
-          next(err);
+
+          return next(err);
      }
 };
 
 export const handleUpdateLabTechnician = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
+
+          const staffRecord = await Staff.exists({ _id: staffId });
+
+          if (!staffRecord)
+               return next(
+                    new APIError(
+                         404,
+                         "No staff record exist with this Id"
+                    )
+               );
+
 
           const updatedLabTechnician = await LabTechnician.findOneAndUpdate(
                { staffId },
@@ -63,7 +83,6 @@ export const handleUpdateLabTechnician = async (req, res, next) => {
           );
 
           return res.status(200).json({
-
                msg: "lab technician updated successfully",
                labTechId: updatedLabTechnician._id
           });
@@ -74,21 +93,24 @@ export const handleUpdateLabTechnician = async (req, res, next) => {
 };
 
 export const handleUploadAvatar = async (req, res, next) => {
-     if (!req.file)
-          return res.status(400).json({
-               sucess: false,
-               err: "no Img file is provided!"
-          });
-
      try {
           const { staffId } = req.parsedParams;
+
+          const staffRecord = await Staff.exists({ _id: staffId });
+          if (!staffRecord)
+               return next(
+                    new APIError(
+                         404,
+                         "No staff record exist with this Id"
+                    )
+               );
 
           const updatedLabTech = await LabTechnician.findOneAndUpdate(
                { staffId },
                {
                     $set: {
-                         pfp_url: req.pfpImageURL,
-                         pfp_publicId: req.pfpImagePublicId
+                         pfp_url: req.pfpAvatarURL,
+                         pfp_publicId: req.pfpAvatarPublicId
                     }
                },
                { returnDocument: "after", runValidators: true }
@@ -96,18 +118,25 @@ export const handleUploadAvatar = async (req, res, next) => {
 
           if (!updatedLabTech)
                return res.status(404).json({
-
                     err: "no lab techinician found with this staff ID"
                });
 
           return res.status(200).json({
-
                msg: "successfully uploaded profile image",
                url: updatedLabTech.pfp_url
           });
+
      } catch (err) {
           console.error("failed during uploading profile pic\n", err.message);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+
+          if (req.pfpAvatarPublicId) {
+               const result = await deleteUserAvatar(req.pfpAvatarPublicId);
+
+               if (!result)
+                    throw new Error(500, "Cloudinary profile image deletion failed!");
+          }
+
+          return next(err);
      }
 };
 
@@ -115,15 +144,23 @@ export const handleDeleteAvatar = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
 
+          const staffRecord = await Staff.exists({ _id: staffId });
+          if (!staffRecord)
+               return next(
+                    new APIError(
+                         404,
+                         "No patient record exist with this staffId."
+                    )
+               );
+
           const labTech = await LabTechnician.findOne({ staffId });
           if (!labTech)
                return res.status(404).json({
-
                     err: "no lab-techinician found with that staffId"
                });
 
-          const result = await cloudinary_Delete_pfp(labTech.pfp_publicId);
-          console.log(result);
+          const result = await deleteUserAvatar(labTech.pfp_publicId);
+
 
           if (!result)
                return res.status(500).json({
@@ -142,53 +179,89 @@ export const handleDeleteAvatar = async (req, res, next) => {
                { returnDocument: "after" }
           );
 
-          return res.status(200).json({
-
-               msg: "successfully deleted profile image"
+          return res.status(204).json({
+               message: "successfully deleted profile image"
           });
      } catch (err) {
           console.error("profile image deletion request Failed\n", err.message);
-          next(err);
+
+          return next(err);
      }
 };
 
-export const handleGetAllDicomStudys = async (req, res, next) => {
+export const handleGetAllDicomStudies = async (req, res, next) => {
      try {
-          const { checkUpId } = req.parsedBody;
+          const { checkUpId } = req.parsedParams;
 
-          const checkUp = await CheckUp.findById(checkUpId);
+          const checkupRecord = await Checkup.exists({ _id: checkUpId });
 
-          if (!checkUp)
-               return res.status(400).json({
+          if (!checkupRecord) {
+               return next(
+                    new APIError(404, "invalid checkup Id")
+               );
+          }
 
-                    err: "invalid checkUp Id"
-               });
-
-
-          const DicomStudy = await DicomStudy.findOne({ checkUpId });
-
-          if (!DicomStudy)
-               return res.status(204).json({
-                    err: "no dicom file founded with this checkUpId"
-               });
+          const dicoms = await DicomStudy.find({
+               checkUpId,
+               isDeleted: false
+          });
 
           return res.status(200).json({
-               data: DicomStudy,
-               msg: "successfully fetched dicom files",
+               data: dicoms,
+               message: dicoms.length === 0 ? "No dicom files found" : "Dicom files fetched"
           });
+
      } catch (err) {
-          console.error("Failed during fetching dicom file\n", err.message);
+          console.error("Error during getting all dicom files\n", err.message);
+
+          return next(err);
+     }
+};
+
+export const handlePreviewDicomStudy = async (req, res, next) => {
+     try {
+          const { DicomStudyId } = req.parsedParams;
+
+          const DicomStudy = await DicomStudy.findOne({
+               _id: DicomStudyId,
+               isDeleted: false
+          });
+
+          if (!DicomStudy) {
+               return next(
+                    new APIError(404, "invalid dicom file Id")
+               );
+          }
+
+          const {
+               studyInstanceId,
+               seriesInstanceId,
+               sopInstanceUid
+          } = DicomStudy;
+
+          const buffer = await previewDicomInstance(studyInstanceId, seriesInstanceId, sopInstanceUid);
+
+          return res.type('application/dicom').send(buffer);
+     } catch (err) {
+          console.error('failed during dicom file preview\n', err.message);
           next(err);
      }
 };
 
-export const handleAddDicomStudy = async (req, res, next) => {
+export const handleUploadDicomStudy = async (req, res, next) => {
      try {
           const { BASE_API_URL } = process.env;
-          const { checkup } = req.parsedParams;
+          const { checkUpId } = req.parsedParams;
           const { patientId, medicalCaseId } = req.parsedBody;
 
-          const { studyUid, seriesUid, instanceUid, modality, bodyPartExamined } = req.dicomPayload;
+          const {
+               studyUid,
+               seriesUid,
+               instanceUid,
+               modality,
+               bodyPartExamined
+          } = req.dicomPayload;
+
 
           const generatedFileUrl = `${BASE_API_URL}/dicom/study/${studyUid}/series/${seriesUid}/instance/${instanceUid}`;
 
@@ -200,7 +273,7 @@ export const handleAddDicomStudy = async (req, res, next) => {
                bodyPart: bodyPartExamined || "Unknown"
           }];
 
-          const newDicomStudy = await createDicomStudy({
+          const { _id: dicomStudyId } = await createDicomStudy({
                patientId,
                checkUpId,
                medicalCaseId,
@@ -210,22 +283,24 @@ export const handleAddDicomStudy = async (req, res, next) => {
                slices: sliceArray
           });
 
-          const timelineEvent = await logTimelineEvent({
+          const { _id: timelineEventId } = await logTimelineEvent({
                patientId,
                eventData: {
                     eventType: 'DICOM_UPLOADED',
                     performedByRole: req.user.role,
                     performedBy: req.user.roleRefId,
-                    eventReferenceId: newDicomStudy._id,
+                    eventReferenceId: dicomStudyId,
                     referenceModel: 'DicomStudy',
                     note: `${sliceArray.length} DICOM files uploaded`
                }
           });
 
           return res.status(201).json({
-               msg: "successfully uploaded dicom file",
-               recordId: newDicomRecord._id
+               message: "successfully uploaded dicom file",
+               timelineEventId,
+               recordId: dicomStudyId
           });
+
      } catch (err) {
           console.error("failed during dicom file upload\n", err.message);
 
@@ -277,7 +352,7 @@ export const handleDicomZip = async (req, res, next) => {
                });
           }
 
-          const newDicomStudy = await createDicomStudy({
+          const { _id: dicomStudyId } = await createDicomStudy({
                patientId,
                checkUpId,
                medicalCaseId,
@@ -287,13 +362,13 @@ export const handleDicomZip = async (req, res, next) => {
                slices: sliceArray
           });
 
-          const timelineEvent = await logTimelineEvent({
+          const { _id: timelineEventId } = await logTimelineEvent({
                patientId,
                eventData: {
                     eventType: 'DICOM_UPLOADED',
                     performedByRole: req.user.role,
                     performedBy: req.user.roleRefId,
-                    eventReferenceId: newDicomStudy._id,
+                    eventReferenceId: dicomStudyId,
                     referenceModel: 'DicomStudy',
                     note: `${sliceArray.length} DICOM files uploaded`
                }
@@ -305,8 +380,8 @@ export const handleDicomZip = async (req, res, next) => {
                failedCount: failedUploads.length,
                failedFiles: failedUploads,
                msg: `Successfully processed and stored ${sliceArray.length} DICOM instances.`,
-               timelineEventId: timelineEvent._id,
-               recordId: newDicomStudy._id
+               recordId: dicomStudyId,
+               timelineEventId,
           });
 
      } catch (err) {
@@ -343,71 +418,19 @@ export const handleDicomZip = async (req, res, next) => {
 //      }
 // };
 
-export const handleGetAllDicomStudys = async (req, res, next) => {
-     try {
-          const { checkUpId } = req.parsedParams;
 
-          const checkUp = await CheckUp.findById(checkUpId);
-          if (!checkUp) {
-               return next(
-                    new APIError(404, "invalid check-up Id")
-               );
-          }
-
-          const dicoms = await DicomStudy.find({ checkUpId, isDeleted: false });
-
-          return res.status(200).json({
-               data: dicoms,
-               msg: dicoms.length === 0 ? "No dicom files found" : "Dicom files fetched"
-          });
-
-     } catch (err) {
-          console.error("Error during getting all dicom files\n", err.message);
-
-          return next(err);
-     }
-}
-
-export const handlePreviewDicomStudy = async (req, res, next) => {
-     try {
-          const { DicomStudyId } = req.parsedParams;
-
-          const DicomStudy = await DicomStudy.findOne({
-               _id: DicomStudyId,
-               isDeleted: false
-          });
-
-          if (!DicomStudy) {
-               return next(
-                    new APIError(404, "invalid dicom file Id")
-               );
-          }
-
-          const {
-               studyInstanceId,
-               seriesInstanceId,
-               sopInstanceUid
-          } = DicomStudy;
-
-          const buffer = await previewDicomInstance(studyInstanceId, seriesInstanceId, sopInstanceUid);
-
-          return res.type('application/dicom').send(buffer);
-     } catch (err) {
-          console.error('failed during dicom file preview\n', err.message);
-          next(err);
-     }
-};
 
 export const handleGetAllLabReports = async (req, res, next) => {
      try {
           const { checkUpId } = req.parsedParams;
 
-          const checkUp = await CheckUp.findById(checkUpId);
+          const checkupRecord = await Checkup.exists({ _id: checkUpId });
 
-          if (!checkUp)
-               return res.status(400).json({
-                    err: "invalid check-up Id"
+          if (!checkupRecord)
+               return res.status(404).json({
+                    message: "invalid checkup mongooseId. This mongooseId doesn't point to any record"
                });
+
 
           const labReports = await LabReport.find({ checkUpId });
 
@@ -417,11 +440,12 @@ export const handleGetAllLabReports = async (req, res, next) => {
           })
      } catch (err) {
           console.error("failed to show lab reports\n", err.message);
+
           return next(err);
      }
 };
 
-export const handleGetPDF = async (req, res, next) => {
+export const handleGetReport = async (req, res, next) => {
      try {
           const { labReportId } = req.parsedParams;
 
@@ -431,38 +455,42 @@ export const handleGetPDF = async (req, res, next) => {
                     msg: "no lab reports found"
                });
 
-          const redirectingURL = await getSignedUrlFromS3(labReport);
+          const { s3Key } = labReport;
+          const redirectingURL = await getSignedUrlFromS3(s3Key);
 
           return res.status(200).json({
-               msg: "successfully getting the signed URL from aws s3",
+               message: "successfully getting the signed URL from aws s3",
                data: redirectingURL
           });
      } catch (err) {
           console.error("Error during showing report PDF\n", err.message);
+
           return next(err);
      }
 };
 
-export const handleUploadPDF = async (req, res, next) => {
+export const handleUploadReport = async (req, res, next) => {
      const { path: filePath } = req.file;
 
      try {
           const { checkUpId } = req.parsedParams;
           const { patientId } = req.parsedBody;
 
-          const checkUp = await CheckUp.findOne({
-               _id: checkUpId,
-               patientId
-          });
+          const [patientRecord, checkupRecord] = await Promise.all([
+               Patient.exists({ _id: patientId }),
+               Checkup.exists({ _id: checkUpId })
+          ]);
 
-          if (!checkUp) {
-               return next(
-                    new APIError(
-                         404,
-                         "CheckUp not found or doesn't belong to this patient"
-                    )
-               );
-          }
+          if (!patientRecord)
+               return res.status(404).json({
+                    message: "invalid patient mongooseId. This mongooseId doesn't point to any record"
+               });
+
+          if (!checkupRecord)
+               return res.status(404).json({
+                    message: "invalid checkup mongooseId. This mongooseId doesn't point to any record"
+               });
+
 
           const s3Key = `patient/${patientId}/report/${crypto.randomUUID()}.pdf`;
 
@@ -478,7 +506,7 @@ export const handleUploadPDF = async (req, res, next) => {
 
           req.LabReportId = labReportId;
 
-          await logTimelineEvent({
+          const { _id: timelineEventId } = await logTimelineEvent({
                patientId,
                eventData: {
                     eventType: 'REPORT_UPLOADED',
@@ -490,7 +518,11 @@ export const handleUploadPDF = async (req, res, next) => {
                }
           });
 
-          return res.status(201).json({ msg: "report file uploaded successfully" });
+          return res.status(201).json({
+               message: "report file uploaded successfully",
+               labReportId,
+               timelineEventId
+          });
      } catch (err) {
           console.error("failed during pdf upload\n", err.message);
 
@@ -501,8 +533,5 @@ export const handleUploadPDF = async (req, res, next) => {
                await deleteFileFromS3(req.s3Key);
 
           return next(err);
-     } finally {
-          if (filePath && fs.existsSync(filePath))
-               fs.unlinkSync(filePath);
      }
 };

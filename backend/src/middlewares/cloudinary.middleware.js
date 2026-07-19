@@ -1,9 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
+import APIError from "../utils/APIError.utils";
 
 const uploadUserAvatar = async (req, res, next) => {
      try {
-          if (!req.file) return next();
-
           const uploadResult = await cloudinary.uploader.upload(
                req.file.path,
                {
@@ -12,13 +11,16 @@ const uploadUserAvatar = async (req, res, next) => {
                }
           );
 
-          req.pfpImageURL = uploadResult.secure_url;
-          req.pfpImagePublicId = uploadResult.public_id;
+          req.pfpAvatarURL = uploadResult.secure_url;
+          req.pfpAvatarPublicId = uploadResult.public_id;
 
           return next();
      } catch (error) {
           console.log("Cloudinary upload failed: ", error);
-          return res.status(500).json({ error: "Image upload failed " })
+
+          return res.status(500).json({
+               error: "Image upload failed"
+          });
      }
 };
 

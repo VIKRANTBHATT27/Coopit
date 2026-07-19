@@ -1,5 +1,18 @@
 import { model, Schema } from "mongoose";
 
+const labInstructionSchema = new Schema({
+     testType: {
+          type: String,
+          enum: ["BLOOD_SAMPLE", "X_RAY", "CT_SCAN", "MRI", "URINE_TEST", "OTHERS"],
+          required: true
+     },
+     customNotes: {
+          type: String,
+          required: false
+     }
+}, { _id: false });
+// Prevents Mongoose from generating unnecessary nested sub-IDs
+
 const checkupSchema = new Schema({
      medicalCaseId: {
           type: Schema.Types.ObjectId,
@@ -69,9 +82,14 @@ const checkupSchema = new Schema({
           duration: String
      }],
 
-     notes: {
+     clinicalNotes: {
           type: String,
           required: false,
+     },
+
+     labInstructions: {
+          type: [labInstructionSchema],
+          default: [],
      },
 
      nextFollowUp: {
@@ -97,3 +115,16 @@ checkupSchema.index({ medicalCaseId: 1 });
 
 const Checkup = model("Checkup", checkupSchema);
 export default Checkup;
+
+
+/*
+example
+{
+     "clinicalNotes": "Patient presents with persistent cough and fatigue for 4 days. Lungs sound clear, but ordering routine chest diagnostics to rule out acute issues.",
+          "labInstructions": [
+               { "testType": "BLOOD_SAMPLE", "customNotes": "Check complete blood count (CBC) and metabolic panels." },
+               { "testType": "X_RAY", "customNotes": "Standard PA chest view." }
+          ]
+}
+
+*/

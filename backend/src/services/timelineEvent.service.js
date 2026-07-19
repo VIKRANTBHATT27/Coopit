@@ -8,12 +8,13 @@ export const logTimelineEvent = async (data) => {
 
         const { patientId, eventData } = parsedData;
 
-        await TimelineEvent.findOneAndUpdate(
+        const timelineEvent = await TimelineEvent.findOneAndUpdate(
             { patientId },
             { $push: { eventData } },
             { returnDocument: "after", runValidators: true }
         );
 
+        return timelineEvent;
     } catch (err) {
         console.error("failed during updating an event in timeline\n", err.message);
 

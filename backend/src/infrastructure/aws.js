@@ -21,7 +21,7 @@ const s3Client = new S3Client({});
 
 const bucketName = `coopit-medical-pdf`;
 
-export const getSignedUrlFromS3 = async ({ s3Key }) => {
+export const getSignedUrlFromS3 = async (s3Key) => {
     const getCommand = new GetObjectCommand({
         Bucket: bucketName,
         Key: s3Key,

@@ -1,69 +1,82 @@
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
-import { uploadDicom, uploadImg } from "../middlewares/multer.middleware.js";
+import { uploadDicom, uploadAvatar } from "../middlewares/multer.middleware.js";
 import express from "express";
 import {
      handleAddLabTech,
-     handleGetLabTech,
-     handleUpdateLabTech,
-     handleUploadPfpImg,
+     handleGetLabTechnician,
+     handleUpdateLabTechnician,
+     handleUploadAvatar,
      handleDicomZip,
-     handleGetDicomFiles,
-     handleDeleteDicomFile,
-     handlePreviewDicomFile,
-     handleDeletePfpImage,
-     handleUploadPDF,
-     handleAddDicomStudy,
-     handleGetPDF,
-     handleGetAllLabReports
+     handleDeleteAvatar,
+     handleUploadReport,
+     handleUploadDicomStudy,
+     handleGetReport,
+     handleGetAllLabReports,
+     handlePreviewDicomStudy,
+     handleGetAllDicomStudies
 } from "../controllers/labTechnician.controller.js";
 
 import { extractAndUploadDicoms, uploadDicomToGoogleCloud } from "../middlewares/dicom.middleware.js";
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import {
      labTechSchema,
-     labTechiUpdateSchema,
-     labTechImgUploadSchema
+     labTechinicianUpdateSchema,
+     labTechAvatarUploadSchema
 } from "../zodSchemas/labTech.schema.js";
-import { checkUpIdSchema } from "../zodSchemas/checkUp.schema.js";
+import { checkupIdSchema } from "../zodSchemas/checkup.schema.js";
 import { uploadReport } from "../middlewares/multer.middleware.js";
 import { labReportIdSchema, labReportUploadSchema } from "../zodSchemas/labReport.schema.js";
 import { dicomZIPSchema, dicomUploadSchema } from "../zodSchemas/dicom.schema.js";
 
 import { validateData } from "../middlewares/dbCheck.middleware.js";
+import { staffIdSchema } from "../zodSchemas/staff.schema.js";
 
 const router = express.Router();
 
-router.post('/',
-     validateBody(labTechSchema),
-     handleAddLabTech
-);
-
 router.route('/:staffId')
-     .get(handleGetLabTech)
+     .get(
+          staffIdSchema,
+          handleGetLabTechnician
+     )
      .patch(
-          validateBody(labTechiUpdateSchema),
-          handleUpdateLabTech
+          validateBody(labTechinicianUpdateSchema),
+          handleUpdateLabTechnician
      );
 
-router.route('/avatar')
+router.route('/avatar/:staffId')
      .post(
-          uploadImg.single("pfpImage"),
+          uploadAvatar.single("pfpImage"),
+          cleanupTempFiles,
+          parseIncomingReq(labTechAvatarUploadSchema),
           uploadUserAvatar,
-          deleteLocalImgFile,
-          validateBody(labTechImgUploadSchema),
-          handleUploadPfpImg
+          handleUploadAvatar
      )
      .delete(
-          handleDeletePfpImage
+          parseIncomingReq(labTechAvatarUploadSchema),
+          handleDeleteAvatar
      );
 
-router.get('/dicom',
-     handleGetDicomFiles
-)
 
-// zip
-router.post('/dicom/zip/:checkUpId',
+router.get('/dicom-studies/:dicomStudyId',
+     handlePreviewDicomStudy
+);
+
+router.route('/checkups/:checkUpId/dicom')
+     .get(
+          parseIncomingReq(checkupIdSchema),
+          handleGetAllDicomStudies
+     )
+     .post(
+          uploadDicom.single("dicom"),
+          cleanupTempFiles,
+          parseIncomingReq(dicomUploadSchema),
+          validateData,
+          uploadDicomToGoogleCloud,
+          handleUploadDicomStudy
+     );
+
+router.post('/checkups/:checkUpId/dicom-zip',
      uploadDicom.single("dicom"),
      cleanupTempFiles,
      parseIncomingReq(dicomZIPSchema),
@@ -72,42 +85,28 @@ router.post('/dicom/zip/:checkUpId',
      handleDicomZip
 );
 
-router.post('/dicom/:checkupId',
-     uploadDicom.single("dicom"),
-     cleanupTempFiles,
-     parseIncomingReq(dicomUploadSchema),
-     validateData,
-     uploadDicomToGoogleCloud,
-     handleAddDicomStudy
+// const cron = require('node-cron');
+
+// // Schedules a task to run every minute
+// cron.schedule('* * * * *', () => {
+//   console.log('This task runs every minute:', new Date().toLocaleTimeString());
+// });
+
+router.get('/report/:labReportId',
+     validateParams(labReportIdSchema),
+     handleGetReport
 );
 
-// router.delete('/dicom/:studyUid',
-//      handleDeleteDicomFile
-// );
-
-
-router.get('/dicom/:dicomFileId',
-     handlePreviewDicomFile
-);
-
-
-router.route(
-     '/report/:checkUpId',
-     validateParams(checkUpIdSchema)
-)
+router.route('/checkups/:checkUpId/report')
      .get(
+          parseIncomingReq(checkUpIdSchema),
           handleGetAllLabReports
      )
      .post(
           uploadReport('report'),
-          validateFilePresence,
-          validateBody(labReportUploadSchema),
-          handleUploadPDF
+          cleanupTempFiles,
+          parseIncomingReq(labReportUploadSchema),
+          handleUploadReport
      );
-
-router.get('/report/:labReportId',
-     validateParams(labReportIdSchema),
-     handleGetPDF
-);
 
 export default router;

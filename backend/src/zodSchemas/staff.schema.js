@@ -1,16 +1,16 @@
 import *  as z from "zod";
 import mongoose from "mongoose";
 
-const mongooseObjectId = (fieldName) => z.string()
+const mongooseObjectIdValidator = (fieldName) => z.string()
      .refine((val) => mongoose.Types.ObjectId.isValid(val), {
           message: `Invalid ObjectId for field ${fieldName}`
      });
 
 
 export const staffSchema = z.object({
-     userId: mongooseObjectId("userId"),
+     userId: mongooseObjectIdValidator("userId"),
 
-     hospitalId: mongooseObjectId("hospitalId"),
+     hospitalId: mongooseObjectIdValidator("hospitalId"),
 
      employeeId: z.string()
           .regex(/^(NUR|REC|LAB|DOC|ADM)-\d{4}-\d{4}$/, {
@@ -47,4 +47,6 @@ export const staffSchema = z.object({
      designation: z.string().optional()
 });
 
-export const checkEmployeeId = staffSchema.pick({ employeeId: true })
+export const checkEmployeeId = staffSchema.pick({ employeeId: true });
+
+export const staffIdSchema = mongooseObjectIdValidator('staffId');

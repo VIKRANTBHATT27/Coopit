@@ -1,29 +1,29 @@
 import { Checkup, Patient, MedicalCase } from "../models/index.js";
 
 export const validateData = async (req, res, next) => {
-    const { checkupId } = req.parsedQuery;
+    const { checkUpId } = req.parsedQuery;
     const { patientId, medicalCaseId } = req.parsedBody;
 
     try {
-        const [patient, medicalCaseRecord, checkup] = await Promise.all([
+        const [patientRecord, medicalCaseRecord, checkupRecord] = await Promise.all([
             Patient.exists({ _id: patientId }),
             MedicalCase.exists({ _id: medicalCaseId }),
             Checkup.exists({ _id: checkUpId })
         ]);
 
-        if (!patient)
+        if (!patientRecord)
             return res.status(404).json({
-                message: "invalid patient mongooseId. This mongooseId doesn't point to any record"
+                message: "No patient record exist with this patientId."
             });
 
         if (!medicalCaseRecord)
             return res.status(404).json({
-                message: "invalid medical case mongooseId. This mongooseId doesn't point to any record"
+                message: "No medical case record exist with this medicalCaseId."
             });
 
-        if (!checkup)
+        if (!checkupRecord)
             return res.status(404).json({
-                message: "invalid checkup mongooseId. This mongooseId doesn't point to any record"
+                message: "No checkup record exist with this CheckupId."
             });
 
         return next();

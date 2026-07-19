@@ -51,10 +51,10 @@ const labTechSchema = new Schema({
           enum: ["Morning", "Evening", "Night"]
      },
 
-     assignedCheckUps: {
+     assignedCheckups: {
           type: [{
                type: mongoose.Types.ObjectId,
-               ref: "CheckUp",
+               ref: "Checkup",
                required: true,
                unique: true
           }],

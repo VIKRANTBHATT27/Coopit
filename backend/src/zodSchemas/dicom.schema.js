@@ -31,12 +31,12 @@ export const dicomUploadSchema = z.object({
     }),
 
     params: z.object({
-        checkupId: mongooseObjectIdValidator('checkup')
+        checkUpId: mongooseObjectIdValidator('Checkup')
     }),
 
     body: z.object({
-        patientId: mongooseObjectIdValidator('patient'),
-        medicalCaseId: mongooseObjectIdValidator('medicalCase')
+        patientId: mongooseObjectIdValidator('Patient'),
+        medicalCaseId: mongooseObjectIdValidator('MedicalCase')
     }),
 });
 
@@ -55,11 +55,11 @@ export const dicomZIPSchema = z.object({
     }),
 
     params: z.object({
-        checkupId: mongooseObjectIdValidator('checkup')
+        checkUpId: mongooseObjectIdValidator('Checkup')
     }),
 
     body: z.object({
-        patientId: mongooseObjectIdValidator('patient'),
-        medicalCaseId: mongooseObjectIdValidator('medicalCase')
-    })
+        patientId: mongooseObjectIdValidator('Patient'),
+        medicalCaseId: mongooseObjectIdValidator('MedicalCase')
+    }),
 });

@@ -1,4 +1,11 @@
+import mongoose from "mongoose";
 import * as z from "zod";
+
+const mongooseObjectIdValidator = (fieldName) => z.string()
+     .refine(val => mongoose.Types.ObjectId.isValid(val), {
+          error: `Invalid ObjectId for the field ${fieldName}`
+     });
+
 
 export const labTechSchema = z.object({
      staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
@@ -25,14 +32,34 @@ export const labTechSchema = z.object({
      shift: z.enum(["Morning", "Evening", "Night"])
 });
 
-export const labTechiUpdateSchema = labTechSchema.partial();
-
-export const labTechImgUploadSchema = z.object({
-     emailId: z.string().email("Invalid email format"),
-     staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid staffId")
+export const labTechinicianUpdateSchema = z.object({
+     params: z.object({
+          staffId: mongooseObjectIdValidator('staffId'),
+     }),
+     body: labTechSchema.partial()
 });
 
-// export const dicomBodySchema = z.array(z.object({
-//      fileName: z.string(),
-//      uploadedBy: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-// }));
+const AVATAR_FILE_TYPES = [
+     "image/jpeg",
+     "image/png",
+     "image/webp"
+];
+
+export const labTechAvatarUploadSchema = z.object({
+     file: z.object({
+          originalName: z.string()
+               .min(1, "Original filename is required"),
+          mimeType: z.string()
+               .refine(mime => AVATAR_FILE_TYPES.includes(mime), {
+                    message: "invalid image file type"
+               }),
+          path: z.string()
+               .min(1, "Temporary storage file path is missing"),
+     }, {
+          message: "file is required for avatar uplaod"
+     }),
+
+     params: z.object({
+          staffId: mongooseObjectIdValidator('staffId')
+     })
+});

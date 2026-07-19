@@ -37,40 +37,40 @@ export const previewDicomInstance = async (
     }
 };
 
-export const uploadDicomInstance = async (
-    dicomStoreName = 'x-rays',
-    dicomFilePath,
-) => {
-    try {
-        const fileBuffer = fs.readFileSync(dcmFilePath);
+// export const uploadDicomInstance = async (
+//     dicomStoreName = 'x-rays',
+//     dicomFilePath,
+// ) => {
+//     try {
+//         const fileBuffer = fs.readFileSync(dcmFilePath);
 
-        const request = {
-            parent,
-            dicomWebPath: 'studies',
-            requestBody: fileBuffer,        // Pass the Buffer, not the stream
-        };
+//         const request = {
+//             parent,
+//             dicomWebPath: 'studies',
+//             requestBody: fileBuffer,        // Pass the Buffer, not the stream
+//         };
 
-        const instance = await healthcareClient.projects.locations.datasets.dicomStores.studies.storeInstances(
-            request,
-            {
-                headers: {
-                    'Content-Type': 'application/dicom',
-                    'Accept': 'application/dicom+json',
-                }
-            }
-        );
+//         const instance = await healthcareClient.projects.locations.datasets.dicomStores.studies.storeInstances(
+//             request,
+//             {
+//                 headers: {
+//                     'Content-Type': 'application/dicom',
+//                     'Accept': 'application/dicom+json',
+//                 }
+//             }
+//         );
 
-        console.log('Stored DICOM instance:', JSON.stringify(instance.data));
+//         console.log('Stored DICOM instance:', JSON.stringify(instance.data));
 
-    } catch (err) {
-        console.error(
-            "Error during uploading DICOM file\n",
-            err.response?.data || err.message,
-        );
+//     } catch (err) {
+//         console.error(
+//             "Error during uploading DICOM file\n",
+//             err.response?.data || err.message,
+//         );
 
-        throw new APIError(500, "Failed to upload DICOM instance");
-    }
-};
+//         throw new APIError(500, "Failed to upload DICOM instance");
+//     }
+// };
 
 export const deleteDicomInstance = async (
     studyUid
