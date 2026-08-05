@@ -36,33 +36,9 @@ const pendingUserSchema = new Schema({
           required: false
      },
 
-     gender: {
-          type: String,
-          enum: ['Male', 'Female', 'Others'],
-          required: true
-     },
-
-     dateOfBirth: {
-          type: Date,
-          required: true,
-     },
-
      role: {
           type: String,
           enum: ["PATIENT", "DOCTOR", "RECEPTIONIST", "NURSE", "LAB_TECH"],
-          required: true
-     },
-
-     state: {
-          type: String,
-          required: true
-     },
-     districtName: {
-          type: String,
-          required: true
-     },
-     landmark: {
-          type: String,
           required: true
      },
 

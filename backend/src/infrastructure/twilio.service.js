@@ -8,8 +8,6 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = twilio(accountSid, authToken);
 
-var oneTimePassword = undefined;
-
 export const dispatchSMS = async (phoneNo, oneTimePassword) => {
      try {
           const message = await client.messages.create({
@@ -24,3 +22,11 @@ export const dispatchSMS = async (phoneNo, oneTimePassword) => {
           return false;
      }
 };
+
+export const fetchPhoneNumber = async (phoneNo) => {
+     const response = await client.lookups.v2
+          .phoneNumbers(phoneNo)
+          .fetch();
+
+     return response.valid;        //returns true or false
+}

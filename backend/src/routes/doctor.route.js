@@ -34,7 +34,7 @@ router.route("/:staffId")
      );
 
 router.patch('/pfpImgUpload',
-     uploadImg.single("profilePic"),
+     uploadImg.single("avatar"),
      cloudinary_pfpUploader,
      deleteLocalImgFile,
      validateBody(emailIdSchema),

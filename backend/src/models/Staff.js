@@ -43,11 +43,11 @@ const staffSchema = new Schema({
           ]
      },
 
-     // role: {
-     //      type: String,
-     //      enum: ["Doctor", "Nurse", "LabTechnician", "Receptionist"],
-     //      required: true
-     // },
+     role: {
+          type: String,
+          enum: ["Doctor", "Nurse", "LabTechnician", "Receptionist"],
+          required: true
+     },
 
      status: {
           type: String,

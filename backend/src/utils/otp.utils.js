@@ -2,27 +2,24 @@ import crypto from "crypto";
 import APIError from "./APIError.utils.js";
 import { dispatchSMS } from "../services/twilio.service.js";
 import { decryptPhoneFn, hashPhone } from "./phoneNumber.utils.js";
-import { User, Otp } from "../models/index.js";
+import { User, Otp, PendingUser } from "../models/index.js";
 import resolveRoleReferences from "./roleReference.utils.js";
 import { generateToken } from "./token.utils.js";
 import mongoose from "mongoose";
-import sendMail from "../services/sendGrid.service.js";
+import sendMail from "../infrastructure/sendGrid.js";
 
-const generateOTP = async (type, userId) => {
-     if (!['EMAIL', 'PHONE'].includes(type)) {
-          throw new APIError(400, "Invalid OTP type. Must be EMAIL or PHONE");
-     }
-     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-          throw new APIError(400, "Invalid mongoose Id");
-     }
+import OTPGenerationSchema from "../zodSchemas/otp.schema.js";
+
+const generateOTP = async (data) => {
+     const { otpType, userId } = OTPGenerationSchema.parse(data);
 
      const oneTimePassword = crypto.randomInt(100000, 1000000).toString();
 
      await Otp.findOneAndUpdate(
           { userId },
           {
+               otpType,
                otpCode: oneTimePassword,
-               otpType: type,
                createdAt: new Date()
           },
           { upsert: true }
@@ -31,9 +28,11 @@ const generateOTP = async (type, userId) => {
      return oneTimePassword;
 };
 
-
 export const generateAndSendPhoneOtp = async ({ _id: userId, phoneNumberEnc, phoneIV, phoneAuthTag }) => {
-     const oneTimePassword = await generateOTP('PHONE', userId);
+     const oneTimePassword = await generateOTP({
+          userId,
+          otpType: 'PHONE',
+     });
 
      const phoneNo = decryptPhoneFn(phoneNumberEnc, phoneIV, phoneAuthTag);
 
@@ -49,7 +48,21 @@ export const checkPhoneOtpAndGenerateToken = async (userId, otpCode) => {
      const otpRecord = await Otp.findOne({ userId });
      if (!otpRecord) throw new APIError(404, "OTP expired or not found");
 
-     if (otpCode !== otpRecord.otpCode) throw new APIError(401, "Incorrect OTP");
+     if (otpRecord.attempts >= 3) {
+          await Otp.findByIdAndDelete(otpRecord._id);
+          
+          throw new APIError(429, "Too many attempts. Please login again.");
+     }
+
+     if (otpCode !== otpRecord.otpCode) {
+          await Otp.findByIdAndUpdate(otpRecord._id,
+               { 
+                    $inc: { attempts: 1 }
+               }
+          );
+          
+          throw new APIError(401, "Incorrect OTP");
+     }
 
      const user = await User.findByIdAndUpdate(
           userId,
@@ -63,21 +76,45 @@ export const checkPhoneOtpAndGenerateToken = async (userId, otpCode) => {
 };
 
 export const generateAndSendEmailOtp = async ({ _id: userId, emailId }) => {
-     const oneTimePassword = await generateOTP('EMAIL', userId);
+     const oneTimePassword = await generateOTP({
+          userId,
+          otpType: 'EMAIL',
+     });
 
      const response = await sendMail(emailId, oneTimePassword);
 
      if (!response) {
           await Otp.findOneAndDelete({ userId });
-          throw new APIError(500, "Email Gateway failed to dispatch an otp");
+
+          await PendingUser.findByIdAndDelete(userId);
+
+          throw new APIError(
+               500,
+               "Email Gateway failed to dispatch an otp"
+          );
      }
+
+     return response;
 };
 
 export const checkEmailOtp = async (userId, otpCode) => {
      const otpRecord = await Otp.findOne({ userId });
+     if (!otpRecord)
+          throw new APIError(404, "OTP expired");
 
-     if (!otpRecord) throw new APIError(404, "OTP expired or not found");
+     if (otpRecord.attempts >= 3) {
+          await Otp.findByIdAndDelete(otpRecord._id);
+          
+          throw new APIError(429, "Too many attempts. Please login again.");
+     }
 
-     if (otpCode !== otpRecord.otpCode) throw new APIError(401, "Incorrect OTP");
-
+     if (otpCode !== otpRecord.otpCode) {
+          await Otp.findByIdAndUpdate(otpRecord._id,
+               { 
+                    $inc: { attempts: 1 }
+               }
+          );
+          
+          throw new APIError(401, "Incorrect OTP");
+     }
 };

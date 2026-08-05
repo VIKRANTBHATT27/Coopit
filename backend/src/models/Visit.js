@@ -29,18 +29,24 @@ const visitSchema = new Schema({         // i don't know why i putted this model
           type: Schema.Types.ObjectId,
           ref: "medicalCase",
           required: false
-     },     
+     },
+
+     timelineEventId: {
+          type: Schema.Types.ObjectId,
+          ref: "TimeLineEvent",
+          required: false,
+     },
 
      reason: {
           type: String,
-          required: true
+          required: false
      },
 
      status: {
           type: String,
           enum: [
                "WAITING",
-               "IN_CONSULTATION",
+               "CONSULTING",
                "CHECKUP_DONE",
                "CLOSED"
           ],
@@ -51,12 +57,6 @@ const visitSchema = new Schema({         // i don't know why i putted this model
           type: Date,
           default: Date.now
      },
-
-     timelineEventId: {
-          type: Schema.Types.ObjectId,
-          ref: "TimeLineEvent",
-          required: false,
-     }
 });
 
 visitSchema.index({ hospitalId: 1, visitDate: -1 });

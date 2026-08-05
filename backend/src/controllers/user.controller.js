@@ -1,5 +1,5 @@
 import { Patient, Staff, Nurse, Doctor, Receptionist, LabTechnician, User, PendingUser, Otp } from "../models/index.js";
-
+import mongoose from "mongoose";
 import {
      createPasswordHash,
      passwordMatch
@@ -16,18 +16,34 @@ import {
 } from "../utils/otp.utils.js";
 
 import { config } from "dotenv";
+import { fetchPhoneNumber } from "../infrastructure/twilio.service.js";
 config();
 
+// a route for sending otp only may be ?
 export const handleUserSignup = async (req, res, next) => {
      try {
-          const { emailId } = req.parsedBody;
+          const { emailId, phoneNumber } = req.parsedBody;
 
           const [existingUser, existingPending] = await Promise.all([
-               User.findOne({ emailId }),
-               PendingUser.findOne({ emailId })
+               User.exists({ emailId }),
+               PendingUser.exists({ emailId })
           ]);
-          if (existingUser) return res.status(409).json({ err: "Email already registered" });
-          if (existingPending) return res.status(409).json({ err: "OTP already sent, please verify" });
+
+          if (existingUser)
+               return res.status(409).json({
+                    err: "This email already registered"
+               });
+
+          if (existingPending)
+               return res.status(409).json({
+                    err: "OTP already sent, please verify"
+               });
+
+          const isValid = await fetchPhoneNumber(phoneNumber);
+          if (!isValid)
+               return res.status(400).json({
+                    err: "Invalid Phone Number"
+               });
 
           const tempUser = await PendingUser.create({
                ...req.parsedBody,
@@ -43,30 +59,47 @@ export const handleUserSignup = async (req, res, next) => {
                data: tempUser
           });
      } catch (err) {
-          console.error("User signup failed\n", err.message);
-          next(err);
+          return next(err);
      }
 };
 
 export const handleVerifyEmailId = async (req, res, next) => {
+     const session = await mongoose.startSession();
+     session.startTransaction();
+
      try {
           const { emailId, otpCode } = req.parsedBody;
 
-          const tempUser = await PendingUser.findOne({ emailId });
-          if (!tempUser) return res.status(404).json({ err: "no user found with this emailId" });
+          const tempUser = await PendingUser.exists({ emailId });
+
+          if (!tempUser)
+               return res.status(404).json({
+                    err: "no user found with this emailId"
+               });
 
           const [user, otp] = await Promise.all([
-               User.create({
-                    ...tempUser,
-                    isVerified: true
-               }),
-               Otp.findOneAndDelete({ userId: tempUser._id })
+               Otp.findOneAndDelete({ userId: tempUser._id }).session(session),
+               User.create(
+                    [{
+                         ...tempUser,
+                         isVerified: true
+                    }],
+                    { session }
+               )
           ]);
 
-          return res.status(201).json({ success: true, message: "user has successfully registered" });
+          await session.commitTransaction();
+
+          return res.status(201).json({
+               success: true,
+               message: "email has been successfully verified"
+          });
      } catch (err) {
-          console.error("Failed during user email verification\n", err.message);
-          next(err);
+          await session.abortTransaction();
+
+          return next(err);
+     } finally {
+          session.endSession();
      }
 };
 
@@ -84,8 +117,7 @@ export const handleUserLogin = async (req, res, next) => {
 
           return res.status(200).json({ success: true, emailId: user.emailId });
      } catch (err) {
-          console.error("User Login Failed\n", err.message);
-          next(err);
+          return next(err);
      }
 };
 
@@ -107,8 +139,7 @@ export const handleVerifyUserLogin = async (req, res, next) => {
 
           return res.status(200).json({ success: true, msg: "login successful" });
      } catch (err) {
-          console.error("failed during user login verification\n", err.message);
-          next(err);
+          return next(err);
      }
 };
 
@@ -120,26 +151,23 @@ export const handleLogout = async (req, res, next) => {
 
           return res.status(200).json({ success: true, msg: "logout successful" });
      } catch (err) {
-          console.error("Failed Logout", err);
-          next(err);
+          return next(err);
      }
 }
 
-export const handleGetUserFromToken = async (req, res, next) => {
-     try {
-          const { userId } = req.user;
+// export const handleGetUserFromToken = async (req, res, next) => {
+//      try {
+//           const { userId } = req.user;
 
-          const user = await User.findById(userId);
-          if (!user) return res.status(404).json({ err: "No user found with this Id" });
+//           const user = await User.findById(userId);
+//           if (!user)
+//                return res.status(404).json({ err: "No user found with this Id" });
 
-          return res.status(200).json({ success: true, data: user });
-     } catch (err) {
-          console.error("failed getting user data from authToken\n", err.message);
-
-          next(err);
-     }
-};
-
+//           return res.status(200).json({ success: true, data: user });
+//      } catch (err) {
+//           return next(err);
+//      }
+// };
 
 export const handleUserUpdate = async (req, res, next) => {
      try {
@@ -162,8 +190,36 @@ export const handleUserUpdate = async (req, res, next) => {
 
           return res.status(200).json({ success: true, data: updatedUser });
      } catch (err) {
-          console.log("failed to update user query\n", err.message);
-          next(err);
+          return next(err);
+     }
+};
+
+export const handleUpdatePhone = async (req, res, next) => {
+     try {
+          const { emailId, password, phoneNumber } = req.parsedBody;
+
+          const user = await User.findOne({ emailId });
+          if (!user) return res.status(404).json({ err: "user not found" });
+
+          const isVerified = await argon2.verify(user.passwordHash, password);
+          if (!isVerified) return res.status(401).json({ err: "invalid password" });
+
+          const isValid = await fetchPhoneNumber(phoneNumber);
+          if (!isValid)
+               return res.status(400).json({
+                    err: "Invalid Phone Number"
+               });
+
+          await User.findByIdAndUpdate(user._id, {
+               phoneNumberEnc: phoneNumber
+          });
+
+          return res.status(200).json({
+               message: "updated user phone number"
+          });
+
+     } catch (err) {
+          return next(err);
      }
 };
 

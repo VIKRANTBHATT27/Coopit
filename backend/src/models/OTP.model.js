@@ -16,13 +16,21 @@ const OtpSchema = new Schema({
           type: String,
           required: true
      },
-     
+
      createdAt: {
           type: Date,
           default: Date.now,
           expires: 180
+     },
+
+     attempts: {
+          type: Number,
+          default: 0,
+          max: 3
      }
 });
+
+otpSchema.index({ userId: 1 });
 
 otpSchema.index({ userId: 1, otpType: 1 }, { unique: true });
 

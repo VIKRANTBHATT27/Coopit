@@ -1,6 +1,3 @@
-import express from "express";
-import { validateBody } from "../middlewares/validateReq.middleware.js";
-
 import {
      handleUserLogin,
      handleUserSignup,
@@ -9,8 +6,10 @@ import {
 } from "../controllers/user.controller.js";
 
 import {
+     createUserSchema,
      loginSchema,
      signUpSchema,
+     updatePhoneSchema,
      userUpdationSchema,
      verificationSchema
 } from "../zodSchemas/user.schema.js";
@@ -18,10 +17,14 @@ import {
 import { checkForAuthentication } from "../middlewares/authenticate.middleware.js";
 import { checkForAuthorization } from "../middlewares/authorize.middleware.js";
 
+import parseIncomingReq from "../middlewares/parseReq.middleware.js";
+import updatePhoneLimiter from "../middlewares/rateLimiter.middleware.js";
+
+import express from "express";
 const router = express.Router();
 
 router.post('/signup',
-     validateBody(signUpSchema),
+     parseIncomingReq(createUserSchema),
      handleUserSignup
 );
 
@@ -37,6 +40,12 @@ router.post('/login',
 router.post('/verify/login',
      validateBody(verificationSchema),
      handleVerifyUserLogin
+);
+
+router.patch("/auth/update-phone",
+     updatePhoneLimitermiter,
+     validateBody(updatePhoneSchema),
+     handleUpdatePhone
 );
 
 router.use(checkForAuthentication());

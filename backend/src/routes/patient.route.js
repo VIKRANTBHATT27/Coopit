@@ -43,7 +43,7 @@ router.route('/avatar/:userId',
      validateParams(userIdSchema),
 )
      .patch(
-          uploadAvatar.single("profilePic"),
+          uploadAvatar.single("avatar"),
           uploadUserAvatar,
           deleteLocalImgFile,
           handleUploadPatientAvatar

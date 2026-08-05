@@ -91,7 +91,7 @@ router.route('/')
 
 router.route('/profile-picture')
      .post(
-          uploadImg.single("profilePic"),
+          uploadImg.single("avatar"),
           cloudinary_pfpUploader,
           deleteLocalImgFile,
           handleUploadImg

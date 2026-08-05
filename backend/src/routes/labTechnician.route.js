@@ -51,14 +51,14 @@ router.route('/:staffId')
 
 router.route('/avatar/:staffId')
      .post(
-          uploadAvatar.single("pfpImage"),
+          uploadAvatar.single("avatar"),
           cleanupTempFiles,
           parseIncomingReq(labTechAvatarUploadSchema),
           uploadUserAvatar,
           handleUploadAvatar
      )
      .delete(
-          parseIncomingReq(labTechAvatarUploadSchema),
+          parseIncomingReq(staffIdSchema),
           handleDeleteAvatar
      );
 

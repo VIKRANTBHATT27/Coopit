@@ -1,13 +1,11 @@
 import express from "express";
-import { validateBody, validateParams } from "../middlewares/validateReq.middleware.js";
 
-import { uploadImg } from "../middlewares/multer.js";
-import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.js";
-import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
+import { uploadAvatar, uploadImg } from "../middlewares/multer.middleware.js";
+import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
 
 import {
-     handleUploadPfp,
-     handleDeletePfp,
+     handleUploadAvatar,
+     handleDeleteAvatar,
      handleCreateReceptionist,
      handleAddPatientVisit,
      handleUpdateReceptionist,
@@ -16,8 +14,12 @@ import {
 
 import {
      receptionistSignupSchema,
-     receptionistUpdateSchema
+     receptionistUpdateSchema,
+     receptionistAvatarUploadSchema
 } from "../zodSchemas/receptionist.schema.js";
+
+import parseIncomingReq from "../middlewares/parseReq.middleware.js";
+import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
 import { emailIdSchema } from "../zodSchemas/user.schema.js";
 import { handleGetUserLookup } from "../controllers/user.controller.js";
@@ -29,7 +31,8 @@ import { handleCreatePatientVisit, handleGetAllNurse } from "../controllers/visi
 
 import { checkForAuthentication, checkForAuthorization } from "../middlewares/authCheck.middleware.js";
 
-import { visitSchema } from "../zodSchemas/visit.schema.js";
+import { patientVisitSchema } from "../zodSchemas/visit.schema.js";
+import { staffIdSchema } from "../zodSchemas/staff.schema.js";
 
 const router = express.Router();
 
@@ -41,8 +44,11 @@ router.post("/",
 router.use(checkForAuthentication());
 router.use(checkForAuthorization(['receptionist']));
 
+
+
+
 router.post("/users/lookup",
-     validateBody(emailIdSchema),
+     parseIncomingReq(emailIdSchema),
      handleGetUserLookup
 );
 
@@ -57,32 +63,32 @@ router.post("/patients/:userId",
 //      );
 
 
+
+router.patch("/:staffId",
+     parseIncomingReq(receptionistUpdateSchema),
+     handleUpdateReceptionist
+);
+
+router.route('/avatar/:staffId')
+     .post(
+          uploadAvatar.single("avatar"),
+          cleanupTempFiles,
+          parseIncomingReq(receptionistAvatarUploadSchema),
+          uploadUserAvatar,
+          handleUploadAvatar
+     )
+     .delete(
+          parseIncomingReq(staffIdSchema),
+          handleDeleteAvatar
+     );
+
 router.get("/nurses",
      handleGetAllNurse
 );
 
 router.post("/patients/:patientId/visits",
-     validateParams(patientIdSchema),
-     validateBody(visitSchema),
+     parseIncomingReq(patientVisitSchema),
      handleCreatePatientVisit
-);
-
-router.patch("/:staffId/profile-picture",
-     validateParams(receptionistSignupSchema.pick({ staffId: true })),
-     uploadImg.single("profilePic"),
-     cloudinary_pfpUploader,
-     deleteLocalImgFile,
-     handleUploadPfp
-);
-
-router.delete("/:staffId/profile-picture",
-     validateParams(receptionistSignupSchema.pick({ staffId: true })),
-     handleDeletePfp
-);
-
-router.patch("/:staffId",
-     validateParams(receptionistUpdateSchema.pick({ staffId: true })),
-     handleUpdateReceptionist
 );
 
 

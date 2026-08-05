@@ -15,12 +15,10 @@ const uploadUserAvatar = async (req, res, next) => {
           req.pfpAvatarPublicId = uploadResult.public_id;
 
           return next();
-     } catch (error) {
-          console.log("Cloudinary upload failed: ", error);
+     } catch (err) {
+          console.error("Cloudinary upload failed\nErrorMsg: ", err.message);
 
-          return res.status(500).json({
-               error: "Image upload failed"
-          });
+          return res.status(500).json({ error: "Image upload failed" });
      }
 };
 

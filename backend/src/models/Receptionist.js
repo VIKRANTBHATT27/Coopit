@@ -46,5 +46,8 @@ const receptionistSchema = new Schema({
 
 }, { timestamps: true });
 
+receptionistSchema.index({ hospitalId: 1  });
+receptionistSchema.index({ staffId: 1 });
+
 export const Receptionist = model("Receptionist", receptionistSchema);
 export default Receptionist;

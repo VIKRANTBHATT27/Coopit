@@ -3,7 +3,6 @@ import { config } from "dotenv";
 import APIError from "./APIError.utils";
 config();
 
-
 const secretKey = process.env.JWT_SECRET_KEY;
 
 export const generateToken = ({ _id: userId, role }, { staffId = null, roleDocId = null }) => {
