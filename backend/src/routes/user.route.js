@@ -1,4 +1,5 @@
 import {
+     handleUpdatePhone,
      handleUserLogin,
      handleUserSignup,
      handleVerifyEmailId,
@@ -43,7 +44,7 @@ router.post('/verify/login',
 );
 
 router.patch("/auth/update-phone",
-     updatePhoneLimitermiter,
+     updatePhoneLimiter,
      validateBody(updatePhoneSchema),
      handleUpdatePhone
 );
