@@ -1,4 +1,7 @@
 import {
+     handleForgotPassword,
+     handleResetPassword,
+     handleUpdatePassword,
      handleUpdatePhone,
      handleUserLogin,
      handleUserSignup,
@@ -7,10 +10,15 @@ import {
 } from "../controllers/user.controller.js";
 
 import {
+     changePhoneSchema,
      createUserSchema,
+     forgotPasswordSchema,
      loginSchema,
+     passwordResetSchema,
      signUpSchema,
+     updatePasswordSchema,
      updatePhoneSchema,
+     updateProfileSchema,
      userUpdationSchema,
      verificationSchema
 } from "../zodSchemas/user.schema.js";
@@ -19,7 +27,7 @@ import { checkForAuthentication } from "../middlewares/authenticate.middleware.j
 import { checkForAuthorization } from "../middlewares/authorize.middleware.js";
 
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
-import updatePhoneLimiter from "../middlewares/rateLimiter.middleware.js";
+import phoneLimiter from "../middlewares/rateLimiter.middleware.js";
 
 import express from "express";
 const router = express.Router();
@@ -30,24 +38,34 @@ router.post('/signup',
 );
 
 router.post('/verify/emailId',
-     validateBody(verificationSchema),
+     parseIncomingReq(verificationSchema),
      handleVerifyEmailId
 );
 
 router.post('/login',
-     validateBody(loginSchema),
+     parseIncomingReq(loginSchema),
      handleUserLogin
 );
 router.post('/verify/login',
-     validateBody(verificationSchema),
+     parseIncomingReq(verificationSchema),
      handleVerifyUserLogin
 );
 
-router.patch("/auth/update-phone",
-     updatePhoneLimiter,
-     validateBody(updatePhoneSchema),
-     handleUpdatePhone
+router.patch("/auth/change-phone",
+     phoneLimiter,
+     parseIncomingReq(changePhoneSchema),
+     handleChangePhone
 );
+
+router.post("/auth/forgot-password",
+     parseIncomingReq(forgotPasswordSchema),
+     handleForgotPassword
+);
+
+router.post("auth/reset-password",
+     parseIncomingReq(passwordResetSchema),
+     handleResetPassword
+)
 
 router.use(checkForAuthentication());
 router.use(checkForAuthorization(["PATIENT", "DOCTOR", "RECEPTIONIST", "NURSE", "LAB_TECH"]));
@@ -59,11 +77,23 @@ router.post('/logout', handleLogout);
 // router.post("/check/:Id", handleGetUser);
 
 // router => /user
-router.route('/')
-     .get(handleGetUserFromToken)
-     .patch(
-          validateBody(userUpdationSchema),
-          handleUserUpdate
-     );
+// router.route('/')
+// .get(handleGetUserFromToken)
+
+
+router.patch("/profile",
+     parseIncomingReq(updateProfileSchema),
+     handleUpdateProfile
+);
+
+router.patch("/phone",
+     parseIncomingReq(updatePhoneSchema),
+     handleUpdatePhone
+);
+
+router.patch("/password",
+     parseIncomingReq(updatePasswordSchema),
+     handleUpdatePassword
+);
 
 export default router;

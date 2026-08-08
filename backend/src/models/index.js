@@ -6,6 +6,7 @@ import LabReport from "./LabReport.model.js";
 import LabTechnician from "./LabTechnician.model.js";
 import MedicalCase from "./MedicalCase.js";
 import Nurse from "./Nurse.js";
+import PasswordReset from "./PasswordReset.js";
 import Patient from "./Patient.js";
 import PendingUser from "./PendingUser.model.js";
 import Receptionist from "./Receptionist.js";
@@ -24,6 +25,7 @@ export {
      LabTechnician,
      MedicalCase,
      Nurse,
+     PasswordReset,
      Patient,
      PendingUser,
      Receptionist,

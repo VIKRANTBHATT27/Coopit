@@ -1,6 +1,6 @@
 import { hashPhone, encryptPhoneFn, decryptPhoneFn } from "../utils/phoneNumber.utils.js";
 import { model, Schema } from "mongoose";
-import argon2 from "argon2";
+import { hashPassword } from "../utils/password.utils.js";
 
 const userSchema = new Schema({
      fullName: {
@@ -91,10 +91,11 @@ userSchema.pre('save', function (next) {
      this.phoneAuthTag = authTag;
 });
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function(next) {
      if (!this.isModified('passwordHash')) return next();
-
-     this.passwordHash = await argon2.hash(this.passwordHash);
+     
+     this.password = await hashPassword(this.password);
+     next();
 });
 
 userSchema.methods.getPhoneNumber = function () {

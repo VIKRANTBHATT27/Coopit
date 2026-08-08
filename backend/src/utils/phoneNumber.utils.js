@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import cypto from "node:crypto";
 
 import { config } from "dotenv";
 config();
