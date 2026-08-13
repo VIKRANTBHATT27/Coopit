@@ -43,6 +43,7 @@ export const handleUserSignup = async (req, res, next) => {
                     new APIError(409, "OTP already sent, please verify")
                );
           }
+
           const isValid = await fetchPhoneNumber(phoneNumber);
           if (!isValid) {
                return next(
@@ -273,7 +274,8 @@ export const handleResetPassword = async (req, res, next) => {
           }
 
           if (otpCode !== otpRecord.otpCode) {
-               await Otp.findByIdAndUpdate(otpRecord._id,
+               await Otp.findByIdAndUpdate(
+                    otpRecord._id,
                     {
                          $inc: { attempts: 1 }
                     }

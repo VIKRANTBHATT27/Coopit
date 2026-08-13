@@ -1,4 +1,5 @@
 import {
+     handleChangePhone,
      handleForgotPassword,
      handleResetPassword,
      handleUpdatePassword,
@@ -62,7 +63,7 @@ router.post("/auth/forgot-password",
      handleForgotPassword
 );
 
-router.post("auth/reset-password",
+router.post("/auth/reset-password",
      parseIncomingReq(passwordResetSchema),
      handleResetPassword
 )
