@@ -71,7 +71,7 @@ import {
 
 const router = express.Router();
 
-router.use(checkForAuthentication());
+router.use(checkForAuthentication);
 router.use(checkForAuthorization(['NURSE']));
 
 router.post("/",

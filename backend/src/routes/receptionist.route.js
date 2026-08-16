@@ -41,7 +41,7 @@ router.post("/",
      handleCreateReceptionist
 );
 
-router.use(checkForAuthentication());
+router.use(checkForAuthentication);
 router.use(checkForAuthorization(['receptionist']));
 
 

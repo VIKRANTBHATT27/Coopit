@@ -1,17 +1,4 @@
-import staffModel from "../models/staff.model.js";
-
-export const handleCreateStaffMember = async (req, res) => {
-     try {
-          const staffMember = await staffModel.create(req.parsedBody);
-
-          return res.status(201).json({ msg: "successfully created staff member", EmpId: staffMember.employeeId });
-
-     } catch (err) {
-          console.log("error: ", err.message);
-
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", error: err.message });
-     }
-};
+import { Staff } from "../models/index.js";
 
 export const handleUpdateStaffMember = async (req, res) => {
      try {
@@ -28,9 +15,7 @@ export const handleUpdateStaffMember = async (req, res) => {
                data: staffMember
           });
      } catch (err) {
-          console.log("error: ", err);
-
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", error: err.message });
+          return next(err);
      }
 };
 

@@ -3,8 +3,6 @@ import APIError from "./APIError.utils.js";
 import { dispatchSMS } from "../services/twilio.service.js";
 import { decryptPhoneFn, hashPhone } from "./phoneNumber.utils.js";
 import { User, Otp, PendingUser } from "../models/index.js";
-import resolveRoleReferences from "./roleReference.utils.js";
-import { generateToken } from "./token.utils.js";
 import mongoose from "mongoose";
 import sendMail from "../infrastructure/sendGrid.js";
 
@@ -44,9 +42,11 @@ export const generateAndSendPhoneOtp = async ({ _id: userId, phoneNumberEnc, pho
      }
 };
 
-export const checkPhoneOtpAndGenerateToken = async (userId, otpCode) => {
+export const checkPhoneOtp = async (userId, otpCode) => {
      const otpRecord = await Otp.findOne({ userId });
-     if (!otpRecord) throw new APIError(404, "OTP expired or not found");
+     
+     if (!otpRecord)
+          throw new APIError(404, "OTP expired or not found");
 
      if (otpRecord.attempts >= 3) {
           await Otp.findByIdAndDelete(otpRecord._id);
@@ -63,16 +63,6 @@ export const checkPhoneOtpAndGenerateToken = async (userId, otpCode) => {
           
           throw new APIError(401, "Incorrect OTP");
      }
-
-     const user = await User.findByIdAndUpdate(
-          userId,
-          { $set: { isVerified: true } },
-          { returnDocument: "after" }
-     );
-
-     const roleRefDetails = resolveRoleReferences(user);
-
-     return generateToken(user, roleRefDetails);
 };
 
 export const generateAndSendEmailOtp = async ({ _id: userId, emailId }) => {

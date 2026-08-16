@@ -36,7 +36,7 @@ import checkForAuthorization from "../middlewares/authorize.middleware.js";
 
 const router = express.Router();
 
-router.use(checkForAuthentication());
+router.use(checkForAuthentication);
 router.use(checkForAuthorization(['LAB_TECH']));
 
 router.route('/:staffId')

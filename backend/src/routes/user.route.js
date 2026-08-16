@@ -1,9 +1,11 @@
 import {
      handleChangePhone,
      handleForgotPassword,
+     handleLogout,
      handleResetPassword,
      handleUpdatePassword,
      handleUpdatePhone,
+     handleUpdateProfile,
      handleUserLogin,
      handleUserSignup,
      handleVerifyEmailId,
@@ -16,16 +18,14 @@ import {
      forgotPasswordSchema,
      loginSchema,
      passwordResetSchema,
-     signUpSchema,
      updatePasswordSchema,
      updatePhoneSchema,
      updateProfileSchema,
-     userUpdationSchema,
      verificationSchema
 } from "../zodSchemas/user.schema.js";
 
-import { checkForAuthentication } from "../middlewares/authenticate.middleware.js";
-import { checkForAuthorization } from "../middlewares/authorize.middleware.js";
+import checkForAuthentication from "../middlewares/authenticate.middleware.js";
+import checkForAuthorization from "../middlewares/authorize.middleware.js";
 
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import phoneLimiter from "../middlewares/rateLimiter.middleware.js";
@@ -68,11 +68,18 @@ router.post("/auth/reset-password",
      handleResetPassword
 )
 
-router.use(checkForAuthentication());
-router.use(checkForAuthorization(["PATIENT", "DOCTOR", "RECEPTIONIST", "NURSE", "LAB_TECH"]));
+router.use(checkForAuthentication);
+router.use(checkForAuthorization([
+     "NURSE",
+     "DOCTOR",
+     "PATIENT",
+     "LAB_TECH",
+     "SUPER_ADMIN",
+     "RECEPTIONIST",
+     "HOSPITAL_ADMIN",
+]));
 
 router.post('/logout', handleLogout);
-
 
 //why this route ?
 // router.post("/check/:Id", handleGetUser);
@@ -80,7 +87,6 @@ router.post('/logout', handleLogout);
 // router => /user
 // router.route('/')
 // .get(handleGetUserFromToken)
-
 
 router.patch("/profile",
      parseIncomingReq(updateProfileSchema),

@@ -1,21 +1,11 @@
 import { model, Schema } from "mongoose";
+import { CreateShortCodeApplicationRequestBusinessInformation } from "twilio/lib/rest/numbers/v2/application";
 
 const hospitalSchema = new Schema({
-
      name: {
           type: String,
           required: true,
           unique: true
-     },
-
-     city: {
-          type: String,
-          required: true
-     },
-
-     landmark: {
-          type: String,
-          required: false
      },
 
      address: {
@@ -73,11 +63,23 @@ const hospitalSchema = new Schema({
           ]
      },
 
-     createdBy: {
+     licenseNumber: {
+          type: String,
+          required: true,
+          unique: true
+     },
+     
+     adminId: {
           type: Schema.Types.ObjectId,
-          ref: "Staff"
+          ref: "User",
+          required: true
      },
 
+     isActive: {
+          type: Boolean,
+          default: true
+     },
+     
      location: {
           type: {
                type: String,
@@ -92,7 +94,12 @@ const hospitalSchema = new Schema({
                     message: "Coordinates must be [longitude, latitude]"
                }
           }
-     }
+     },
+
+     createdAt: {
+          type: Date,
+          default: Date.now
+     },
 });
 
 hospitalSchema.index({ city: 1 });

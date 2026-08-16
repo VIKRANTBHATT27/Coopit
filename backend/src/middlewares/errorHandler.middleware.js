@@ -2,7 +2,6 @@ import APIError from "../utils/APIError.utils.js";
 import logger from "../../config/logger.js";
 
 export const errorHandler = async (err, req, res, next) => {
-
     logger.error({
         err,
         method: req.method,

@@ -2,7 +2,7 @@ import { config } from "dotenv";
 config();
 
 import path from "path";
-import cors from 'cors';  
+import cors from 'cors';
 import express from 'express';
 import script from './script.js';
 import { connectMongoDb } from "./config/mongoose-connection.js";

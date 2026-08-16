@@ -164,4 +164,3 @@ export const handleUpdateReceptionist = async (req, res, next) => {
           return next(err);
      }
 };
-

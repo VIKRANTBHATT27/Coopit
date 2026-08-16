@@ -1,16 +1,18 @@
 import express from "express";
 
-import userRoutes from "./src/routes/user.route.js";
-import staffRoutes from "./src/routes/staff.route.js";
-import adminRoutes from "./src/routes/admin.js";
-import nurseRoutes from "./src/routes/nurse.js";
-import doctorRoutes from "./src/routes/doctor.route.js";
-import patientRoutes from "./src/routes/patient.js";
-import serviceRoutes from "./src/routes/service.js";
-import hospitalRoutes from "./src/routes/hospital.js";
-import receptionRoutes from "./src/routes/receptionist.js";
-import labTechnicianRoutes from "./src/routes/labTechnician.js";
+import {
+    userRoutes,
+    staffRoutes,
+    adminRoutes,
+    nurseRoutes,
+    doctorRoutes,
+    patientRoutes,
+    superAdminRoutes,
+    receptionistRoutes,
+    labTechnicianRoutes
+} from "./src/routes/index.js";
 
+import serviceRoutes from "./src/routes/service.js";
 const app = express();
 
 app.use('/user', userRoutes);
@@ -20,7 +22,7 @@ app.use('/nurse', nurseRoutes);
 app.use('/doctor', doctorRoutes);
 app.use('/patient', patientRoutes);
 app.use('/services', serviceRoutes);
-app.use('/hospital', hospitalRoutes);
+app.use('/super-admin', superAdminRoutes);
 app.use('/receptionist', receptionRoutes);
 app.use('/lab-technician', labTechnicianRoutes);
 

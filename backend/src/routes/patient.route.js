@@ -31,7 +31,7 @@ import checkForAuthorization from "../middlewares/authorize.middleware.js";
 const router = express.Router();
 
 
-router.use(checkForAuthentication());
+router.use(checkForAuthentication);
 router.use(checkForAuthorization('PATIENT'));
 
 router.get("/:userId",

@@ -4,18 +4,19 @@ import {
      passwordMatch
 } from "../utils/password.utils.js";
 import {
+     generateToken,
      getDataFromToken
 } from "../utils/token.utils.js";
 
-
 import {
-     checkPhoneOtpAndGenerateToken,
+     checkPhoneOtp,
      generateAndSendEmailOtp,
      generateAndSendPhoneOtp
 } from "../utils/otp.utils.js";
 
 import { fetchPhoneNumber } from "../infrastructure/twilio.service.js";
 import APIError from "../utils/APIError.utils.js";
+import resolveRoleReferences from "../utils/roleReference.utils.js";
 
 import mongoose from "mongoose";
 import cypto from "node:crypto";
@@ -84,7 +85,6 @@ export const handleVerifyEmailId = async (req, res, next) => {
                );
           }
 
-
           const [user, otp] = await Promise.all([
                User.create([
                     {
@@ -101,6 +101,7 @@ export const handleVerifyEmailId = async (req, res, next) => {
                success: true,
                message: "email has been successfully verified"
           });
+
      } catch (err) {
           await session.abortTransaction();
 
@@ -147,14 +148,23 @@ export const handleVerifyUserLogin = async (req, res, next) => {
           const { emailId, otpCode } = req.parsedBody;
 
           const user = await User.findOne({ emailId });
-
           if (!user) {
                return next(
                     new APIError(404, "Invalid EmailId")
                );
           }
 
-          const token = await checkPhoneOtpAndGenerateToken(user._id, otpCode);
+          await checkPhoneOtp(user._id, otpCode);
+
+          const user = await User.findByIdAndUpdate(
+               user._id,
+               { $set: { isVerified: true } },
+               { returnDocument: "after" }
+          );
+
+          const roleRefDetails = await resolveRoleReferences(user);
+
+          const token = generateToken(user, roleRefDetails);
 
           res.cookie("authToken", token, {
                httpOnly: true,
@@ -306,8 +316,11 @@ export const handleResetPassword = async (req, res, next) => {
 
 export const handleLogout = async (req, res, next) => {
      try {
-          if (!req.user)
-               return res.status(401).json({ success: false, err: "unauthorized" });
+          if (!req.user) {
+               return next(
+                    new APIError(403, "Unauthorized Access")
+               );
+          }
 
           res.clearCookie("authToken");
 
@@ -327,7 +340,6 @@ export const handleUpdateProfile = async (req, res, next) => {
                     new APIError(404, "User not found")
                );
           }
-
 
           Object.assign(user, req.parsedBody);
           await user.save();

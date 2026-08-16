@@ -6,11 +6,8 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
           message: `Invalid ObjectId for field ${fieldName}`
      });
 
-
 export const staffSchema = z.object({
      userId: mongooseObjectIdValidator("userId"),
-
-     hospitalId: mongooseObjectIdValidator("hospitalId"),
 
      employeeId: z.string()
           .regex(/^(NUR|REC|LAB|DOC|ADM)-\d{4}-\d{4}$/, {
@@ -18,35 +15,62 @@ export const staffSchema = z.object({
           }),
 
      department: z.enum([
-               "Anesthesiology",
-               "Cardiology",
-               "Dermatology",
-               "Emergency Medicine",
-               "Endocrinology",
-               "Gastroenterology",
-               "General Medicine",
-               "General Surgery",
-               "Gynecology & Obstetrics",
-               "Neurology",
-               "Oncology",
-               "Orthopedics",
-               "Pediatrics",
-               "Psychiatry",
-               "Pulmonology",
-               "Radiology",
-               "Urology",
-               "Front Desk"
-          ]),
+          "Anesthesiology",
+          "Cardiology",
+          "Dermatology",
+          "Emergency Medicine",
+          "Endocrinology",
+          "Gastroenterology",
+          "General Medicine",
+          "General Surgery",
+          "Gynecology & Obstetrics",
+          "Neurology",
+          "Oncology",
+          "Orthopedics",
+          "Pediatrics",
+          "Psychiatry",
+          "Pulmonology",
+          "Radiology",
+          "Urology",
+          "Front Desk"
+     ]),
 
-     role: z.enum(["Doctor", "Nurse", "LabTechnician", "Receptionist"]),
+     role: z.enum([
+          "Doctor",
+          "Nurse",
+          "LabTechnician",
+          "Receptionist"
+     ]),
 
-     status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-
-     shift: z.enum(["Morning", "Evening", "Night"]),
+     shift: z.enum(["Morning", "Night"]),
 
      designation: z.string().optional()
 });
 
-export const checkEmployeeId = staffSchema.pick({ employeeId: true });
+export const staffRegistrationSchema = z.object({
+     body: staffSchema
+});
 
-export const staffIdSchema = mongooseObjectIdValidator('staffId');
+export const staffLookUpSchema = z.object({
+     body: staffSchema.pick({ role: true })
+});
+
+export const staffRoleChangeSchema = z.object({
+     body: staffSchema.pick({ role: true }),
+
+     params: mongooseObjectIdValidator("staffId")
+});
+
+export const staffDetailChangeSchema = z.object({
+     body: staffSchema.omit({ userId: true, role: true }),
+
+     params: mongooseObjectIdValidator("staffId")
+});
+
+export const employeeIdSchema = z.object({
+     body: staffSchema.pick({ employeeId: true })
+});
+
+export const staffIdSchema = z.object({
+     params: mongooseObjectIdValidator("staffId")
+});
