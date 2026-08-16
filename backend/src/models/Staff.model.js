@@ -71,9 +71,12 @@ const staffSchema = new Schema({
      }
 }, { timestamps: true });
 
-staffSchema.index({ hospitalId: 1, employeeId: 1}, { unique: true });
-staffSchema.index({ _id: 1, hospitalId: 1, status: 1 });
-staffSchema.index({ _id: 1, hospitalId: 1 });
+
+
+
+
+staffSchema.index({ hospitalId: 1, employeeId: 1 }, { unique: true });
+staffSchema.index({ hospitalId: 1, status: 1 });
 staffSchema.index({ hospitalId: 1, role: 1 });
 
 const Staff = model('Staff', staffSchema);

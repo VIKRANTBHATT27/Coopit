@@ -47,30 +47,39 @@ export const staffSchema = z.object({
      designation: z.string().optional()
 });
 
-export const staffRegistrationSchema = z.object({
+export const registrationSchema = z.object({
      body: staffSchema
 });
 
-export const staffLookUpSchema = z.object({
+export const getAllSchema = z.object({
+     query: z.object({
+          page: z.coerce.number().int().positive().default(1),
+          limit: z.coerce.number().int().positive().default(12),
+          role: z.enum([
+               "Doctor",
+               "Nurse",
+               "LabTechnician",
+               "Receptionist"
+          ]).optional(),
+     })
+});
+
+export const lookUpSchema = z.object({
      body: staffSchema.pick({ role: true })
 });
 
-export const staffRoleChangeSchema = z.object({
+export const updateRoleSchema = z.object({
      body: staffSchema.pick({ role: true }),
 
      params: mongooseObjectIdValidator("staffId")
 });
 
-export const staffDetailChangeSchema = z.object({
+export const updateDetailsSchema = z.object({
      body: staffSchema.omit({ userId: true, role: true }),
 
      params: mongooseObjectIdValidator("staffId")
 });
 
-export const employeeIdSchema = z.object({
-     body: staffSchema.pick({ employeeId: true })
-});
-
-export const staffIdSchema = z.object({
+export const idSchema = z.object({
      params: mongooseObjectIdValidator("staffId")
 });

@@ -24,8 +24,8 @@ import {
      verificationSchema
 } from "../zodSchemas/user.schema.js";
 
-import checkForAuthentication from "../middlewares/authenticate.middleware.js";
-import checkForAuthorization from "../middlewares/authorize.middleware.js";
+import authorize from "../middlewares/authorize.middleware.js";
+import authenticate from "../middlewares/authenticate.middleware.js";
 
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import phoneLimiter from "../middlewares/rateLimiter.middleware.js";
@@ -68,8 +68,8 @@ router.post("/auth/reset-password",
      handleResetPassword
 )
 
-router.use(checkForAuthentication);
-router.use(checkForAuthorization([
+router.use(authenticate);
+router.use(authorize([
      "NURSE",
      "DOCTOR",
      "PATIENT",

@@ -2,8 +2,10 @@ import { Staff } from "../models/index.js";
 
 export const handleUpdateStaffMember = async (req, res) => {
      try {
-          const staffMember = await staffModel.findOneAndUpdate(
-               { employeeId: req.parsedBody?.employeeId },
+          const { employeeId } = req.parsedBody;
+
+          const staffMember = await Staff.findOneAndUpdate(
+               { employeeId },
                { $set: { ...req.parsedBody } },
                { returnDocument: "after" }
           );
@@ -21,7 +23,9 @@ export const handleUpdateStaffMember = async (req, res) => {
 
 export const handleGetStaffMember = async (req, res) => {
      try {
-          const staffMember = await staffModel.findOne({ employeeeId: req.parsedBody.employeeId });
+          const { employeeId } = req.parsedBody;
+
+          const staffMember = await Staff.findOne({ employeeeId });
 
           if (!staffMember) return res.status(404).json({ msg: "no staff member found" });
 

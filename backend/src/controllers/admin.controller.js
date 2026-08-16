@@ -1,32 +1,40 @@
 import { Hospital, Staff, User } from "../models/index.js";
 import APIError from "../utils/APIError.utils";
 
-export const handleGetAllStaff = async (req, res, next) => {
+export const handleGetAll = async (req, res, next) => {
     try {
-        const { role } = req.parsedBody;
+        const { page, limit, role } = req.parsedQuery;
         const { hospitalId } = req.user;
 
-        const hospital = await Hospital.findById(hospitalId);
-        if (!hospital) {
-            return next(
-                new APIError(404, "Hospital not found")
-            );
-        }
+        const skip = (page - 1) * limit;
 
-        const allStaff = await Staff.find({
-            hospitalId,
-            role
-        });
+        const filter = { hospitalId, ...(role && { role }) };
 
-        if (!allStaff) {
-            return res.status(204).json({
-                message: "No staff account is found"
+        const [total, staffList] = await Promise.all([
+            Staff.countDocuments(filter),
+            Staff.find(filter)
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 })
+        ]);
+
+        if (!staffList.length) {
+            return res.status(200).json({
+                data: [],
+                message: "No staff found"
             });
         }
 
         return res.status(200).json({
-            message: `All Staff account of role: ${role} in your hospital`,
-            data: allStaff
+            data: staffList,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
         });
 
     } catch (err) {
@@ -34,21 +42,14 @@ export const handleGetAllStaff = async (req, res, next) => {
     }
 };
 
-export const handleStaffLookUp = async (req, res, next) => {
+export const handleLookUp = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { hospitalId } = req.user;
 
-        const hospital = await Hospital.findById(hospitalId);
-        if (!hospital) {
-            return next(
-                new APIError(404, "Hospital not found")
-            );
-        }
-
         const staffMember = await Staff.findOne({
             _id: staffId,
-            hospitalId: hospitalId,
+            hospitalId,
             status: "ACTIVE"
         });
 
@@ -68,27 +69,17 @@ export const handleStaffLookUp = async (req, res, next) => {
     }
 };
 
-export const handleRegisterStaff = async (req, res, next) => {
+export const handleRegister = async (req, res, next) => {
     try {
         const { userId, employeeId, department, role, shift, designation } = req.parsedBody;
 
         // add hospitalId in authToken
         const { hospitalId } = req.user;
 
-        const [user, hospital] = await Promise.all([
-            User.findById(userId),
-            Hospital.findById(hospitalId)
-        ]);
-
+        const user = await User.findById(userId);
         if (!user) {
             return next(
                 new APIError(404, "User not found"),
-            );
-        }
-
-        if (!hospital) {
-            return next(
-                new APIError(404, "Hospital not found")
             );
         }
 
@@ -109,26 +100,17 @@ export const handleRegisterStaff = async (req, res, next) => {
     }
 };
 
-export const handleChangeStaffRole = async (req, res, next) => {
+export const handleChangeRole = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { role } = req.parsedBody;
         const { hospitalId } = req.user;
 
-        const [hospital, staffMember] = await Promise.all([
-            Hospital.findById(hospitalId),
-            Staff.findOne({
-                _id: staffId,
-                hospitalId: hospitalId,
-                status: "ACTIVE"
-            })
-        ]);
-
-        if (!hospital) {
-            return next(
-                new APIError(404, "Hospital not found")
-            );
-        }
+        const staffMember = await Staff.findOne({
+            _id: staffId,
+            hospitalId,
+            status: "ACTIVE"
+        });
 
         if (!staffMember) {
             return next(
@@ -149,25 +131,16 @@ export const handleChangeStaffRole = async (req, res, next) => {
     }
 };
 
-export const handleChangeStaffDetails = async (req, res, next) => {
+export const handleChangeDetails = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { hospitalId } = req.user;
 
-        const [hospital, staffMember] = await Promise.all([
-            Hospital.findById(hospitalId),
-            Staff.findOne({
-                _id: staffId,
-                hospitalId: hospitalId,
-                status: "ACTIVE"
-            })
-        ]);
-
-        if (!hospital) {
-            return next(
-                new APIError(404, "Hospital not found")
-            );
-        }
+        const staffMember = await Staff.findOne({
+            _id: staffId,
+            hospitalId,
+            status: "ACTIVE"
+        });
 
         if (!staffMember) {
             return next(
@@ -187,25 +160,16 @@ export const handleChangeStaffDetails = async (req, res, next) => {
     }
 };
 
-export const handleReactivateStaff = async (req, res, next) => {
+export const handleReactivate = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { hospitalId } = req.user;
 
-        const [hospital, staffMember] = await Promise.all([
-            Hospital.findById(hospitalId),
-            Staff.findOne({
-                _id: staffId,
-                hospitalId: hospitalId,
-                status: "INACTIVE"
-            })
-        ]);
-
-        if (!hospital) {
-            return next(
-                new APIError(404, "Hospital not found")
-            );
-        }
+        const staffMember = await Staff.findOne({
+            _id: staffId,
+            hospitalId,
+            status: "INACTIVE"
+        });
 
         if (!staffMember) {
             return next(
@@ -226,25 +190,16 @@ export const handleReactivateStaff = async (req, res, next) => {
     }
 };
 
-export const handleInactiveStaff = async (req, res, next) => {
+export const handleDeactivate = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { hospitalId } = req.user;
 
-        const [hospital, staffMember] = await Promise.all([
-            Hospital.findById(hospitalId),
-            Staff.findOne({
-                _id: staffId,
-                hospitalId: hospitalId,
-                status: "ACTIVE"
-            })
-        ]);
-
-        if (!hospital) {
-            return next(
-                new APIError(404, "Hospital not found")
-            );
-        }
+        const staffMember = await Staff.findOne({
+            _id: staffId,
+            hospitalId,
+            status: "ACTIVE"
+        });
 
         if (!staffMember) {
             return next(

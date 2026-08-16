@@ -1,4 +1,4 @@
-const checkForAuthorization = (roles = []) => {
+const authorize = (roles = []) => {
      return (req, res, next) => {
           if (!req.user) return res.status(400).json({ err: "user not logged in " });
 
@@ -8,4 +8,4 @@ const checkForAuthorization = (roles = []) => {
      };
 };
 
-export default checkForAuthorization;
+export default authorize;

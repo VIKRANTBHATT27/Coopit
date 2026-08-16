@@ -10,7 +10,7 @@ import PasswordReset from "./PasswordReset.js";
 import Patient from "./Patient.js";
 import PendingUser from "./PendingUser.model.js";
 import Receptionist from "./Receptionist.js";
-import Staff from "./Staff.js";
+import Staff from "./Staff.model.js";
 import TimelineEvent from "./TimelineEvent.model.js";
 import User from "./User.model.js";
 import Visit from "./Visit.js";
