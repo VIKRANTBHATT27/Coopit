@@ -50,7 +50,8 @@ export const handleLookUp = async (req, res, next) => {
         const staffMember = await Staff.findOne({
             _id: staffId,
             hospitalId,
-            status: "ACTIVE"
+            status: "ACTIVE",
+            role: { $ne: "Admin" },
         });
 
         if (!staffMember) {
@@ -109,7 +110,8 @@ export const handleChangeRole = async (req, res, next) => {
         const staffMember = await Staff.findOne({
             _id: staffId,
             hospitalId,
-            status: "ACTIVE"
+            status: "ACTIVE",
+            role: { $ne: "Admin" },
         });
 
         if (!staffMember) {
@@ -139,12 +141,13 @@ export const handleChangeDetails = async (req, res, next) => {
         const staffMember = await Staff.findOne({
             _id: staffId,
             hospitalId,
-            status: "ACTIVE"
+            status: "ACTIVE",
+            role: { $ne: "Admin" },
         });
 
         if (!staffMember) {
             return next(
-                new APIError(404, "Staff not activated or Invalid StaffId")
+                new APIError(404, "Staff not activated or Staff do not exist")
             );
         }
 
@@ -160,60 +163,45 @@ export const handleChangeDetails = async (req, res, next) => {
     }
 };
 
-export const handleReactivate = async (req, res, next) => {
+export const handleToggleStatus = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
+        const { status } = req.parsedBody;
         const { hospitalId } = req.user;
 
-        const staffMember = await Staff.findOne({
-            _id: staffId,
-            hospitalId,
-            status: "INACTIVE"
-        });
+        const staffMember = await Staff.findOneAndUpdate(
+            {
+                _id: staffId,
+                hospitalId,
+                status: { $ne: status },
+                role: { $ne: "Admin" },
+            },
+            { $set: { status } },
+            { returnDocument: true, runValidator: true }
+        );
 
         if (!staffMember) {
+            const exists = await Staff.exists({
+                _id: staffId,
+                hospitalId,
+            });
+
+            if (exists) {
+                return next(
+                    new APIError(404, "No Staff Account found")
+                );
+            }
+
             return next(
-                new APIError(404, "Staff Account is already activated or Invalid StaffId")
+                new APIError(400, `Staff Account is already set to ${status}`)
             );
         }
 
-        await staffMembers.updateOne({
-            $set: { status: "ACTIVE" }
-        });
-
         return res.status(200).json({
-            message: "Staff Member got Inactive account"
+            message: `successfully marked Staff Account  as ${status}`,
+            data: staffMember
         });
 
-    } catch (err) {
-        return next(err);
-    }
-};
-
-export const handleDeactivate = async (req, res, next) => {
-    try {
-        const { staffId } = req.parsedParams;
-        const { hospitalId } = req.user;
-
-        const staffMember = await Staff.findOne({
-            _id: staffId,
-            hospitalId,
-            status: "ACTIVE"
-        });
-
-        if (!staffMember) {
-            return next(
-                new APIError(404, "Staff Account is already activated or Invalid StaffId")
-            );
-        }
-
-        await staffMembers.updateOne({
-            $set: { status: "INACTIVE" }
-        });
-
-        return res.status(200).json({
-            message: "Staff Member got Inactive account"
-        });
     } catch (err) {
         return next(err);
     }

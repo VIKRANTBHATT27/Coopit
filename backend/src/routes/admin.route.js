@@ -3,18 +3,17 @@ import {
     handleLookUp,
     handleRegister,
     handleChangeDetails,
-    handleReactivate,
-    handleDeactivate,
-    handleGetAll
+    handleGetAll,
+    handleToggleStatus
 } from "../controllers/admin.controller.js";
 
 import {
     idSchema,
-    lookUpSchema,
+    getAllSchema,
     roleChangeSchema,
-    detailChangeSchema,
     registrationSchema,
-    getAllSchema
+    detailChangeSchema,
+    toggleStaffStatusSchema
 } from "../zodSchemas/staff.schema.js";
 
 import authorize from "../middlewares/authorize.middleware.js";
@@ -54,14 +53,9 @@ router.patch("/staff/:staffId/role",
     handleChangeRole
 );
 
-router.post("/staff/:staffId/reactivate",
-    parseIncomingReq(idSchema),
-    handleReactivate
-);
-
-router.post("/staff/:staffId/deactivate",
-    parseIncomingReq(idSchema),
-    handleDeactivate
+router.post("/staff/:staffId/status",
+    parseIncomingReq(toggleStaffStatusSchema),
+    handleToggleStatus
 );
 
 

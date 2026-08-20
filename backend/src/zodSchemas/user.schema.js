@@ -30,7 +30,7 @@ export const userProfileSchema = z.object({
      ]).default("PATIENT"),
      state: z.string(),
      districtName: z.string(),
-     landmark: z.string(),
+     landmark: z.string().optional(),
 });
 
 export const createUserSchema = z.object({

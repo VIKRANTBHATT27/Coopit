@@ -39,17 +39,19 @@ const staffSchema = new Schema({
                "Pulmonology",
                "Radiology",
                "Urology",
-               "Front Desk"
+               "Front Desk",
+               "Management"
           ]
      },
 
      role: {
           type: String,
           enum: [
-               "Doctor",
+               "Admin",
                "Nurse",
-               "LabTechnician",
-               "Receptionist"
+               "Doctor",
+               "Receptionist",
+               "LabTechnician"
           ],
           required: true
      },
@@ -62,7 +64,8 @@ const staffSchema = new Schema({
 
      shift: {
           type: String,
-          enum: ["Morning", "Night"]
+          enum: ["Morning", "Night"],
+          required: false
      },
 
      designation: {
@@ -70,10 +73,6 @@ const staffSchema = new Schema({
           required: false,
      }
 }, { timestamps: true });
-
-
-
-
 
 staffSchema.index({ hospitalId: 1, employeeId: 1 }, { unique: true });
 staffSchema.index({ hospitalId: 1, status: 1 });

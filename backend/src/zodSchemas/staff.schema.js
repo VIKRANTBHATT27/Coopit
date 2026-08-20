@@ -32,14 +32,16 @@ export const staffSchema = z.object({
           "Pulmonology",
           "Radiology",
           "Urology",
-          "Front Desk"
+          "Front Desk",
+          "Management"
      ]),
 
      role: z.enum([
-          "Doctor",
+          "Admin",
           "Nurse",
-          "LabTechnician",
-          "Receptionist"
+          "Doctor",
+          "Receptionist",
+          "LabTechnician"
      ]),
 
      shift: z.enum(["Morning", "Night"]),
@@ -64,22 +66,26 @@ export const getAllSchema = z.object({
      })
 });
 
-export const lookUpSchema = z.object({
-     body: staffSchema.pick({ role: true })
-});
-
-export const updateRoleSchema = z.object({
+export const roleChangeSchema = z.object({
      body: staffSchema.pick({ role: true }),
 
      params: mongooseObjectIdValidator("staffId")
 });
 
-export const updateDetailsSchema = z.object({
+export const detailChangeSchema = z.object({
      body: staffSchema.omit({ userId: true, role: true }),
 
      params: mongooseObjectIdValidator("staffId")
 });
 
 export const idSchema = z.object({
+     params: mongooseObjectIdValidator("staffId")
+});
+
+export const toggleStaffStatusSchema = z.object({
+     body: z.object({
+          status: z.enum(["ACTIVE", "INACTIVE"])
+     }),
+
      params: mongooseObjectIdValidator("staffId")
 });

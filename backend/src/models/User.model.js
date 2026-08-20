@@ -77,7 +77,7 @@ const userSchema = new Schema({
      },
      landmark: {              //landmark => area wise calculation => only for patients
           type: String,
-          required: true
+          required: false
      },
 
      isVerified: {            //using phoneNo and otp procedure

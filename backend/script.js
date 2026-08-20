@@ -22,9 +22,9 @@ app.use('/nurse', nurseRoutes);
 app.use('/doctor', doctorRoutes);
 app.use('/patient', patientRoutes);
 app.use('/services', serviceRoutes);
-app.use('/super-admin', superAdminRoutes);
 app.use('/receptionist', receptionRoutes);
 app.use('/lab-technician', labTechnicianRoutes);
+app.use('/super-admin/hospital', superAdminRoutes);
 
 
 export default app;

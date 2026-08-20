@@ -21,7 +21,12 @@ const hospitalSchema = new Schema({
 
      hospitalType: {
           type: String,
-          enum: ["Government", "Private", "Clinic", "Speciality"]
+          enum: [
+               "Government",
+               "Private",
+               "Clinic",
+               "Speciality"
+          ]
      },
 
      phones: {
@@ -68,18 +73,13 @@ const hospitalSchema = new Schema({
           required: true,
           unique: true
      },
-     
-     adminId: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          required: true
-     },
 
-     isActive: {
-          type: Boolean,
-          default: true
-     },
-     
+     adminIds: [{
+          type: Schema.Types.ObjectId,
+          ref: "Staff",
+          required: true
+     }],
+
      location: {
           type: {
                type: String,
@@ -99,6 +99,11 @@ const hospitalSchema = new Schema({
      createdAt: {
           type: Date,
           default: Date.now
+     },
+
+     isActive: {
+          type: Boolean,
+          default: true
      },
 });
 
