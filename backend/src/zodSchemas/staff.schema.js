@@ -1,4 +1,4 @@
-import *  as z from "zod";
+import { z } from "zod";
 import mongoose from "mongoose";
 
 const mongooseObjectIdValidator = (fieldName) => z.string()
@@ -6,7 +6,7 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
           message: `Invalid ObjectId for field ${fieldName}`
      });
 
-export const staffSchema = z.object({
+const staffSchema = z.object({
      userId: mongooseObjectIdValidator("userId"),
 
      employeeId: z.string()
@@ -15,33 +15,32 @@ export const staffSchema = z.object({
           }),
 
      department: z.enum([
-          "Anesthesiology",
-          "Cardiology",
-          "Dermatology",
-          "Emergency Medicine",
-          "Endocrinology",
-          "Gastroenterology",
-          "General Medicine",
-          "General Surgery",
-          "Gynecology & Obstetrics",
-          "Neurology",
-          "Oncology",
-          "Orthopedics",
-          "Pediatrics",
-          "Psychiatry",
-          "Pulmonology",
-          "Radiology",
-          "Urology",
-          "Front Desk",
-          "Management"
+          "ANESTHESIOLOGY",
+          "CARDIOLOGY",
+          "DERMATOLOGY",
+          "EMERGENCY_MEDICINE",
+          "ENDOCRINOLOGY",
+          "GASTROENTEROLOGY",
+          "GENERAL_MEDICINE",
+          "GENERAL_SURGERY",
+          "GYNECOLOGY_OBSTETRICS",
+          "NEUROLOGY",
+          "ONCOLOGY",
+          "ORTHOPEDICS",
+          "PEDIATRICS",
+          "PSYCHIATRY",
+          "PULMONOLOGY",
+          "RADIOLOGY",
+          "UROLOGY",
+          "FRONT_DESK",
+          "MANAGEMENT"
      ]),
 
      role: z.enum([
-          "Admin",
-          "Nurse",
-          "Doctor",
-          "Receptionist",
-          "LabTechnician"
+          "NURSE",
+          "DOCTOR",
+          "RECEPTIONIST",
+          "LAB_TECHNICIAN",
      ]),
 
      shift: z.enum(["Morning", "Night"]),
@@ -58,10 +57,10 @@ export const getAllSchema = z.object({
           page: z.coerce.number().int().positive().default(1),
           limit: z.coerce.number().int().positive().default(12),
           role: z.enum([
-               "Doctor",
-               "Nurse",
-               "LabTechnician",
-               "Receptionist"
+               "NURSE",
+               "DOCTOR",
+               "RECEPTIONIST",
+               "LAB_TECHNICIAN",
           ]).optional(),
      })
 });
@@ -88,4 +87,14 @@ export const toggleStaffStatusSchema = z.object({
      }),
 
      params: mongooseObjectIdValidator("staffId")
+});
+
+export const getUserSchema = z.object({
+     body: z.object({
+          emailId: z.string().email({ message: "Invalid email address" })
+     })
+});
+
+export const checkEmployeeId = z.object({
+     params: staffSchema.pick({ employeeId: true })
 });

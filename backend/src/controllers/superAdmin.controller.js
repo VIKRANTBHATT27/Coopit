@@ -69,7 +69,7 @@ export const handleRegisterHospital = async (req, res, next) => {
                     password: adminPassword,
                     gender: adminGender,
                     dateOfBirth: adminDOB,
-                    role: 'HOSPITAL_ADMIN',
+                    role: "STAFF",
                     state: adminState,
                     districtName: adminDistrict,
                 }],

@@ -116,6 +116,37 @@ export const handleDeleteUploadedImg = async (req, res, next) => {
      }
 };
 
+export const handleGetAllNurse = async (req, res) => {
+     try {
+          const { hospitalId } = req.user;
+
+          const allNurse = await Staff.find({
+               hospitalId,
+               role: "NURSE",
+               department: {
+                    $in: [
+                         "EMERGENCY_MEDICINE",
+                         "GENERAL_MEDICINE",
+                         "GENERAL_SURGERY"
+                    ]
+               }
+          });
+
+          if (!allNurse) {
+               return next(
+                    new APIError(204, "No nurse record found")
+               );
+          }
+
+          return res.status(200).json({
+               message: "All nurse records of department Emergency, General Medicine, General Surgery.",
+               data: allNurse
+          });
+
+     } catch (err) {
+          return next(err);
+     }
+};
 
 
 

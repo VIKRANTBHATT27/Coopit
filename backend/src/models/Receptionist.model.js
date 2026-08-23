@@ -19,7 +19,7 @@ const receptionistSchema = new Schema({
           required: false,
           default: "/default-pfp/default-receptionist.png"
      },
-     
+
      pfp_publicId: {
           type: String,
           required: false
@@ -27,26 +27,32 @@ const receptionistSchema = new Schema({
 
      department: {
           type: String,
-          enum: ["Front Desk", "Billing Desk", "Emergency Desk"],
+          enum: [
+               "Front Desk",
+               "Billing Desk",
+               "Emergency Desk"
+          ],
           default: "Front Desk"
      },
 
      shift: {
           type: String,
-          enum: ["Morning", "Evening", "Night"]
+          enum: ["Morning", "Evening", "Night"],
+          required: true
      },
      workingHours: {
-          start: String,
-          end: String
+          start: { type: String, required: true },
+          end: { type: String, required: true }
      },
-     skills: {
+
+     qualifications: {
           type: [String],
           required: false
-     },
+     }
 
 }, { timestamps: true });
 
-receptionistSchema.index({ hospitalId: 1  });
+receptionistSchema.index({ hospitalId: 1 });
 receptionistSchema.index({ staffId: 1 });
 
 export const Receptionist = model("Receptionist", receptionistSchema);

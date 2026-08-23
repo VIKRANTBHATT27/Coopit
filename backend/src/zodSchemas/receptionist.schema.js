@@ -12,23 +12,33 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
           message: `Invalid ObjectId for field ${fieldName}`
      });
 
-export const receptionistSignupSchema = z.object({
+export const createReceptionistSchema = z.object({
      body: z.object({
-          hospitalId: mongooseObjectIdValidator("hospitalId"),
-          staffId: mongooseObjectIdValidator("staffId"),
+          department: z.enum([
+               "Front Desk",
+               "Billing Desk",
+               "Emergency Desk"
+          ]).default("Front Desk"),
 
-          pfp_url: z.string().default("/default-pfp/default-receptionist.png"),
-          department: z.enum(["Front Desk", "Billing Desk", "Emergency Desk"]),
           shift: z.enum(["Morning", "Evening", "Night"]),
 
-          workingHours: z.object({ start: z.string(), end: z.string() }),
+          workingHours: z.object({
+               start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
+               end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)")
+          }),
 
-          skills: z.array(z.string()),
+          qualifications: z.array(z.string()).optional(),
      })
 });
 
+export const updateReceptionistSchema = z.object({
+     body: createReceptionistSchema.shape.body.partial()
+});
+
+
 export const receptionistUpdateSchema = z.object({
      body: receptionistSignupSchema.shape.body.omit({ hospitalId: true }).partial(),
+     pfp_url: z.string().default("/default-pfp/default-receptionist.png")
 });
 
 
@@ -44,9 +54,5 @@ export const receptionistAvatarUploadSchema = z.object({
                .min(1, "Temporary storage file path is missing"),
      }, {
           message: "file is required for avatar uplaod"
-     }),
-
-     params: z.object({
-          staffId: mongooseObjectIdValidator('staffId')
      })
 });

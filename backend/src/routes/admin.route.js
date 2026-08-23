@@ -4,17 +4,26 @@ import {
     handleRegister,
     handleChangeDetails,
     handleGetAll,
-    handleToggleStatus
+    handleToggleStatus,
+    handleGetUser,
+    handleCreateReceptionist,
+    handleUpdateReceptionist
 } from "../controllers/admin.controller.js";
 
 import {
     idSchema,
     getAllSchema,
+    getUserSchema,
     roleChangeSchema,
     registrationSchema,
     detailChangeSchema,
-    toggleStaffStatusSchema
+    toggleStaffStatusSchema,
 } from "../zodSchemas/staff.schema.js";
+
+import {
+    createReceptionistSchema,
+    updateReceptionistSchema
+} from "../zodSchemas/receptionist.schema.js";
 
 import authorize from "../middlewares/authorize.middleware.js";
 import authenticate from "../middlewares/authenticate.middleware.js";
@@ -27,12 +36,17 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorize(["HOSPITAL_ADMIN"]));
 
+router.get("/user",
+    parseIncomingReq(getUserSchema),
+    handleGetUser
+)
+
 router.get("/staff",
     parseIncomingReq(getAllSchema),
     handleGetAll
 );
 
-router.post("/register-staff",
+router.post("/staff",
     parseIncomingReq(registrationSchema),
     handleRegister
 );
@@ -47,7 +61,6 @@ router.route("/staff/:staffId")
         handleChangeDetails
     );
 
-
 router.patch("/staff/:staffId/role",
     parseIncomingReq(roleChangeSchema),
     handleChangeRole
@@ -58,5 +71,14 @@ router.post("/staff/:staffId/status",
     handleToggleStatus
 );
 
+router.route("/receptionist/:staffId")
+    .post(
+        parseIncomingReq(createReceptionistSchema),
+        handleCreateReceptionist
+    )
+    .patch(
+        parseIncomingReq(updateReceptionistSchema),
+        handleUpdateReceptionist
+    );
 
 export default router;

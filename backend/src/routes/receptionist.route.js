@@ -1,75 +1,40 @@
-import express from "express";
-
-import { uploadAvatar, uploadImg } from "../middlewares/multer.middleware.js";
+import { uploadAvatar } from "../middlewares/multer.middleware.js";
 import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
 
 import {
      handleUploadAvatar,
      handleDeleteAvatar,
-     handleCreateReceptionist,
-     handleAddPatientVisit,
-     handleUpdateReceptionist,
      handleGetReceptionist,
 } from "../controllers/receptionist.controller.js";
 
-import {
-     receptionistSignupSchema,
-     receptionistUpdateSchema,
-     receptionistAvatarUploadSchema
-} from "../zodSchemas/receptionist.schema.js";
 
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
-import { emailIdSchema } from "../zodSchemas/user.schema.js";
 import { handleGetUserLookup } from "../controllers/user.controller.js";
-
-import { patientIdSchema, patientSchema } from "../zodSchemas/patient.schema.js";
 import { handleCreatePatient } from "../controllers/patient.controller.js"
+import { handleCreatePatientVisit } from "../controllers/visit.controller.js";
+import { handleGetAllNurse } from "../controllers/nurse.controller.js";
 
-import { handleCreatePatientVisit, handleGetAllNurse } from "../controllers/visit.controller.js";
-
-import { checkForAuthentication, checkForAuthorization } from "../middlewares/authCheck.middleware.js";
-
+import { emailIdSchema } from "../zodSchemas/user.schema.js";
 import { patientVisitSchema } from "../zodSchemas/visit.schema.js";
-import { staffIdSchema } from "../zodSchemas/staff.schema.js";
+import { createPatientSchema } from "../zodSchemas/patient.schema.js";
+import { receptionistAvatarUploadSchema } from "../zodSchemas/receptionist.schema.js";
 
+import authenticate from "../middlewares/authenticate.middleware.js";
+import authorize from "../middlewares/authorize.middleware.js";
+
+import express from "express";
 const router = express.Router();
 
-router.post("/",
-     validateBody(receptionistSignupSchema),
-     handleCreateReceptionist
-);
+router.use(authenticate);
+router.use(authorize(["STAFF"], ["RECEPTIONIST"]));
 
-router.use(checkForAuthentication);
-router.use(checkForAuthorization(['receptionist']));
+router.get("/receptionist",
+     handleGetReceptionist
+)
 
-
-
-
-router.post("/users/lookup",
-     parseIncomingReq(emailIdSchema),
-     handleGetUserLookup
-);
-
-router.post("/patients/:userId",
-     validateBody(patientSchema),
-     handleCreatePatient
-);
-
-//    .patch(
-//           validateBody(patientUpdationSchema),
-//           handleUpdatePatient
-//      );
-
-
-
-router.patch("/:staffId",
-     parseIncomingReq(receptionistUpdateSchema),
-     handleUpdateReceptionist
-);
-
-router.route('/avatar/:staffId')
+router.route('/avatar')
      .post(
           uploadAvatar.single("avatar"),
           cleanupTempFiles,
@@ -77,18 +42,25 @@ router.route('/avatar/:staffId')
           uploadUserAvatar,
           handleUploadAvatar
      )
-     .delete(
-          parseIncomingReq(staffIdSchema),
-          handleDeleteAvatar
-     );
+     .delete(handleDeleteAvatar);
 
-router.get("/nurses",
-     handleGetAllNurse
+router.get("/users/lookup",
+     parseIncomingReq(emailIdSchema),
+     handleGetUserLookup
+);
+
+router.post("/patient/:userId",
+     parseIncomingReq(createPatientSchema),
+     handleCreatePatient
 );
 
 router.post("/patients/:patientId/visits",
      parseIncomingReq(patientVisitSchema),
      handleCreatePatientVisit
+);
+
+router.get("/nurses",
+     handleGetAllNurse
 );
 
 

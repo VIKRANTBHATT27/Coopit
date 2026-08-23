@@ -56,13 +56,9 @@ const userSchema = new Schema({
      role: {
           type: String,
           enum: [
-               "NURSE",
-               "DOCTOR",
                "PATIENT",
-               "LAB_TECH",
-               "SUPER_ADMIN",
-               "RECEPTIONIST",
-               "HOSPITAL_ADMIN",
+               "STAFF",
+               "SUPER-ADMIN",
           ],
           default: "PATIENT"
      },

@@ -15,7 +15,7 @@ import {
 import {
      changePhoneSchema,
      createUserSchema,
-     forgotPasswordSchema,
+     emailIdSchema,
      loginSchema,
      passwordResetSchema,
      updatePasswordSchema,
@@ -59,14 +59,14 @@ router.patch("/auth/change-phone",
 );
 
 router.post("/auth/forgot-password",
-     parseIncomingReq(forgotPasswordSchema),
+     parseIncomingReq(emailIdSchema),
      handleForgotPassword
 );
 
 router.post("/auth/reset-password",
      parseIncomingReq(passwordResetSchema),
      handleResetPassword
-)
+);
 
 router.use(authenticate);
 router.use(authorize([

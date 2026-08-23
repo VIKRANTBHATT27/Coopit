@@ -7,13 +7,13 @@ import LabTechnician from "./LabTechnician.model.js";
 import MedicalCase from "./MedicalCase.js";
 import Nurse from "./Nurse.js";
 import PasswordReset from "./PasswordReset.js";
-import Patient from "./Patient.js";
+import Patient from "./Patient.model.js";
 import PendingUser from "./PendingUser.model.js";
-import Receptionist from "./Receptionist.js";
+import Receptionist from "./Receptionist.model.js";
 import Staff from "./Staff.model.js";
 import TimelineEvent from "./TimelineEvent.model.js";
 import User from "./User.model.js";
-import Visit from "./Visit.js";
+import Visit from "./Visit.model.js";
 import Otp from "./OTP.model.js";
 
 export {

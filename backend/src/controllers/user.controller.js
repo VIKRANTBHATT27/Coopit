@@ -143,12 +143,13 @@ export const handleUserLogin = async (req, res, next) => {
      }
 };
 
+// issue in this route
 export const handleVerifyUserLogin = async (req, res, next) => {
      try {
           const { emailId, otpCode } = req.parsedBody;
 
-          const user = await User.findOne({ emailId });
-          if (!user) {
+          const userData = await User.findOne({ emailId });
+          if (!userData) {
                return next(
                     new APIError(404, "Invalid EmailId")
                );
@@ -503,3 +504,24 @@ export const handleUpdatePassword = async (req, res, next) => {
 //           return res.status(500).json({ error: "Error fetching user data" });
 //      }
 // };
+
+export const handleGetUserLookup = async (req, res, next) => {
+     try {
+          const { emailId } = req.parsedBody;
+
+          const user = await User.findOne({ emailId }).select("_id").lean();
+
+          if (!user) {
+               return next(
+                    new APIError(400, "No user found")
+               );
+          }
+
+          return res.status(200).json({
+               message: "User Exists",
+               userId: user._id
+          });
+     } catch (err) {
+          return next(err);
+     }
+};

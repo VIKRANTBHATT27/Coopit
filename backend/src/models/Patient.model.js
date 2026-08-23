@@ -16,7 +16,7 @@ const patientSchema = new Schema({
      
      pfp_publicId: {
           type: String,
-          required: false,
+          default: undefined,
      },
 
      weight: {
@@ -34,10 +34,9 @@ const patientSchema = new Schema({
 
      bloodType: {
           type: String,
-          enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
-          trim: true,
-          required: false,
-          uppercase: true,
+          enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', "UNKNOWN"],
+          default: "UNKNOWN",
+          required: true,
      },
      lifestyle: {
           smoking: { type: Boolean, default: false, required: true },
@@ -53,23 +52,11 @@ const patientSchema = new Schema({
      chronicConditions: {
           type: [String],
           default: []
-     },
-
-     // location: {
-     //      type: {
-     //           type: String,
-     //           enum: ['Point'],
-     //           default: 'Point'
-     //      },
-     //      coordinates: {
-     //           type: [Number],
-     //           required: false
-     //      }
-     // },
+     }
 
 }, { timestamps: true });
 
-patientSchema.index({ location: '2dsphere' });
+patientSchema.index({ userId: 1 });
 
 const Patient = model("Patient", patientSchema);
 export default Patient;

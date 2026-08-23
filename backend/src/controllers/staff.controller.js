@@ -1,38 +1,20 @@
 import { Staff } from "../models/index.js";
-
-export const handleUpdateStaffMember = async (req, res) => {
-     try {
-          const { employeeId } = req.parsedBody;
-
-          const staffMember = await Staff.findOneAndUpdate(
-               { employeeId },
-               { $set: { ...req.parsedBody } },
-               { returnDocument: "after" }
-          );
-
-          if (!staffMember) return res.status(404).json({ msg: "no staff member found with this Id" });
-
-          return res.status(200).json({
-               msg: "successfully updated the staff member details",
-               data: staffMember
-          });
-     } catch (err) {
-          return next(err);
-     }
-};
+import APIError from "../utils/APIError.utils.js";
 
 export const handleGetStaffMember = async (req, res) => {
      try {
-          const { employeeId } = req.parsedBody;
+          const { employeeId } = req.parsedParams;
 
-          const staffMember = await Staff.findOne({ employeeeId });
+          const staffMember = await Staff.findOne({ employeeId });
 
-          if (!staffMember) return res.status(404).json({ msg: "no staff member found" });
+          if (!staffMember) {
+               return next(
+                    new APIError(404, "Staff Member not found")
+               )
+          }
 
           return res.status(200).json({ data: staffMember });
      } catch (err) {
-          console.log("error: ", err);
-
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", error: err.message });
+          return next(err);
      }
 };

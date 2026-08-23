@@ -20,13 +20,9 @@ export const userProfileSchema = z.object({
                { message: "Birth date cannot be in the future" }
           ),
      role: z.enum([
-          "NURSE",
-          "DOCTOR",
           "PATIENT",
-          "LAB_TECH",
+          "STAFF",
           "SUPER_ADMIN",
-          "RECEPTIONIST",
-          "HOSPITAL_ADMIN",
      ]).default("PATIENT"),
      state: z.string(),
      districtName: z.string(),
@@ -84,10 +80,6 @@ export const updatePhoneSchema = z.object({
      })
 });
 
-export const forgotPasswordSchema = z.object({
-     body: userProfileSchema.pick({ emailId: true })
-});
-
 export const passwordResetSchema = z.object({
      body: z.object({
           resetToken: z.string()
@@ -111,4 +103,8 @@ export const updatePasswordSchema = z.object({
                .min(8, "Password must be at least 8 characters long")
                .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
      })
+});
+
+export const emailIdSchema = z.object({
+     body: userProfileSchema.pick({ emailId: true })
 });

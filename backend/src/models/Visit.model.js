@@ -19,7 +19,7 @@ const visitSchema = new Schema({         // i don't know why i putted this model
           required: true
      },
 
-     assignedNurse: {
+     assignedNurseId: {
           type: Schema.Types.ObjectId,
           ref: "Nurse",
           required: true

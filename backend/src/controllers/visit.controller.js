@@ -1,79 +1,83 @@
-import Visit from "../models/visit.model.js";
-import Patient from "../models/patient.model.js";
-import Hospital from "../models/hospital.model.js";
-import Nurse from "../models/nurse.model.js";
-import { Promise } from "mongoose";
+import { Nurse, Visit, Patient, Hospital } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
+import mongoose from "mongoose";
 
 export const handleCreatePatientVisit = async (req, res) => {
+     const session = await mongoose.startSession();
+
      try {
           const { patientId } = req.parsedParams;
-          const { assignedNurse: nurseId, hospitalId } = req.parsedBody;
+          const { assignedNurseId, hospitalId } = req.parsedBody;
 
-          const [patientRecord, nurseRecord, hospitalRecord] = await Promise.all([
-               Patient.exists({ _id: patientId }),
-               Nurse.exists({ _id: nurseId }),
-               Hospital.exists({ _id: hospitalId })
+          const [patient, hospital, nurse] = await Promise.all([
+               Patient.exists({ _id: patientId }).lean(),
+               Hospital.exists({ _id: hospitalId }).lean(),
+               Nurse.exists({ _id: assignedNurseId }).lean(),
           ]);
 
-          if (!patientRecord)
-               return res.status(404).json({ err: "No patient record found with this patientId" });
-          if (!nurseRecord)
-               return res.status(404).json({ err: "No nurse record found with this nurseId" });
-          if (!hospitalRecord)
-               return res.status(404).json({ err: "No hospital record found with this hospitalId" });
+          if (!patient) {
+               return next(
+                    new APIError(404, "No patient record found")
+               );
+          }
+          if (!hospital) {
+               return next(
+                    new APIError(404, "No hospital record found")
+               );
+          }
+          if (!nurse) {
+               return next(
+                    new APIError(404, "No nurse record found")
+               );
+          }
 
-          const [visitRecord, updatedNurseRecord,] = await Promise.all([
-               Visit.create({
-                    ...req.parsedBody,
-                    medicalCaseId: undefined
-               }),
+          session.startTransaction();
+
+          const [visitRecord, updatedNurseRecord] = await Promise.all([
+               Visit.create(
+                    [{
+                         ...req.parsedBody,
+                         medicalCaseId: undefined,
+                         timelineEventId: undefined
+                    }],
+                    { returnDocument: true, runValidators: true, session }
+               ),
                Nurse.findOneAndUpdate(
-                    { _id: nurseId },
-                    {
-                         $push: {
-                              assignedPatients: patientId
-                         }
-                    }
+                    { _id: assignedNurseId },
+                    { $push: { assignedPatients: patientId } },
+                    { returnDocument: true, runValidators: true, session }
                )
           ]);
 
-          if (!visitRecord)
+          if (!Array.isArray(visitRecord) || visitRecord.length === 0) {
                return next(
                     new APIError(
                          500, "Failed to create a visit for the patient"
                     )
                );
+          }
 
-          if (!updatedNurseRecord)
+          if (!updatedNurseRecord) {
                return next(
                     new APIError(
                          500, "Failed to assign visit to nurse"
                     )
                );
+          }
+
+          await session.commitTransaction();
 
           return res.status(201).json({
-               visitId: visit._id,
-               message: "successfully created and assigned the visit to the nurse"
+               success: true,
+               message: "successfully created and assigned the visit to the nurse",
+               data: { visitRecord: visitRecord[0], updatedNurseRecord }
           });
 
      } catch (err) {
-          console.error("failed during creating a patient visit\nerrorMsg: ", err.message);
+          await session.abortTransaction();
 
           return next(err);
-     }
-};
-
-export const handleGetAllNurse = async (req, res) => {
-     try {
-          const allNurse = await Staff.find({
-               hospitalId: req.user.hospitalId
-          });
-          if (!allNurse) return res.status(204).json({ msg: "no nurse exist" });
-
-          return res.status(200).json({ data: allNurse });
-     } catch (err) {
-          console.error("error: ", err.message);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+     } finally {
+          session.endSession();
      }
 };
