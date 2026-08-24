@@ -1,4 +1,4 @@
-import receptionistModel from "../models/receptionistModel.js";
+
 import { Receptionist, Staff } from "../models/index.js";
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
 import APIError from "../utils/APIError.utils.js";
@@ -15,6 +15,82 @@ export const handleGetReceptionist = async (req, res, next) => {
           }
 
           return res.status(200).json({ data: receptionist });
+     } catch (err) {
+          return next(err);
+     }
+};
+
+export const handleCreateReceptionist = async (req, res, next) => {
+     try {
+          const { staffId } = req.parsedParams;
+          const { hospitalId } = req.user;
+
+          const [staffExists, receptionistExists] = await Promise.all([
+               Staff.exists({ _id: staffId }).lean(),
+               Receptionist.exists({ staffId }).lean()
+          ]);
+
+          if (!staffExists) {
+               return next(
+                    new APIError(404, "Staff Record not found")
+               );
+          }
+          if (receptionistExists) {
+               return next(
+                    new APIError(400, "Receptionist already exists")
+               );
+          }
+
+          const receptionist = await Receptionist.create({
+               ...req.parsedBody,
+               hospitalId,
+               staffId
+          });
+
+          return res.status(201).json({
+               message: "Successfully created a Receptionist",
+               data: receptionist
+          });
+
+     } catch (err) {
+          return next(err);
+     };
+};
+
+export const handleUpdateReceptionist = async (req, res, next) => {
+     try {
+          const { staffId } = req.parsedParams;
+
+          const staffRecord = await Staff.exists({ _id: staffId }).lean();
+
+          if (!staffRecord) {
+               return next(
+                    new APIError(400, "No staff record found")
+               );
+          }
+
+          const receptionist = await Receptionist.findOneAndUpdate(
+               { staffId },
+               {
+                    $set: {
+                         ...req.parsedBody,
+                         staffId
+                    }
+               },
+               { returnDocument: "after", runValidator: true }
+          );
+
+          if (!receptionist) {
+               return next(
+                    new APIError(404, "No receptionist record found")
+               );
+          }
+
+          return res.status(200).json({
+               msg: "Successfully updated Receptionist record",
+               data: receptionist
+          });
+
      } catch (err) {
           return next(err);
      }
@@ -89,4 +165,3 @@ export const handleDeleteAvatar = async (req, res, next) => {
           return next(err);
      }
 };
-

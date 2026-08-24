@@ -1,10 +1,16 @@
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
 import { z } from "zod";
 
-const mongooseObjectIdValidator = (fieldName) => z.string()
-     .refine((val) => mongoose.Types.ObjectId.isValid(val), {
-          message: `Invalid ObjectId for field ${fieldName}`
-     });
+// const mongooseObjectIdValidator = (fieldName) => z.string()
+//      .refine((val) => mongoose.Types.ObjectId.isValid(val), {
+//           message: `Invalid ObjectId for field ${fieldName}`
+//      });
+
+export const getUserSchema = z.object({
+     body: z.object({
+          emailId: z.string().email({ message: "Invalid email address" })
+     })
+});
 
 export const userProfileSchema = z.object({
      fullName: z.string().min(1).max(60),

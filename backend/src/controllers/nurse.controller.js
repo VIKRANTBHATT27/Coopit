@@ -1,4 +1,3 @@
-import { Promise } from "mongoose";
 import { Staff, Nurse } from "../models/index.js";
 
 export const handleCreateNurse = async (req, res, next) => {

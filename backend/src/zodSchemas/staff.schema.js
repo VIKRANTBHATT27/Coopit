@@ -89,12 +89,6 @@ export const toggleStaffStatusSchema = z.object({
      params: mongooseObjectIdValidator("staffId")
 });
 
-export const getUserSchema = z.object({
-     body: z.object({
-          emailId: z.string().email({ message: "Invalid email address" })
-     })
-});
-
 export const checkEmployeeId = z.object({
      params: staffSchema.pick({ employeeId: true })
 });

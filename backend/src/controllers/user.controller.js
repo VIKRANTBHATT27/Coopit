@@ -1,4 +1,5 @@
-import { Patient, Staff, Nurse, Doctor, Receptionist, LabTechnician, User, PendingUser, Otp, PasswordReset } from "../models/index.js";
+
+import { User, PendingUser, Otp, PasswordReset } from "../models/index.js";
 import {
      hashPassword,
      passwordMatch
@@ -17,12 +18,29 @@ import {
 import { fetchPhoneNumber } from "../infrastructure/twilio.service.js";
 import APIError from "../utils/APIError.utils.js";
 import resolveRoleReferences from "../utils/roleReference.utils.js";
-
 import mongoose from "mongoose";
-import cypto from "node:crypto";
 
-import { config } from "dotenv";
-config();
+export const handleGetUser = async (req, res, next) => {
+    try {
+        const { emailId } = req.parsedBody;
+
+        const user = await User.findOne({ emailId }).select("_id").lean();
+
+        if (!user) {
+            return next(
+                new APIError(404, "User not found")
+            );
+        }
+
+        return res.status(200).json({
+            message: "User found",
+            data: { userId: user._id }
+        });
+
+    } catch (err) {
+        return next(err);
+    }
+};
 
 export const handleUserSignup = async (req, res, next) => {
      try {

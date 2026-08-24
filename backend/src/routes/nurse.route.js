@@ -1,4 +1,3 @@
-import express from "express";
 
 import {
      handleCreateNurse,
@@ -69,6 +68,7 @@ import {
      createPatientTimelineSchema,
 } from "../zodSchemas/timelineEvent.schema.js";
 
+import express from "express";
 const router = express.Router();
 
 router.use(checkForAuthentication);

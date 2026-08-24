@@ -5,15 +5,19 @@ import {
     handleChangeDetails,
     handleGetAll,
     handleToggleStatus,
-    handleGetUser,
+} from "../controllers/admin.controller.js";
+
+import {
     handleCreateReceptionist,
     handleUpdateReceptionist
-} from "../controllers/admin.controller.js";
+} from "../controllers/receptionist.controller.js";
+
+import { handleGetUser } from "../controllers/user.controller.js";
+import { getUserSchema } from "../zodSchemas/user.schema.js";
 
 import {
     idSchema,
     getAllSchema,
-    getUserSchema,
     roleChangeSchema,
     registrationSchema,
     detailChangeSchema,
