@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import APIError from "./APIError.utils.js";
-import { dispatchSMS } from "../services/twilio.service.js";
+import { dispatchSMS } from "../services/twilio.js";
 import { decryptPhoneFn, hashPhone } from "./phoneNumber.utils.js";
 import { User, Otp, PendingUser } from "../models/index.js";
 import mongoose from "mongoose";

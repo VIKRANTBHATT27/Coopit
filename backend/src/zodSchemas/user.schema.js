@@ -20,7 +20,7 @@ export const userProfileSchema = z.object({
           .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
      phoneNumber: z.string()
           .regex(/^\+?[1-9]\d{9,14}$/, "Phone number must be 10 digits"),
-     gender: z.enum(['Male', 'Female', 'Others']),
+     gender: z.enum(['MALE', 'FEMALE', 'OTHERS']),
      dateOfBirth: z.date()
           .max(new Date(),
                { message: "Birth date cannot be in the future" }

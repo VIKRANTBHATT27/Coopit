@@ -40,9 +40,16 @@ const receptionistSchema = new Schema({
           enum: ["Morning", "Evening", "Night"],
           required: true
      },
+     
      workingHours: {
-          start: { type: String, required: true },
-          end: { type: String, required: true }
+          start: {
+               type: String,
+               required: true,
+          },
+          end: {
+               type: String,
+               required: true,
+          }
      },
 
      qualifications: {

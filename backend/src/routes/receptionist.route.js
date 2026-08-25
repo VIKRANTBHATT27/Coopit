@@ -14,12 +14,14 @@ import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 import { handleGetUserLookup } from "../controllers/user.controller.js";
 import { handleCreatePatient } from "../controllers/patient.controller.js"
 import { handleCreatePatientVisit } from "../controllers/visit.controller.js";
-import { handleGetAllNurse } from "../controllers/nurse.controller.js";
+import { handleGetNursesByDept } from "../controllers/nurse.controller.js";
+
 
 import { emailIdSchema } from "../zodSchemas/user.schema.js";
-import { patientVisitSchema } from "../zodSchemas/visit.schema.js";
 import { createPatientSchema } from "../zodSchemas/patient.schema.js";
-import { receptionistAvatarUploadSchema } from "../zodSchemas/receptionist.schema.js";
+import { patientVisitSchema } from "../zodSchemas/visit.schema.js";
+import { avatarUploadSchema } from "../zodSchemas/receptionist.schema.js";
+import { getNursesQuerySchema } from "../zodSchemas/nurse.schema.js";
 
 import authenticate from "../middlewares/authenticate.middleware.js";
 import authorize from "../middlewares/authorize.middleware.js";
@@ -38,7 +40,7 @@ router.route('/avatar')
      .post(
           uploadAvatar.single("avatar"),
           cleanupTempFiles,
-          parseIncomingReq(receptionistAvatarUploadSchema),
+          parseIncomingReq(avatarUploadSchema),
           uploadUserAvatar,
           handleUploadAvatar
      )
@@ -59,9 +61,7 @@ router.post("/patients/:patientId/visits",
      handleCreatePatientVisit
 );
 
-router.get("/nurses",
-     handleGetAllNurse
-);
+
 
 
 export default router;

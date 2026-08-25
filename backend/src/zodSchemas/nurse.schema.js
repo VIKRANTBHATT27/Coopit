@@ -1,45 +1,90 @@
 import mongoose from 'mongoose';
 import { z } from 'zod';
 
+const AVATAR_FILE_TYPES = [
+     "image/jpeg",
+     "image/png",
+     "image/webp"
+];
+
 const mongooseObjectIdValidator = (fieldName) => z.string()
      .refine(val => mongoose.Types.ObjectId.isValid(val), {
-          message: `Invalid ${fieldName} ObjectId`
+          message: `Invalid Object Id for ${fieldName}`
      });
 
 
-export const nurseSchema = z.object({
-     staffId: mongooseObjectIdValidator('staffId'),
-     
-     pfp_url: z.string().default('/default-pfp/default-nurse.png'),
+export const createNurseSchema = z.object({
+     body: z.object({
+          wardAssigned: z.enum([
+               "ICU_INTENSIVE_CARE_UNIT",
+               "NICU_PICU_NEONATAL_PEDIATRIC_ICU",
+               "CCU_CORONARY_CARE_UNIT",
+               "GENERAL_WARD",
+               "MATERNITY_OBSTETRICS",
+               "PEDIATRIC_WARD",
+               "SURGICAL_WARD",
+               "ONCOLOGY_WARD",
+               "PSYCHIATRIC_UNIT",
+               "EMERGENCY_OBSERVATION",
+               "ISOLATION_UNIT"
+          ]),
 
-     wardAssigned: z.enum([
-          "ICU (Intensive Care Unit)",
-          "NICU/PICU (Neonatal/Pediatric ICU)",
-          "CCU (Coronary Care Unit)",
-          "General Ward",
-          "Maternity & Obstetrics",
-          "Pediatric Ward",
-          "Surgical Ward",
-          "Oncology Ward",
-          "Psychiatric Unit",
-          "Emergency/Observation",
-          "Isolation Unit"
-     ]),
+          nurseDescription: z.string().optional(),
 
-     assignedPatients: z.array(mongooseObjectIdValidator("patientId")).unique().default([]),
+          shift: z.enum(["DAY", "NIGHT"]),
 
-     nurseDescription: z.string().optional(),
+          workingHours: z.object({
+               start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)"),
+               end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)")
+          }),
 
-     shift: z.enum(["DAY", "NIGHT"]),
+          experienceYears: z.number().default(0),
 
-     workingHours: z.object({
-          start: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "given time is not a valid time (HH:MM)!"),
-          end: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "given time is not a valid time (HH:MM)!")
+          qualification: z.string()
      }),
 
-     experienceYears: z.number().default(0),
-
-     qualification: z.string()
+     params: z.object({
+          staffId: mongooseObjectIdValidator('Staff')
+     })
 });
 
-export const nurseUpdationSchema = nurseSchema.omit({ staffId: true }).partial();
+export const nurseUpdationSchema = z.object({
+     body: createNurseSchema.shape.body.shape.partial(),
+
+     params: z.object({
+          staffId: mongooseObjectIdValidator('Staff')
+     })
+});
+
+// pfp_url: z.string().default('/default-pfp/default-nurse.png'),
+// assignedPatients: z.array(mongooseObjectIdValidator("patientId")).unique().default([]),
+// patientId: mongooseObjectIdValidator("patientId"),
+
+
+export const avatarUploadSchema = z.object({
+     file: z.object({
+          originalName: z.string()
+               .min(1, "Original filename is required"),
+          mimeType: z.string()
+               .refine(mime => AVATAR_FILE_TYPES.includes(mime), {
+                    message: "invalid image file type"
+               }),
+          path: z.string()
+               .min(1, "Temporary storage file path is missing"),
+     }, {
+          message: "file is required for avatar uplaod"
+     })
+});
+
+export const getNursesQuerySchema = z.object({
+     query: z.object({
+          department: z.enum([
+               "EMERGENCY_MEDICINE",
+               "GENERAL_MEDICINE",
+               "GENERAL_SURGERY"
+          ], {
+               required_error: "Department query parameter is required",
+               invalid_type_error: "Invalid hospital department selected"
+          })
+     })
+});

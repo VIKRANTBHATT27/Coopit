@@ -7,7 +7,7 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
      });
 
 const staffSchema = z.object({
-     userId: mongooseObjectIdValidator("userId"),
+     userId: mongooseObjectIdValidator("User"),
 
      employeeId: z.string()
           .regex(/^(NUR|REC|LAB|DOC|ADM)-\d{4}-\d{4}$/, {
@@ -68,17 +68,17 @@ export const getAllSchema = z.object({
 export const roleChangeSchema = z.object({
      body: staffSchema.pick({ role: true }),
 
-     params: mongooseObjectIdValidator("staffId")
+     params: mongooseObjectIdValidator("Staff")
 });
 
 export const detailChangeSchema = z.object({
      body: staffSchema.omit({ userId: true, role: true }),
 
-     params: mongooseObjectIdValidator("staffId")
+     params: mongooseObjectIdValidator("Staff")
 });
 
-export const idSchema = z.object({
-     params: mongooseObjectIdValidator("staffId")
+export const staffIdSchema = z.object({
+     params: mongooseObjectIdValidator("Staff")
 });
 
 export const toggleStaffStatusSchema = z.object({
@@ -86,9 +86,13 @@ export const toggleStaffStatusSchema = z.object({
           status: z.enum(["ACTIVE", "INACTIVE"])
      }),
 
-     params: mongooseObjectIdValidator("staffId")
+     params: mongooseObjectIdValidator("Staff")
 });
 
 export const checkEmployeeId = z.object({
      params: staffSchema.pick({ employeeId: true })
+});
+
+export const getStaffByDept = z.object({
+     query: staffSchema.pick({ department: true })
 });

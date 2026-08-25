@@ -1,6 +1,12 @@
 import { z } from "zod";
 import mongoose from "mongoose";
 
+const AVATAR_FILE_TYPES = [
+     "image/jpeg",
+     "image/png",
+     "image/webp"
+];
+
 const mongooseObjectIdValidator = (fieldName) => z.string()
      .refine((val) => mongoose.Types.ObjectId.isValid(val), {
           message: `Invalid ObjectId for field ${fieldName}`
@@ -8,7 +14,7 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
 
 
 export const userIdSchema = z.object({
-     userId: mongooseObjectIdValidator("userId")
+     userId: mongooseObjectIdValidator("User")
 });
 
 export const createPatientSchema = z.object({
@@ -31,8 +37,10 @@ export const createPatientSchema = z.object({
      params: userIdSchema
 });
 
-export const patientUpdationSchema = patientSchema.omit({
-     userId: true,
-     pfp_url: true,
-     pfp_publicId: true,
-}).partial();
+export const updatePatientSchema = z.object({
+     body: createPatientSchema.shape.body.shape.partial(),
+     
+     params: z.object({
+          patientId:  mongooseObjectIdValidator("Patient")
+     })
+});

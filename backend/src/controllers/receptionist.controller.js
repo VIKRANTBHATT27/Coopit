@@ -20,13 +20,45 @@ export const handleGetReceptionist = async (req, res, next) => {
      }
 };
 
+export const handleGetReceptionistDetails = async (req, res, next) => {
+     try {
+          const { staffId } = req.parsedParams;
+
+          const receptionistDetails = await Receptionist.findOne({ staffId })
+               .populate({
+                    path: "staffId",
+                    populate: {
+                         path: "userId",
+                         select: "-passwordHash -phoneNumberHash -phoneNumberEnc -phoneIV -phoneAuthTag"
+                    }
+               })
+
+          if (!receptionistDetails) {
+               return next(
+                    new APIError(404, "Receptionist record not found")
+               );
+          }
+
+          return res.status(200).json({
+               message: "All details of receptionist",
+               data: receptionistDetails
+          });
+
+     } catch (err) {
+          return next(err);
+     }
+};
+
 export const handleCreateReceptionist = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
           const { hospitalId } = req.user;
 
           const [staffExists, receptionistExists] = await Promise.all([
-               Staff.exists({ _id: staffId }).lean(),
+               Staff.exists({
+                    _id: staffId,
+                    role: "RECEPTIONIST"
+               }).lean(),
                Receptionist.exists({ staffId }).lean()
           ]);
 
@@ -61,7 +93,10 @@ export const handleUpdateReceptionist = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
 
-          const staffRecord = await Staff.exists({ _id: staffId }).lean();
+          const staffRecord = await Staff.exists({
+               _id: staffId,
+               role: "RECEPTIONIST"
+          }).lean();
 
           if (!staffRecord) {
                return next(
@@ -106,7 +141,7 @@ export const handleUploadAvatar = async (req, res, next) => {
           const receptionist = await Receptionist.findOneAndUpdate(
                { staffId },
                { $set: { pfp_url, pfp_publicId } },
-               { returnDocument: "after", runValidator: true }
+               { returnDocument: "after" }
           );
 
           if (!receptionist) {
@@ -116,7 +151,7 @@ export const handleUploadAvatar = async (req, res, next) => {
           }
 
           return res.status(200).json({
-               message: "successfully uploaded image",
+               message: "successfully uploaded avatar",
                url: receptionist.pfp_url
           });
 
@@ -147,11 +182,11 @@ export const handleDeleteAvatar = async (req, res, next) => {
 
           if (!cloudDeletionResult) {
                return next(
-                    new APIError(400, "Failed to delete avatar from stoage system.")
+                    new APIError(500, "Failed to delete avatar from stoage system.")
                );
           }
 
-          receptionist.pfp_publicId = undefined;
+          receptionist.pfp_publicId = null;
           receptionist.pfp_url = "/default-pfp/default-receptionist.png";
           await receptionist.save();
 

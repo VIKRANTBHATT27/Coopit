@@ -1,5 +1,7 @@
-import { DicomStudy } from "../models/index.js";
+import { DicomStudy, Staff, User } from "../models/index.js";
 import { previewDicomInstance } from "../services/dicom.service.js";
+import APIError from "../utils/APIError.utils.js";
+
 
 export const handleViewDicom = async (req, res) => {
     const { checkUpId } = req.parsedParams;

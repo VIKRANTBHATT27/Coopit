@@ -72,6 +72,7 @@ const staffSchema = new Schema({
           type: String,
           required: false,
      }
+     
 }, { timestamps: true });
 
 staffSchema.index({ hospitalId: 1, employeeId: 1 }, { unique: true });

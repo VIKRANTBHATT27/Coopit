@@ -1,40 +1,95 @@
 import { Promise } from "mongoose";
-import { Nurse, Doctor, MedicalCase } from "../models/index.js";
+import { Nurse, Doctor, MedicalCase, Patient } from "../models/index.js";
+import APIError from "../utils/APIError.utils.js";
 
-export const handleCreateMedicalCase = async (req, res) => {
+export const handleGetAllMedicalCases = async (req, res) => {
      try {
-          const { staffId } = req.user;
-          const { diagnosedBy } = req.parsedBody;
+          const { roleRefId } = req.user;
+          const { patientId } = req.parsedParams;
 
-          const [nurse, doctor] = await Promise.all([
-               Nurse.findOne({ staffId }),
-               Doctor.findById(diagnosedBy)
-          ]);
+          const patient = await Patient.exists({ _id: patientId }).lean();
+          if (!patient) {
+               return next(
+                    new APIError(404, "No patient record found")
+               );
+          }
 
-          if (!nurse) return res.status(404).json({ err: "no nurse found with this staffId" });
-          if (!doctor) return res.status(404).json({ err: "no doctor found with this mongoose Id" });
+          const allMedicalCases = await MedicalCase.find({
+               patientId,
+               assistedBy: roleRefId
+          }).sort({ createdAt: -1 });
 
-          const medicalCase = await MedicalCase.create(req.parsedBody);
+          if (allMedicalCases.length === 0) {
+               return res.status(200).json({
+                    status: "ok",
+                    data: [],
+                    messsage: "no medical cases exist yet"
+               });
+          }
 
-          return res.status(201).json({ status: "created", data: medicalCase });
+          return res.status(200).json({
+               status: "ok",
+               data: allMedicalCases
+          });
+
      } catch (err) {
-          console.error("failed creationg of medical-case\n", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          return next(err);
+     }
+};
+
+export const handleCreateMedicalCase = async (req, res, next) => {
+     try {
+          const { roleRefId } = req.user;
+          const { patientId } = req.parsedParams;
+          const { doctorId } = req.parsedBody;
+
+          const patient = await Patient.exists({ _id: patientId }).lean();
+          if (!patient) {
+               return next(
+                    new APIError(404, "No patient record found")
+               );
+          }
+
+          if (doctorId) {
+               const doctor = await Doctor.exists({ _id: doctorId }).lean();
+
+               if (!doctor) {
+                    return next(
+                         new APIError(404, "No doctor record found")
+                    );
+               }
+          }
+
+          const medicalCase = await MedicalCase.create({
+               ...req.parsedBody,
+               patientId,
+               assistedBy: roleRefId,
+               diagnosedBy: doctorId || null,
+               timelineEventId: null
+          });
+
+          return res.status(201).json({
+               success: true,
+               message: "Medical case successfully created",
+               data: medicalCase
+          });
+
+     } catch (err) {
+          return next(err);
      }
 };
 
 export const handleUpdateMedicalCase = async (req, res) => {
      try {
-          const { staffId } = req.user;
           const { medicalCaseId } = req.parsedParams;
 
-          const [nurse, medicalCase] = await Promise.all([
-               Nurse.findOne({ staffId }),
-               MedicalCase.findById(medicalCaseId)
-          ]);
+          const medicalCase = await MedicalCase.exists({ _id: medicalCaseId }).lean();
 
-          if (!nurse) return res.status(404).json({ err: "invalid staffId" });
-          if (!medicalCase) return res.status(404).json({ err: "invalid medical-case Id" });
+          if (!medicalCase) {
+               return next(
+                    new APIError(404, "No medical case record found")
+               );
+          }
 
           const updatedMedicalCase = await MedicalCase.findByIdAndUpdate(
                medicalCaseId,
@@ -42,28 +97,112 @@ export const handleUpdateMedicalCase = async (req, res) => {
                { returnDocument: "after", runValidators: true }
           );
 
-          return res.status(200).json({ status: "ok", data: updatedMedicalCase });
+          return res.status(200).json({
+               status: "ok",
+               message: "Medical Case record updated successfully",
+               data: updatedMedicalCase
+          });
+
      } catch (err) {
-          console.log("failed updation of medicalCase\n", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          return next(err);
      }
 };
 
-export const handleGetAllMedicalCase = async (req, res) => {
+export const handleChangeNurse = async (req, res, next) => {
      try {
-          const { staffId } = req.user;
-          const { timelineEventId } = req.parsedParams;
+          const { roleRefId } = req.user;
+          const { nurseId, medicalCaseId } = req.parsedParams;
 
-          const nurse = await Nurse.findOne({ staffId });
-          if (!nurse) return res.status(404).json({ err: "no nurse found with this staffId" });
+          if (roleRefId === nurseId) {
+               return next(
+                    new APIError(400, "Nurse ID matches the logged-in nurse")
+               );
+          }
 
-          const allMedicalCases = await MedicalCase.find({ timelineEventId });
+          const [nurseExists, medicalCaseExists] = await Promise.all([
+               Nurse.exists({ _id: nurseId }).lean(),
+               MedicalCase.exists({
+                    _id: medicalCaseId,
+                    assistedBy: roleRefId
+               }).lean()
+          ]);
 
-          if (allMedicalCases.length === 0) return res.status(204).json({ msg: "no medical cases exist yet" });
+          if (!nurseExists) {
+               return next(
+                    new APIError(404, "Nurse record not found")
+               );
+          }
 
-          return res.status(200).json({ status: "ok", data: allMedicalCases });
+          if (!medicalCaseExists) {
+               return next(
+                    new APIError(404, "Either medical case not found or it is not assigned to you")
+               );
+          }
+
+          const updatedMedicalCase = await MedicalCase.findByIdAndUpdate(
+               medicalCaseId,
+               { $set: { assistedBy: nurseId } },
+               { returnDocument: true, runValidators: true }
+          );
+
+          return res.status(200).json({
+               status: "ok",
+               message: "New nurse is added to the medical case.",
+               data: updatedMedicalCase
+          });
+
      } catch (err) {
-          console.log("error in getting all medical case\n", err);
-          return res.status(500).json({ err: 'INTERNAL SERVER ERROR' });
+          return next(err);
+     }
+};
+
+export const handleChangeDoctor = async (req, res, next) => {
+     try {
+          const { roleRefId } = req.user;
+          const { doctorId, medicalCaseId } = req.parsedParams;
+
+          const [doctorExists, medicalCaseExists] = await Promise.all([
+               Doctor.exists({ _id: doctorId }).lean(),
+               MedicalCase.exists({
+                    _id: medicalCaseId,
+                    assistedBy: roleRefId
+               }).lean()
+          ]);
+
+          if (!doctorExists) {
+               return next(
+                    new APIError(404, "Doctor record not found")
+               );
+          }
+
+          if (!medicalCaseExists) {
+               return next(
+                    new APIError(404, "Either medical case not found or it is not assigned to you")
+               );
+          }
+
+          const updatedMedicalCase = await MedicalCase.findByIdAndUpdate(
+               medicalCaseId,
+               { $set: { diagnosedBy: doctorId } },
+               { returnDocument: true, runValidators: true }
+          );
+
+          return res.status(200).json({
+               status: "ok",
+               message: "New doctor is added to the medical case.",
+               data: updatedMedicalCase
+          });
+
+     } catch (err) {
+          return next(err);
+     }
+};
+
+export const handleChangeTimelineEvent = async (req, res, next) => {
+     try {
+          
+
+     } catch (err) {
+          return next(err);
      }
 };

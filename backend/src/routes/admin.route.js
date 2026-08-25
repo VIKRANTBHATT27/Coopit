@@ -9,14 +9,21 @@ import {
 
 import {
     handleCreateReceptionist,
+    handleGetReceptionistDetails,
     handleUpdateReceptionist
 } from "../controllers/receptionist.controller.js";
+
+import {
+    handleGetNurseDetails,
+    handleCreateNurse,
+    handleUpdateNurse
+} from "../controllers/nurse.controller.js";
 
 import { handleGetUser } from "../controllers/user.controller.js";
 import { getUserSchema } from "../zodSchemas/user.schema.js";
 
 import {
-    idSchema,
+    staffIdSchema,
     getAllSchema,
     roleChangeSchema,
     registrationSchema,
@@ -28,6 +35,11 @@ import {
     createReceptionistSchema,
     updateReceptionistSchema
 } from "../zodSchemas/receptionist.schema.js";
+
+import {
+    createNurseSchema,
+    nurseUpdationSchema
+} from "../zodSchemas/nurse.schema.js";
 
 import authorize from "../middlewares/authorize.middleware.js";
 import authenticate from "../middlewares/authenticate.middleware.js";
@@ -57,7 +69,7 @@ router.post("/staff",
 
 router.route("/staff/:staffId")
     .get(
-        parseIncomingReq(idSchema),
+        parseIncomingReq(staffIdSchema),
         handleLookUp
     )
     .patch(
@@ -76,6 +88,10 @@ router.post("/staff/:staffId/status",
 );
 
 router.route("/receptionist/:staffId")
+    .get(
+        parseIncomingReq(staffIdSchema),
+        handleGetReceptionistDetails
+    )
     .post(
         parseIncomingReq(createReceptionistSchema),
         handleCreateReceptionist
@@ -83,6 +99,20 @@ router.route("/receptionist/:staffId")
     .patch(
         parseIncomingReq(updateReceptionistSchema),
         handleUpdateReceptionist
+    );
+
+router.route("/nurse/:staffId")
+    .get(
+        parseIncomingReq(staffIdSchema),
+        handleGetNurseDetails
+    )
+    .post(
+        parseIncomingReq(createNurseSchema),
+        handleCreateNurse
+    )
+    .patch(
+        parseIncomingReq(nurseUpdationSchema),
+        handleUpdateNurse
     );
 
 export default router;

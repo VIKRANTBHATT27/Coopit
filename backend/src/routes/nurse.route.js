@@ -1,46 +1,23 @@
+import { handleGetDoctorsByDept } from "../controllers/doctor.controller.js";
 
 import {
-     handleCreateNurse,
      handleGetNurse,
-     handleUpdateNurse,
-     handleUploadImg,
-     handleDeleteUploadedImg,
+     handleUploadAvatar,
+     handleDeleteAvatar,
+     handleGetNursesByDept,
 } from "../controllers/nurse.controller.js";
+
+import {
+     handleGetPatients,
+     handleUpdatePatient
+} from "../controllers/patient.controller.js";
 
 import {
      handleCreateMedicalCase,
      handleUpdateMedicalCase,
      handleGetAllMedicalCase,
+     handleGetAllMedicalCases,
 } from "../controllers/medicalCase.controller.js";
-
-import {
-     validateParams,
-     validateQuery,
-     validateBody
-} from "../middlewares/validateReq.middleware.js";
-
-import {
-     medicalCaseSchema,
-     medicalCaseUpdationSchema
-} from "../zodSchemas/medicalCase.schema.js";
-
-import checkForAuthentication from "../middlewares/authenticate.middleware.js";
-import checkForAuthorization from "../middlewares/authorize.middleware.js";
-
-import { uploadImg } from "../middlewares/multer.js";
-import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
-import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.js";
-
-
-
-
-import {
-     handleViewDicomFile
-} from "../controllers/dicom.controller.js";
-
-import {
-     handleCreateNurse
-} from "../controllers/nurse.controller.js";
 
 import {
      handleAddNewEventData,
@@ -50,16 +27,35 @@ import {
      handleUpdatePatientTimeline,
 } from "../controllers/timelineEvent.controller.js";
 
+import {
+     handleViewDicomFile
+} from "../controllers/dicom.controller.js";
 
+
+import authenticate from "../middlewares/authenticate.middleware.js";
+import authorize from "../middlewares/authorize.middleware.js";
+
+import { uploadAvatar } from "../middlewares/multer.middleware.js";
+
+import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
+
+import parseIncomingReq from "../middlewares/parseReq.middleware.js";
+
+import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
+
+
+import { getStaffByDept } from "../zodSchemas/staff.schema.js";
+import { checkUpIdSchema } from "../zodSchemas/checkUp.schema.js";
+import { avatarUploadSchema } from "../zodSchemas/nurse.schema.js";
+import { updatePatientSchema } from "../zodSchemas/patient.schema.js";
 
 import {
-     checkUpIdSchema
-} from "../zodSchemas/checkUp.schema.js";
-
-import {
-     nurseSchema,
-     nurseUpdationSchema
-} from "../zodSchemas/nurse.schema.js";
+     changeDoctorSchema,
+     changeNurseSchema,
+     createMedicalCaseSchema,
+     medicalCaseSchema,
+     medicalCaseUpdationSchema
+} from "../zodSchemas/medicalCase.schema.js";
 
 import {
      addNewEventDataSchema,
@@ -71,50 +67,73 @@ import {
 import express from "express";
 const router = express.Router();
 
-router.use(checkForAuthentication);
-router.use(checkForAuthorization(['NURSE']));
+router.use(authenticate);
 
-router.post("/",
-
+router.get('/',
+     authorize(["STAFF"], ["RECEPTIONIST", "NURSE", "ADMIN"]),
+     parseIncomingReq(getNursesQuerySchema),
+     handleGetNursesByDept
 );
 
+router.use(authorize(["STAFF"], ["NURSE"]));
+
 router.route('/')
-     .get( handleGetNurse )
+     .get(handleGetNurse);
+
+router.route('/avatar')
      .post(
-          validateBody(nurseSchema),
-          handleCreateNurse
+          uploadAvatar.single("avatar"),
+          cleanupTempFiles,
+          parseIncomingReq(avatarUploadSchema),
+          uploadUserAvatar,
+          handleUploadAvatar
      )
-     .patch(
-          validateBody(nurseUpdationSchema),
-          handleUpdateNurse
-     );
+     .delete(handleDeleteAvatar);
 
-router.route('/profile-picture')
-     .post(
-          uploadImg.single("avatar"),
-          cloudinary_pfpUploader,
-          deleteLocalImgFile,
-          handleUploadImg
+router.get("/patients",
+     handleGetPatients
+);
+
+router.patch("/patients/:patientId",
+     parseIncomingReq(updatePatientSchema),
+     handleUpdatePatient
+);
+
+router.get("/nurses",
+     parseIncomingReq(getStaffByDept),
+     handleGetNursesByDept
+);
+
+router.get("/doctors",
+     parseIncomingReq(getStaffByDept),
+     handleGetDoctorsByDept
+);
+
+router.route("/medical-case/:patientId")
+     .get(
+          parseIncomingReq(getMedicalCaseSchema),
+          handleGetAllMedicalCases
      )
-     .delete(
-
-          handleDeleteUploadedImg
-     );
-
-
-router.route('/medical-case')
      .post(
-          validateBody(createMedicalCaseSchema),
+          parseIncomingReq(createMedicalCaseSchema),
           handleCreateMedicalCase
-     )
-     .patch(
-          validateBody(medicalCaseUpdationSchema),
-          handleUpdateMedicalCase
      );
 
+router.patch("/medical-case/:medicalCaseId",
+     parseIncomingReq(medicalCaseUpdationSchema),
+     handleUpdateMedicalCase
+);
 
-router.get('/medical-case/:timelineEventId',
-     handleGetAllMedicalCase
+router.patch(
+     "/medical-case/:medicalCaseId/nurse/:nurseId",
+     parseIncomingReq(changeNurseSchema),
+     handleChangeNurse
+);
+
+router.patch(
+     "/medical-case/:medicalCaseId/doctor/:doctorId",
+     parseIncomingReq(changeDoctorSchema),
+     handleChangeDoctor
 );
 
 router.route('/timeline-event',

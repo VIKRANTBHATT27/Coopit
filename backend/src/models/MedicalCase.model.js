@@ -1,13 +1,13 @@
 import { model, Schema } from "mongoose";
 
-const medicalCase_Schema = new Schema({
+const medicalCaseSchema = new Schema({
      patientId: {
           type: Schema.Types.ObjectId,
           required: true,
           ref: "Patient"
      },
 
-     createdBy: {
+     assistedBy: {
           type: Schema.Types.ObjectId,
           ref: "Nurse",
           required: true
@@ -15,26 +15,31 @@ const medicalCase_Schema = new Schema({
 
      diagnosedBy: {
           type: Schema.Types.ObjectId,
-          required: true,
-          ref: "Doctor"
+          ref: "Doctor",
+          default: null,
      },
 
      timelineEventId: {
           type: Schema.Types.ObjectId,
-          required: false,
           ref: "TimelineEvent",
           default: null,
      },
 
      severity: {
           type: String,
-          enum: ['Mild', 'Moderate', 'Severe'],
+          enum: ['MILD', 'MODERATE', 'SEVERE'],
           required: true,
      },
 
-     category: {         //need a look 
+     category: { 
           type: String,
-          enum: ['Infectious', 'NonCommunicable', 'Genetic', 'Deficiency', 'Non-Infectious'],
+          enum: [
+               'GENETIC',
+               'DEFICIENCY',
+               'INFECTIOUS',
+               'NON_INFECTIOUS',
+               'NON_COMMUNICABLE',
+          ],
           required: false
      },
 
@@ -46,12 +51,6 @@ const medicalCase_Schema = new Schema({
      isApproved: {
           type: Boolean,
           default: false
-     },
-
-     timelineEventId: {
-          type: Schema.Types.ObjectId,
-          ref: "TimeLineEvent",
-          required: false,
      }
 
 }, { timestamps: true });
@@ -60,5 +59,5 @@ medicalCase_Schema.index({ patientId: 1 });
 medicalCase_Schema.index({ diagnosisDistrict: 1 });
 medicalCase_Schema.index({ diseaseName: 1, status: 1 });
 
-const MedicalCase = model("medicalCase", medicalCase_Schema);
+const MedicalCase = model("medicalCase", medicalCaseSchema);
 export default MedicalCase;

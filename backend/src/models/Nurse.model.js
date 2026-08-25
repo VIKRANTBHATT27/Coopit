@@ -1,4 +1,4 @@
-import mongoose, { model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
 const nurseSchema = new Schema({
      staffId: {
@@ -13,7 +13,7 @@ const nurseSchema = new Schema({
           required: false,
           default: "/default-pfp/default-nurse.png"
      },
-     
+
      pfp_publicId: {
           type: String,
           required: false,
@@ -23,23 +23,23 @@ const nurseSchema = new Schema({
           type: String,
           trim: true,
           enum: [
-               "ICU (Intensive Care Unit)",
-               "NICU/PICU (Neonatal/Pediatric ICU)",
-               "CCU (Coronary Care Unit)",
-               "General Ward",
-               "Maternity & Obstetrics",
-               "Pediatric Ward",
-               "Surgical Ward",
-               "Oncology Ward",
-               "Psychiatric Unit",
-               "Emergency/Observation",
-               "Isolation Unit"
+               "ICU_INTENSIVE_CARE_UNIT",
+               "NICU_PICU_NEONATAL_PEDIATRIC_ICU",
+               "CCU_CORONARY_CARE_UNIT",
+               "GENERAL_WARD",
+               "MATERNITY_OBSTETRICS",
+               "PEDIATRIC_WARD",
+               "SURGICAL_WARD",
+               "ONCOLOGY_WARD",
+               "PSYCHIATRIC_UNIT",
+               "EMERGENCY_OBSERVATION",
+               "ISOLATION_UNIT"
           ],
      },
 
      assignedPatients: {
           type: [{
-               type: mongoose.Types.ObjectId,
+               type: Schema.Types.ObjectId,
                ref: "Patient",
                required: true,
                unique: true

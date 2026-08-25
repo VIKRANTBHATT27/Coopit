@@ -169,25 +169,37 @@ export const handlePreviewDicomFile = async (req, res) => {
      }
 };
 
-// export const handleDoctorLogin = async (req, res) => {
-//      const { emailId, password } = req.body;
+export const handleGetDoctorsByDept = async (req, res, next) => {
+     try {
+          const { hospitalId } = req.user;
+          const { department } = req.parsedParams;
 
-//      if (!emailId && !password) return res.status(400).json({ err: "emailId and password are required!" });
+          const allDoctors = await Staff.find({
+               hospitalId,
+               department,
+               role: "DOCTOR",
+               status: "ACTIVE",
+          });
 
-//      try {
-//           const token = await doctorModel.matchPassword_and_GenerateToken(emailId, password);
+          if (!allDoctors) {
+               return next(
+                    new APIError(404, "No doctor records found")
+               );
+          }
 
-//           console.log(token);
+          const allDoctorDetails = [];
 
-//           res.cookie("authToken", token, {
-//                httpOnly: true,
-//                secure: false,      //turn it to true on deployment
-//           });
-//      } catch (error) {
-//           console.log("error: ", error.message);
+          for (const doctor of allDoctors) {
+               const userDetails = await User.findById(doctor.userId).select("fullName emailId gender dateOfBirth");
 
-//           if (error.message === "Password not matched") return res.status(400).json({ err: "Invalid Credientials" });
+               allDoctorDetails.push(userDetails);
+          }
 
-//           return res.status(500).json({ err: "INTERNAL SERVER ERROR", error: err.message });
-//      }
-// };
+          return res.status(200).json({
+               message: "details of all the doctors",
+               data: allDoctorDetails
+          });
+     } catch (err) {
+          return next(err);
+     }
+};

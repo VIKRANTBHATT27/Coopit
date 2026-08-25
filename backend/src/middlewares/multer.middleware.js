@@ -9,7 +9,7 @@ const customStorageAvatars = multer.diskStorage({
           // const extensionName = path.extname(file.originalname);
           // const basename = path.basename(file.originalname, extensionName);
           
-          cb(null, "image-" + Date.now() + file.originalname);
+          cb(null, "Image-" + Date.now() + file.originalname);
      }
 });
 

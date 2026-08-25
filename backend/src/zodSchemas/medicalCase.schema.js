@@ -3,22 +3,55 @@ import { z } from "zod";
 
 const mongooseObjectIdValidator = (fieldName) => z.string()
      .refine(val => mongoose.Types.ObjectId.isValid(val), {
-          message: `Invalid ${fieldName}'s mongoose-Id`
+          message: `Invalid Object Id for ${fieldName}`
      });
 
-export const medicalCaseSchema = z.object({
-     patientId: mongooseObjectIdValidator("patientId"),
-     createdBy: mongooseObjectIdValidator("nurseId"),
-     diagnosedBy: mongooseObjectIdValidator("doctorId"),
-     timelineEventId: mongooseObjectIdValidator("timelineEventId").nullable().optional().default(null),
-     severity: z.enum(['Mild', 'Moderate', 'Severe']),
-     category: z.enum(['Infectious', 'NonCommunicable', 'Genetic', 'Deficiency', 'Non-Infectious']).optional(),
-     possibleCause: z.string().optional(),
+export const getMedicalCaseSchema = z.object({
+     params: z.object({
+          patientId: mongooseObjectIdValidator("Patient")
+     })
+})
+
+export const createMedicalCaseSchema = z.object({
+     body: z.object({
+          doctorId: mongooseObjectIdValidator("Doctor").optional(),
+
+          severity: z.enum(['MILD', 'MODERATE', 'SEVERE']),
+
+          category: z.enum([
+               'GENETIC',
+               'DEFICIENCY',
+               'INFECTIOUS',
+               'NON_INFECTIOUS',
+               'NON_COMMUNICABLE',
+          ]).optional(),
+
+          possibleCause: z.string().optional(),
+     }),
+
+     params: z.object({
+          patientId: mongooseObjectIdValidator("Patient")
+     })
 });
 
-export const medicalCaseUpdationSchema = medicalCaseSchema.omit({
-     patientId: true,
-     createdBy: true,
-     diagnosedBy: true,
-     timelineEventId: true
-}).partial();
+export const medicalCaseUpdationSchema = z.object({
+     body: medicalCaseUpdationSchema.shape.body.shape.omit({ doctorId: true }).partial(),
+
+     params: z.object({
+          medicalCaseId: mongooseObjectIdValidator("Medical Case"),
+     })
+});
+
+export const changeNurseSchema = z.object({
+     params: z.object({
+          medicalCaseId: mongooseObjectIdValidator("Medical Case"),
+          nurseId: mongooseObjectIdValidator("Nurse")
+     })
+});
+
+export const changeDoctorSchema = z.object({
+     params: z.object({
+          medicalCaseId: mongooseObjectIdValidator("Medical Case"),
+          doctorId: mongooseObjectIdValidator("Doctor")
+     })
+});

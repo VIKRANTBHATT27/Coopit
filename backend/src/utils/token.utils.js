@@ -10,7 +10,8 @@ export const generateToken = ({ _id: userId, role }, { staffId = null, roleDocId
           userId,
           role,
           staffId,
-          roleRefId
+          roleRefId,
+          hospitalId
      }, secretKey, { expiresIn: "24h" });
 };
 

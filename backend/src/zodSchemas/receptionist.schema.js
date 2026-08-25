@@ -12,7 +12,7 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
           message: `Invalid ObjectId for field ${fieldName}`
      });
 
-export const createReceptionistSchema = z.object({
+export const createSchema = z.object({
      body: z.object({
           department: z.enum([
                "Front Desk",
@@ -23,26 +23,29 @@ export const createReceptionistSchema = z.object({
           shift: z.enum(["Morning", "Evening", "Night"]),
 
           workingHours: z.object({
-               start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
-               end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)")
-          }),
+               start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)"),
+               end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)")
+          })
+          ,
 
           qualifications: z.array(z.string()).optional(),
+     }),
+
+     params: z.object({
+          staffId: mongooseObjectIdValidator('Staff')
      })
 });
 
-export const updateReceptionistSchema = z.object({
-     body: createReceptionistSchema.shape.body.partial()
+export const updateSchema = z.object({
+     body: createSchema.shape.body.partial(),
+     
+     params: z.object({
+          staffId: mongooseObjectIdValidator('Staff')
+     })
 });
 
 
-export const receptionistUpdateSchema = z.object({
-     body: receptionistSignupSchema.shape.body.omit({ hospitalId: true }).partial(),
-     pfp_url: z.string().default("/default-pfp/default-receptionist.png")
-});
-
-
-export const receptionistAvatarUploadSchema = z.object({
+export const avatarUploadSchema = z.object({
      file: z.object({
           originalName: z.string()
                .min(1, "Original filename is required"),

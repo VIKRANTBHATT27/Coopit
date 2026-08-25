@@ -18,7 +18,7 @@ export const handleGetAll = async (req, res, next) => {
                 .sort({ createdAt: -1 })
         ]);
 
-        if (!staffList.length) {
+        if (staffList.length === 0) {
             return res.status(200).json({
                 data: [],
                 message: "No staff found"

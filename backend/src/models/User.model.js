@@ -44,7 +44,7 @@ const userSchema = new Schema({
 
      gender: {
           type: String,
-          enum: ['Male', 'Female', 'Others'],
+          enum: ['MALE', 'FEMALE', 'OTHERS'],
           required: true
      },
 

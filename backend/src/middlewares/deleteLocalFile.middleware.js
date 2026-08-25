@@ -12,6 +12,8 @@ const cleanupTempFiles = (req, res, next) => {
                await fs.rm(req.file.path, { force: true });
           } catch (err) {
                console.warn(`[DISK CRISIS] Hard permissions failure for path ${req.file.path}:`, err.message);
+
+               return next(err);
           }
      };
 

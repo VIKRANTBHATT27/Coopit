@@ -16,9 +16,9 @@ const uploadUserAvatar = async (req, res, next) => {
 
           return next();
      } catch (err) {
-          console.error("Cloudinary upload failed\nErrorMsg: ", err.message);
-
-          return res.status(500).json({ error: "Image upload failed" });
+          return next(
+               new APIError(500, "Image Upload failed from cloudinary")
+          );
      }
 };
 

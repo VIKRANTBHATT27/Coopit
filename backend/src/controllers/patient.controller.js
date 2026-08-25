@@ -1,5 +1,5 @@
-import { Patient } from "../models/index.js";
-import deleteUserAvatar from "../services/cloudinary.service.js";
+import { Nurse, Patient } from "../models/index.js";
+import deleteUserAvatar from "../infrastructure/cloudinary.js";
 import APIError from "../utils/APIError.utils.js";
 
 export const handleCreatePatient = async (req, res, next) => {
@@ -28,17 +28,61 @@ export const handleCreatePatient = async (req, res, next) => {
      }
 };
 
+export const handleGetPatients = async (req, res, next) => {
+     try {
+          const { staffId } = req.user;
+
+          const nurse = await Nurse.findOne({ staffId });
+
+          const result = [];
+
+          for (const patientId of nurse.assignedPatients) {
+               const patientDetails = await Patient.findById(patientId)
+                    .populate({
+                         path: "userId",
+                         select: "fullName dateOfBirth gender"
+                    });
+
+               result.push(patientDetails);
+          }
+
+          if (result.length === 0) {
+               return res.status(200).json({
+                    success: true,
+                    message: "No patients are assigned",
+                    data: []
+               });
+          }
+
+          return res.status(200).json({
+               success: true,
+               data: result
+          });
+
+     } catch (err) {
+          return next(err);
+     }
+};
+
 export const handleGetPatient = async (req, res, next) => {
      try {
           const { userId } = req.parsedParams;
 
           const patient = await Patient.findOne({ userId });
-          if (!patient) return res.status(404).json({ msg: "Patient not found" });
 
-          return res.status(200).json({ success: true, data: patient });
+          if (!patient) {
+               return next(
+                    new APIError(404, "Patient record not found")
+               );
+          }
+
+          return res.status(200).json({
+               success: true,
+               data: patient
+          });
+
      } catch (err) {
-          console.error("failed during getting patient detials\n", err.message);
-          next(err);
+          return next(err);
      }
 };
 
@@ -49,20 +93,27 @@ export const handleUpdatePatient = async (req, res, next) => {
           const patient = await Patient.findOneAndUpdate(
                { userId },
                { $set: { ...req.parsedBody } },
-               { returnDocument: "after" }
+               { returnDocument: "after", runValidators: true }
           );
-          if (!patient) return res.status(404).json({ err: "No patient found with this userId" });
 
-          return res.status(200).json({ success: true, msg: "successfully updated patient data" });
+          if (!patient) {
+               return next(
+                    new APIError(404, "Patient record not found")
+               );
+          }
+
+          return res.status(200).json({
+               success: true,
+               message: "successfully updated patient data",
+               data: patient
+          });
+
      } catch (err) {
-          console.error("failed during patient updation\n", err.message);
-          next(err);
+          return next(err);
      }
 };
 
 export const handleUploadPatientAvatar = async (req, res, next) => {
-     if (!req.file) return res.status(400).json({ err: "no image file uploaded" });
-
      try {
           const { userId } = req.parsedParams;
 
@@ -76,7 +127,12 @@ export const handleUploadPatientAvatar = async (req, res, next) => {
                },
                { returnDocument: "after" }
           );
-          if (!patient) return res.status(404).json({ err: "No patient found with this userId" });
+
+          if (!patient) {
+               return next(
+                    new APIError(404, "Patient record not found")
+               );
+          }
 
           return res.status(200).json({
                success: true,
@@ -84,12 +140,10 @@ export const handleUploadPatientAvatar = async (req, res, next) => {
                url: patient.pfp_url
           });
      } catch (err) {
-          console.log("Patient image upload failed!\n", err.message);
-          next(err);
+          return next(err);
      }
 };
 
-// fix the null issue here 
 export const handleDeleteAvatar = async (req, res, next) => {
      try {
           const { userId } = req.parsedParams;
@@ -100,35 +154,19 @@ export const handleDeleteAvatar = async (req, res, next) => {
 
           const result = await deleteUserAvatar(patient.pfp_publicId);
 
-          console.log(result);
+          if (!result) {
+               return next(
+                    new APIError(500, "Failed to delete avatar from storage system.")
+               );
+          }
 
-          const patient = await Patient.findOneAndUpdate(
-               { userId },
-               {
-                    $set: {
-                         pfp_url: "/public/default-pfp/default-patient.png",
-                         pfp_publicId: undefined
-                    }
-               },
-               { returnDocument: "after" }
-          );
+          patient.pfp_publicId = null;
+          patient.pfp_url = "/public/default-pfp/default-patient.png";
+          await patient.save();
 
-          return res.status(200).json({ msg: "successfully deleted image" });
+          return res.status(200).json({ message: "successfully deleted image" });
      } catch (err) {
-          console.log("patient deletion request failed!\n", err);
-          next(err);
+          return next(err);
      }
 
 };
-
-
-// // delete the user function or temp disable the user for 30 days
-// export const handleDeletePatient = async (req, res) => {
-//      // logout function too
-
-//      try {
-
-//      } catch (error) {
-
-//      }
-// };

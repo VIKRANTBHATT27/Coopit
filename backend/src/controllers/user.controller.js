@@ -21,25 +21,25 @@ import resolveRoleReferences from "../utils/roleReference.utils.js";
 import mongoose from "mongoose";
 
 export const handleGetUser = async (req, res, next) => {
-    try {
-        const { emailId } = req.parsedBody;
+     try {
+          const { emailId } = req.parsedBody;
 
-        const user = await User.findOne({ emailId }).select("_id").lean();
+          const user = await User.findOne({ emailId }).select("_id").lean();
 
-        if (!user) {
-            return next(
-                new APIError(404, "User not found")
-            );
-        }
+          if (!user) {
+               return next(
+                    new APIError(404, "User not found")
+               );
+          }
 
-        return res.status(200).json({
-            message: "User found",
-            data: { userId: user._id }
-        });
+          return res.status(200).json({
+               message: "User found",
+               data: { userId: user._id }
+          });
 
-    } catch (err) {
-        return next(err);
-    }
+     } catch (err) {
+          return next(err);
+     }
 };
 
 export const handleUserSignup = async (req, res, next) => {
