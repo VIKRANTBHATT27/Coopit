@@ -1,6 +1,6 @@
 import Checkup from "./Checkup.model.js";
 import DicomStudy from "./DicomStudy.model.js";
-import Doctor from "./Doctor.js";
+import Doctor from "./Doctor.model.js";
 import Hospital from "./Hospital.model.js";
 import LabReport from "./LabReport.model.js";
 import LabTechnician from "./LabTechnician.model.js";

@@ -23,29 +23,29 @@ const doctorSchema = new Schema({
         type: [{
             type: String,
             enum: [
-                "Anesthesiology",
-                "Cardiology",
-                "Dermatology",
-                "Emergency Medicine",
-                "Endocrinology",
-                "Gastroenterology",
-                "General Medicine",
-                "General Surgery",
-                "Gynecology & Obstetrics",
-                "Neurology",
-                "Oncology",
-                "Orthopedics",
-                "Pediatrics",
-                "Psychiatry",
-                "Pulmonology",
-                "Radiology",
-                "Urology"
+                "ANESTHESIOLOGY",
+                "CARDIOLOGY",
+                "DERMATOLOGY",
+                "EMERGENCY_MEDICINE",
+                "ENDOCRINOLOGY",
+                "GASTROENTEROLOGY",
+                "GENERAL_CHECKUP",
+                "GENERAL_SURGERY",
+                "GYNECOLOGY_OBSTETRICS",
+                "NEUROLOGY",
+                "ONCOLOGY",
+                "ORTHOPEDICS",
+                "PEDIATRICS",
+                "PSYCHIATRY",
+                "PULMONOLOGY",
+                "RADIOLOGY",
+                "UROLOGY"
             ]
         }],
-        default: ['General Checkup'],
-        required: true,
-        trim: true,
+        default: ["GENERAL_CHECKUP"],
+        required: true
     },
+    
     experienceYears: {
         type: Number,
         required: true,
@@ -71,7 +71,21 @@ const doctorSchema = new Schema({
             startTime: String,
             endTime: String
         },
-        closedOn: String,       //sundays or wednesday
+        closedOn: {
+            type: [{
+                type: String,
+                enum: [
+                    "MONDAY",
+                    "TUESDAY",
+                    "WEDNESDAY",
+                    "THRUSDAY",
+                    "FRIDAY",
+                    "SATURDAY",
+                    "SUNDAY"
+                ]
+            }],
+            default: []
+        },
     },
 }, { timestamps: true });
 

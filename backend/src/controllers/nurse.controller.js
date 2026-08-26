@@ -160,7 +160,7 @@ export const handleDeleteAvatar = async (req, res, next) => {
                );
           }
 
-          if (!receptionist.pfp_publicId) {
+          if (!nurse.pfp_publicId) {
                return next(
                     new APIError(400, "Doesn't have custom profile picture")
                );

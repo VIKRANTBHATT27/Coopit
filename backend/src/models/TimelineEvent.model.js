@@ -1,5 +1,4 @@
 import { model, Schema } from "mongoose";
-import { Doctor, LabTechnician, Nurse } from "./index.js";
 
 const timelineEventSchema = new Schema({
      patientId: {
@@ -21,62 +20,82 @@ const timelineEventSchema = new Schema({
 
      currentStatus: {
           type: String,
-          enum: ['Active', 'Recovered', 'Chronic', 'Deceased'],
-          default: 'Active',
+          enum: [
+               "ACTIVE",
+               "RECOVERED",
+               "CHRONIC",
+               "DECEASED"
+          ],
+          default: "ACTIVE",
      },
-     
+
      eventData: {
-          type: [{
-               eventType: {
-                    type: String,
-                    enum: [
-                         'CHECKUP_CREATED',
-                         'DICOM_UPLOADED',
-                         'REPORT_UPLOADED',
-                         'MEDICATION_CHANGED',
-                         'MEDICAL_CASE_CREATED',
-                         'MEDICAL_CASE_UPDATED',
-                         'FOLLOW_UP_COMPLETED',
-                         'PRESCRIPTION_ADDED',
-                    ],
-                    required: true
-               },
+          type: [
+               {
+                    eventType: {
+                         type: String,
+                         enum: [
+                              'CHECKUP_CREATED',
+                              'DICOM_UPLOADED',
+                              'REPORT_UPLOADED',
+                              'MEDICATION_CHANGED',
+                              'MEDICAL_CASE_CREATED',
+                              'MEDICAL_CASE_UPDATED',
+                              'FOLLOW_UP_COMPLETED',
+                              'PRESCRIPTION_ADDED',
+                         ],
+                         required: true
+                    },
 
-               performedByRole: {
-                    type: String,
-                    enum: ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN'],
-                    required: true
-               },
+                    performedByRole: {
+                         type: String,
+                         enum: [
+                              'DOCTOR',
+                              'NURSE',
+                              'LAB_TECHNICIAN'
+                         ],
+                         required: true
+                    },
 
-               performedBy: {
-                    type: Schema.Types.ObjectId,
-                    required: true,
-                    refPath: "performedByReference"
-               },
+                    performedBy: {
+                         type: Schema.Types.ObjectId,
+                         required: true,
+                         refPath: "performedByReference"
+                    },
 
-               performedByReference: {
-                    type: String,
-                    enum: ["Doctor", "LabTechnician", "Nurse"],
-                    required: true
-               },
+                    performedByReference: {
+                         type: String,
+                         enum: [
+                              "Nurse",
+                              "Doctor",
+                              "LabTechnician",
+                         ],
+                         required: true
+                    },
 
-               eventReferenceId: {
-                    type: Schema.Types.ObjectId,
-                    required: true,
-                    refPath: "eventReferenceType"
-               },
+                    eventReferenceId: {
+                         type: Schema.Types.ObjectId,
+                         required: true,
+                         refPath: "eventReferenceType"
+                    },
 
-               eventReferenceModel: {
-                    type: String,
-                    enum: ['CheckUp', 'MedicalCase', 'DicomFile', 'LabReport', 'FailedDicomFiles'],
-                    required: true
-               },
+                    eventReferenceModel: {
+                         type: String,
+                         enum: [
+                              'CheckUp',
+                              'MedicalCase',
+                              'DicomFile',
+                              'LabReport', 'FailedDicomFiles'
+                         ],
+                         required: true
+                    },
 
-               note: {
-                    type: String,
-                    required: false
-               },
-          }],
+                    note: {
+                         type: String,
+                         required: false
+                    },
+               }
+          ],
           default: [],
           required: true
      },

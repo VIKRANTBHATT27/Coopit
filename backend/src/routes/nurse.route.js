@@ -17,6 +17,8 @@ import {
      handleUpdateMedicalCase,
      handleGetAllMedicalCase,
      handleGetAllMedicalCases,
+     handleChangeNurse,
+     handleChangeDoctor,
 } from "../controllers/medicalCase.controller.js";
 
 import {
@@ -25,6 +27,7 @@ import {
      handleDeleteTimelimeEvent,
      handleCreatePatientTimeline,
      handleUpdatePatientTimeline,
+     handleGetPatientTimelines,
 } from "../controllers/timelineEvent.controller.js";
 
 import {
@@ -45,15 +48,15 @@ import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
 
 import { getStaffByDept } from "../zodSchemas/staff.schema.js";
-import { checkUpIdSchema } from "../zodSchemas/checkUp.schema.js";
+import { checkUpIdSchema, createCheckupSchema, updateCheckupSchema } from "../zodSchemas/checkup.schema.js";
 import { avatarUploadSchema } from "../zodSchemas/nurse.schema.js";
-import { updatePatientSchema } from "../zodSchemas/patient.schema.js";
+import { patientIdSchema, updatePatientSchema } from "../zodSchemas/patient.schema.js";
 
 import {
      changeDoctorSchema,
      changeNurseSchema,
-     createMedicalCaseSchema,
-     medicalCaseSchema,
+     createmedicalCaseIdSchema,
+     medicalCaseIdSchema,
      medicalCaseUpdationSchema
 } from "../zodSchemas/medicalCase.schema.js";
 
@@ -65,6 +68,7 @@ import {
 } from "../zodSchemas/timelineEvent.schema.js";
 
 import express from "express";
+import { handleCreateCheckup, handleGetCheckups, handleUpdateCheckup } from "../controllers/checkup.controller.js";
 const router = express.Router();
 
 router.use(authenticate);
@@ -99,6 +103,22 @@ router.patch("/patients/:patientId",
      handleUpdatePatient
 );
 
+
+router.route("/medical-case/:patientId")
+     .get(
+          parseIncomingReq(getmedicalCaseIdSchema),
+          handleGetAllMedicalCases
+     )
+     .post(
+          parseIncomingReq(createmedicalCaseIdSchema),
+          handleCreateMedicalCase
+     );
+
+router.patch("/medical-case/:medicalCaseId",
+     parseIncomingReq(medicalCaseUpdationSchema),
+     handleUpdateMedicalCase
+);
+
 router.get("/nurses",
      parseIncomingReq(getStaffByDept),
      handleGetNursesByDept
@@ -107,21 +127,6 @@ router.get("/nurses",
 router.get("/doctors",
      parseIncomingReq(getStaffByDept),
      handleGetDoctorsByDept
-);
-
-router.route("/medical-case/:patientId")
-     .get(
-          parseIncomingReq(getMedicalCaseSchema),
-          handleGetAllMedicalCases
-     )
-     .post(
-          parseIncomingReq(createMedicalCaseSchema),
-          handleCreateMedicalCase
-     );
-
-router.patch("/medical-case/:medicalCaseId",
-     parseIncomingReq(medicalCaseUpdationSchema),
-     handleUpdateMedicalCase
 );
 
 router.patch(
@@ -136,11 +141,32 @@ router.patch(
      handleChangeDoctor
 );
 
-router.route('/timeline-event',
-     validateQuery(checkpatientIdSchema)
-)
+// medical-case route to add timeline
+
+router.route("/check-up/:medicalCaseId")
      .get(
-          handleGetPatientTimeline
+          parseIncomingReq(medicalCaseIdSchema),
+          handleGetCheckups
+     )
+     .post(
+          parseIncomingReq(createCheckupSchema),
+          handleCreateCheckup
+     );
+
+router.patch("/check-up/:checkupId",
+     parseIncomingReq(updateCheckupSchema),
+     handleUpdateCheckup
+);
+
+// assignment route to labTechnician $push
+
+// frontend form should uses a standard browser date picker 
+// (<input type="date" />), YYYY-MM-DD format 
+
+router.route("/timeline-event/:patientId")
+     .get(
+          parseIncomingReq(patientIdSchema),
+          handleGetPatientTimelines
      )
      .post(
           validateBody(createPatientTimelineSchema),

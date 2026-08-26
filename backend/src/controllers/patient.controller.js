@@ -34,7 +34,7 @@ export const handleGetPatients = async (req, res, next) => {
 
           const nurse = await Nurse.findOne({ staffId });
 
-          const result = [];
+          const allPatientData = [];
 
           for (const patientId of nurse.assignedPatients) {
                const patientDetails = await Patient.findById(patientId)
@@ -43,10 +43,10 @@ export const handleGetPatients = async (req, res, next) => {
                          select: "fullName dateOfBirth gender"
                     });
 
-               result.push(patientDetails);
+               allPatientData.push(patientDetails);
           }
 
-          if (result.length === 0) {
+          if (allPatientData.length === 0) {
                return res.status(200).json({
                     success: true,
                     message: "No patients are assigned",
@@ -56,7 +56,7 @@ export const handleGetPatients = async (req, res, next) => {
 
           return res.status(200).json({
                success: true,
-               data: result
+               data: allPatientData
           });
 
      } catch (err) {
@@ -88,10 +88,10 @@ export const handleGetPatient = async (req, res, next) => {
 
 export const handleUpdatePatient = async (req, res, next) => {
      try {
-          const { userId } = req.parsedParams;
+          const { patientId } = req.parsedParams;
 
           const patient = await Patient.findOneAndUpdate(
-               { userId },
+               { patientId },
                { $set: { ...req.parsedBody } },
                { returnDocument: "after", runValidators: true }
           );

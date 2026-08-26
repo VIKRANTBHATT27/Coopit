@@ -55,3 +55,7 @@ export const changeDoctorSchema = z.object({
           doctorId: mongooseObjectIdValidator("Doctor")
      })
 });
+
+export const medicalCaseIdSchema = z.object({
+     params: mongooseObjectIdValidator("Medical Case")
+});

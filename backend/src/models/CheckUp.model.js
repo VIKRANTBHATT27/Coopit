@@ -3,12 +3,37 @@ import { model, Schema } from "mongoose";
 const labInstructionSchema = new Schema({
      testType: {
           type: String,
-          enum: ["BLOOD_SAMPLE", "X_RAY", "CT_SCAN", "MRI", "URINE_TEST", "OTHERS"],
+          enum: [
+               "MRI",
+               "X_RAY",
+               "CT_SCAN",
+               "URINE_TEST",
+               "BLOOD_SAMPLE",
+               "OTHERS",
+          ],
           required: true
      },
+
      customNotes: {
           type: String,
           required: false
+     },
+
+     status: {
+          type: String,
+          enum: [
+               "REQUESTED",
+               "SAMPLE_COLLECTED",
+               "PROCESSING",
+               "COMPLETED",
+               "CANCELLED"
+          ],
+          default: "REQUESTED"
+     },
+
+     requestedAt: {
+          type: Date,
+          required: true
      }
 }, { _id: false });
 // Prevents Mongoose from generating unnecessary nested sub-IDs
@@ -26,9 +51,10 @@ const checkupSchema = new Schema({
           required: true,
      },
 
-     doctorName: {
-          type: String,
-          required: true
+     doctorId: {
+          type: Schema.Types.ObjectId,
+          ref: "Doctor",
+          required: true,
      },
 
      symptoms: {
@@ -38,17 +64,21 @@ const checkupSchema = new Schema({
 
      progressStatus: {
           type: String,
-          required: true,
-          enum: ["First Visit", "Improving", "Worsening", "Stable"],
+          enum: [
+               "STABLE",
+               "IMPROVING",
+               "WORSENING",
+               "FIRST_VISIT"
+          ],
      },
 
      vitals: {
-          oxygenSaturation: { type: Number, required: false },
-          respirationRate: { type: Number, required: false },
+          oxygenSaturation: Number,
+          respirationRate: Number,
           temperature: Number,     //*c or *fahrenheit
           pulse: Number,      //bpm => beats per minute
 
-          bp: {
+          bloodPressure: {
                systolic: Number,
                diastolic: Number
           }
@@ -57,34 +87,60 @@ const checkupSchema = new Schema({
      vaccinationsGiven: {
           type: [
                {
-                    vaccineName: { type: String, required: true },
-                    doseNumber: Number,
-                    administeredAt: { type: Date, default: Date.now },
+                    vaccineName: {
+                         type: String,
+                         required: true
+                    },
+
+                    doseNumber: {
+                         type: Number,
+                         required: true
+                    },
+
+                    administeredAt: {
+                         type: Date,
+                         default: Date.now
+                    },
+
                     administeredBy: {
                          type: Schema.Types.ObjectId,
-                         ref: "Doctor"
+                         ref: "Doctor",
+                         required: true
                     }
                }
           ],
           default: [],
      },
-     treatments: [{
-          treatmentType: {
-               type: String,
-               enum: ["Tablet", "Injection", "IV", "Surgery", "Procedure", "Therapy"]     //Procedure => dressing, Therapy => physiotherapy
-          },
-          name: {
-               type: String,
-               required: true
-          },
-          dosage: String,
-          frequency: String,
-          duration: String
-     }],
+
+     treatments: [
+          {
+               treatmentType: {      //Procedure => dressing, Therapy => physiotherapy
+                    type: String,
+                    enum: [
+                         "IV",
+                         "TABLET",
+                         "SURGERY",
+                         "THERAPY",
+                         "PROCEDURE",
+                    ]
+               },
+
+               name: {
+                    type: String,
+                    required: true
+               },
+
+               dosage: String,
+
+               frequency: Number,
+
+               duration: String
+          }
+     ],
 
      clinicalNotes: {
           type: String,
-          required: false,
+          required: true,
      },
 
      labInstructions: {
@@ -99,7 +155,7 @@ const checkupSchema = new Schema({
 
      visitDate: {
           type: Date,
-          default: Date.now
+          required: true
      },
 
      timelineEventId: {

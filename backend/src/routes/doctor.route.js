@@ -12,11 +12,17 @@ import {
      handleGetDiseaseCase,
      handleApproveDiseaseCase,
      handleGetAllCheckUps,
-     handlePreviewDicomFile
+     handlePreviewDicomFile,
+     handleUploadAvatar,
+     handleDeleteAvatar
 } from "../controllers/doctor.controller.js";
 
 import { validateBody, validateParams } from "../middlewares/validateReq.middleware.js";
-import { doctorIdSchema, staffIdSchema, doctorSchema, doctorUpdateSchema, emailIdSchema } from "../zodSchemas/doctor.schema.js";
+import { doctorIdSchema, staffIdSchema, doctorSchema, doctorUpdateSchema, emailIdSchema, avatarUploadSchema } from "../zodSchemas/doctor.schema.js";
+import { uploadAvatar } from "../middlewares/multer.middleware.js";
+import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
+import parseIncomingReq from "../middlewares/parseReq.middleware.js";
+import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
 const router = express.Router();
 
@@ -26,25 +32,22 @@ router.post("/add-doctor",
 );
 
 router.route("/:staffId")
-     .get( validateParams(staffIdSchema), handleGetDoctor )
+     .get(validateParams(staffIdSchema), handleGetDoctor)
      .post(
           validateParams(staffIdSchema),
           validateBody(doctorUpdateSchema),
           handleUpdateDoctor
      );
 
-router.patch('/pfpImgUpload',
-     uploadImg.single("avatar"),
-     cloudinary_pfpUploader,
-     deleteLocalImgFile,
-     validateBody(emailIdSchema),
-     handleUploadImg
-);
-
-router.delete('/deletePfpImage',
-     validateBody(emailIdSchema),
-     handleDeletePfpImage
-);
+router.route('/avatar')
+     .post(
+          uploadAvatar.single("avatar"),
+          cleanupTempFiles,
+          parseIncomingReq(avatarUploadSchema),
+          uploadUserAvatar,
+          handleUploadAvatar
+     )
+     .delete(handleDeleteAvatar);
 
 router.get('/diseaseCase/:doctorId',
      validateParams(doctorIdSchema),

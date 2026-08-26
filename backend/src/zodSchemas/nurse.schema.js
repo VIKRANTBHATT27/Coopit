@@ -1,16 +1,22 @@
 import mongoose from 'mongoose';
 import { z } from 'zod';
 
-const AVATAR_FILE_TYPES = [
-     "image/jpeg",
-     "image/png",
-     "image/webp"
-];
 
 const mongooseObjectIdValidator = (fieldName) => z.string()
      .refine(val => mongoose.Types.ObjectId.isValid(val), {
           message: `Invalid Object Id for ${fieldName}`
      });
+
+const timeSchema = z.string()
+     .regex(/^([01]\d|2[0-3]):[0-5]\d$/,
+          "Time must be in 24-hour format with leading zeros (HH:MM)"
+     );
+
+const AVATAR_FILE_TYPES = [
+     "image/jpeg",
+     "image/png",
+     "image/webp"
+];
 
 
 export const createNurseSchema = z.object({
@@ -34,8 +40,8 @@ export const createNurseSchema = z.object({
           shift: z.enum(["DAY", "NIGHT"]),
 
           workingHours: z.object({
-               start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)"),
-               end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)")
+               start: timeSchema,
+               end: timeSchema
           }),
 
           experienceYears: z.number().default(0),

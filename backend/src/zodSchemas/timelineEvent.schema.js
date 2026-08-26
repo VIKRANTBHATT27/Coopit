@@ -8,10 +8,16 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
 
 export const createPatientTimelineSchema = z.object({
      medicalConditionName: z.string(),
-     startedAt: z.date().default(Date.now),
-     enededAt: z.date().optional(),
-     currentStatus: z.enum(['Active', 'Recovered', 'Chronic', 'Deceased']).default("Active"),
-     patientId: mongooseObjectIdValidator('patient'),
+
+     enededAt: z.date().default(Date.now),
+
+     currentStatus: z.enum([
+          "ACTIVE",
+          "RECOVERED",
+          "CHRONIC",
+          "DECEASED"
+     ]).default("ACTIVE"),
+
      eventData: z.array({
           eventType: z.enum([
                'CHECKUP_CREATED',
@@ -23,13 +29,29 @@ export const createPatientTimelineSchema = z.object({
                'FOLLOW_UP_COMPLETED',
                'PRESCRIPTION_ADDED',
           ]),
-          performedByRole: z.enum(['DOCTOR', 'NURSE', 'LAB_TECHNICIAN']).nonoptional(),
+
+          performedByRole: z.enum([
+               'DOCTOR',
+               'NURSE',
+               'LAB_TECHNICIAN'
+          ]),
+
           performedBy: mongooseObjectIdValidator(performedByRole),
-          performedByReference: z.enum(["Doctor", "LabTechnician", "Nurse"]).nonoptional(),
-          eventReferenceType: z.enum(['CheckUp', 'MedicalCase', 'DicomFile', 'LabReport', 'FailedDicomFiles']),
+
+          // performedByReference: z.enum(["Doctor", "LabTechnician", "Nurse"]).nonoptional(),
+
+          eventReferenceType: z.enum([
+               'CheckUp',
+               'MedicalCase',
+               'DicomFile',
+               'LabReport', 'FailedDicomFiles'
+          ]),
+
           eventReferenceId: mongooseObjectIdValidator(eventReferenceType),
+
           note: z.string().optional(),
-     }).default([]).nonoptional(),
+
+     }).default([]),
 });
 
 export const addEventDataSchema = createPatientTimelineSchema.pick({

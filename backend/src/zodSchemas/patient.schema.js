@@ -17,6 +17,10 @@ export const userIdSchema = z.object({
      userId: mongooseObjectIdValidator("User")
 });
 
+export const patientIdSchema = z.object({
+     params: mongooseObjectIdValidator("Patient")
+});
+
 export const createPatientSchema = z.object({
      body: z.object({
           weight: z.number().min(1).max(500).optional(),
@@ -39,8 +43,6 @@ export const createPatientSchema = z.object({
 
 export const updatePatientSchema = z.object({
      body: createPatientSchema.shape.body.shape.partial(),
-     
-     params: z.object({
-          patientId:  mongooseObjectIdValidator("Patient")
-     })
+
+     params: patientIdSchema
 });

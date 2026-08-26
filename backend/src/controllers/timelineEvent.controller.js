@@ -1,35 +1,47 @@
-import { Promise } from "mongoose";
 import { CheckUp, DicomFile, Doctor, FailedDicomFiles, LabReport, LabTechnician, MedicalCase, Nurse, Patient, Receptionist, Staff, TimelineEvent } from "../models/index.js";
+import APIError from "../utils/APIError.utils.js";
 
-export const handleGetPatientTimeline = async (req, res) => {
+export const handleGetPatientTimelines = async (req, res, next) => {
      try {
-          const { staffId } = req.user;
-          const { patientId } = req.parsedQuery;
+          const { patientId } = req.parsedParams;
 
-          const [nurse, patient] = await Promise.all([
-               Nurse.findOne({ staffId }),
-               Patient.findById(patientId)
-          ]);
+          const patient = await Patient.exists({ _id: patientId }).lean();
 
-          if (!nurse) return res.status(404).json({ err: "no nurse found with this staffId" });
-          if (!patient) return res.status(404).json({ err: "no patient found with this mongoose object Id" });
+          if (!patient) {
+               return next(
+                    new APIError(404, "No patient record found")
+               );
+          }
 
-          const allTimelineEvents = await TimelineEvent.findOne({ patientId });
+          const allTimelineEvents = await TimelineEvent.find({
+               patientId,
+               currentStatus: 'ACITVE'
+          }).sort({ createdAt: -1 });
 
-          if (!allTimelineEvents) return res.status(404).json({ err: "no timeline event found with this patientId" });
+          if (allTimelineEvents.length === 0) {
+               return res.status(200).json({
+                    status: "ok",
+                    data: [],
+                    messsage: "No timeline events found"
+               });
+          }
 
-          return res.status(200).json({ status: "ok", data: allTimelineEvents });
+          return res.status(200).json({
+               status: "ok",
+               data: allTimelineEvents
+          });
+
      } catch (err) {
-          console.log("failed getting the timeline-event\n", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR" });
+          return next(err);
      }
 };
 
 
-export const handleCreatePatientTimeline = async (req, res) => {
+export const handleCreatePatientTimeline = async (req, res, next) => {
      try {
-          const { patientId } = req.parsedQuery;
-          const { staffId, role } = req.user;
+          const { patientId } = req.parsedParams;
+          const { roleRefId } = req.user;
+          
           const { eventData: { eventReferenceId } = {} } = req.parsedBody;
 
           const [staff, patient, medicalCase] = await Promise.all([

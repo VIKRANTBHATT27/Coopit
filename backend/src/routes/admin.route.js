@@ -47,6 +47,8 @@ import authenticate from "../middlewares/authenticate.middleware.js";
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 
 import express from "express";
+import { handleCreateDoctor, handleGetDoctorDetails, handleUpdateDoctor } from "../controllers/doctor.controller.js";
+import { createDoctorSchema, updateDoctorSchema } from "../zodSchemas/doctor.schema.js";
 const router = express.Router();
 
 router.use(authenticate);
@@ -87,7 +89,7 @@ router.post("/staff/:staffId/status",
     handleToggleStatus
 );
 
-router.route("/receptionist/:staffId")
+router.route("/:staffId/receptionist")
     .get(
         parseIncomingReq(staffIdSchema),
         handleGetReceptionistDetails
@@ -101,7 +103,7 @@ router.route("/receptionist/:staffId")
         handleUpdateReceptionist
     );
 
-router.route("/nurse/:staffId")
+router.route("/:staffId/nurse")
     .get(
         parseIncomingReq(staffIdSchema),
         handleGetNurseDetails
@@ -113,6 +115,20 @@ router.route("/nurse/:staffId")
     .patch(
         parseIncomingReq(nurseUpdationSchema),
         handleUpdateNurse
+    );
+
+router.route("/:staffId/doctor")
+    .get(
+        parseIncomingReq(staffIdSchema),
+        handleGetDoctorDetails
+    )
+    .post(
+        parseIncomingReq(createDoctorSchema),
+        handleCreateDoctor
+    )
+    .patch(
+        parseIncomingReq(updateDoctorSchema),
+        handleUpdateDoctor
     );
 
 export default router;

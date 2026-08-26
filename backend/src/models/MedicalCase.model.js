@@ -55,9 +55,9 @@ const medicalCaseSchema = new Schema({
 
 }, { timestamps: true });
 
-medicalCase_Schema.index({ patientId: 1 });
-medicalCase_Schema.index({ diagnosisDistrict: 1 });
-medicalCase_Schema.index({ diseaseName: 1, status: 1 });
+medicalCaseSchema.index({ patientId: 1 });
+medicalCaseSchema.index({ diagnosisDistrict: 1 });
+medicalCaseSchema.index({ diseaseName: 1, status: 1 });
 
 const MedicalCase = model("medicalCase", medicalCaseSchema);
 export default MedicalCase;
