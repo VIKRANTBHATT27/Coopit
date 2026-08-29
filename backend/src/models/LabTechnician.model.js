@@ -22,22 +22,22 @@ const labTechSchema = new Schema({
           type: String,
           required: true,
           enum: [
-               "Anatomic Pathology",
-               "Biochemistry",
-               "Cytology",
-               "Genetics/Genomics",
-               "Hematology",
-               "Histology",
-               "Imaging (MRI/CT/X-Ray)",
-               "Immunology/Serology",
-               "Microbiology",
-               "Molecular Diagnostics",
-               "Nuclear Medicine",
-               "Phlebotomy",
-               "Radiology",
-               "Toxicology",
-               "Urinalysis",
-               "Virology"
+               "ANATOMIC_PATHOLOGY",
+               "BIOCHEMISTRY",
+               "CYTOLOGY",
+               "GENETICS_GENOMICS",
+               "HEMATOLOGY",
+               "HISTOLOGY",
+               "IMAGING_MRI_CT_X_RAY",
+               "IMMUNOLOGY_SEROLOGY",
+               "MICROBIOLOGY",
+               "MOLECULAR_DIAGNOSTICS",
+               "NUCLEAR_MEDICINE",
+               "PHLEBOTOMY",
+               "RADIOLOGY",
+               "TOXICOLOGY",
+               "URINALYSIS",
+               "VIROLOGY"
           ]
      },
 
@@ -48,7 +48,11 @@ const labTechSchema = new Schema({
 
      shift: {
           type: String,
-          enum: ["Morning", "Evening", "Night"]
+          enum: [
+               "MORNING",
+               "EVENING",
+               "Night"
+          ]
      },
 
      assignedCheckups: {

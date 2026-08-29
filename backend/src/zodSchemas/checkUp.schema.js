@@ -8,7 +8,6 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
 
 export const checkupIdSchema = mongooseObjectIdValidator("Checkup");
 
-
 export const createCheckupSchema = z.object({
     body: z.object({
         symptoms: z.array(z.string()).default([]),
@@ -101,7 +100,6 @@ export const createCheckupSchema = z.object({
 
         nextFollowUp: z.string().date()
             .transform((val) => new Date(val)).optional(),
-            
     }),
 
     params: mongooseObjectIdValidator("Medical Case")
@@ -110,5 +108,14 @@ export const createCheckupSchema = z.object({
 export const updateCheckupSchema = z.object({
     body: createCheckupSchema.shape.body.shape.partial(),
 
-    params: mongooseObjectIdValidator("Checkup")
+    params: z.object({
+        checkupId: mongooseObjectIdValidator("Checkup")
+    })
+});
+
+export const assignLabTechSchema = z.object({
+    params: z.object({
+        checkupId: mongooseObjectIdValidator("Checkup"),
+        labTechId: mongooseObjectIdValidator("Lab Technician")
+    })
 });

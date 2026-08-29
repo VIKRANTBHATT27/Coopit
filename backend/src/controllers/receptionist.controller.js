@@ -156,6 +156,13 @@ export const handleUploadAvatar = async (req, res, next) => {
           });
 
      } catch (err) {
+          if (req.pfpAvatarPublicId) {
+               const result = await deleteUserAvatar(req.pfpAvatarPublicId);
+
+               if (!result)
+                    throw new Error(500, "Cloudinary profile image deletion failed!");
+          }
+
           return next(err);
      }
 };

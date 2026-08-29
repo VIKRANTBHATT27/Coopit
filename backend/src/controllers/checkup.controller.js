@@ -1,4 +1,4 @@
-import { Checkup, MedicalCase } from "../models/index.js";
+import { Checkup, LabTechnician, MedicalCase } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
 
 export const handleGetCheckups = async (req, res, next) => {
@@ -101,3 +101,37 @@ export const handleUpdateCheckup = async (req, res, next) => {
     }
 };
 
+export const handleAssignCheckup = async (req, res, next) => {
+    try {
+        const { checkupId, labTechId } = req.parsedParams;
+
+        const [checkupRecord, labTechRecord] = await Promise.all([
+            Checkup.exists({ _id: checkupId }).lean(),
+            LabTechnician.findOne({ _id: labTechId })
+        ]);
+
+        if (!checkupRecord) {
+            return next(
+                new APIError(404, "No checkup record found")
+            );
+        }
+
+        if (!labTechRecord) {
+            return next(
+                new APIError(404, "No lab technician record found")
+            );
+        }
+
+        labTechRecord.assignedCheckups.push(checkupRecord);
+
+        await labTechRecord.save();
+
+        return res.status(200).json({
+            message: "Successfully updated checkup record",
+            data: labTechRecord
+        });
+
+    } catch (err) {
+        return next(err);
+    }
+};

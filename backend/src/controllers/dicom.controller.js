@@ -1,14 +1,19 @@
-import { DicomStudy, Staff, User } from "../models/index.js";
+import { DicomStudy } from "../models/index.js";
 import { previewDicomInstance } from "../services/dicom.service.js";
 import APIError from "../utils/APIError.utils.js";
 
 
-export const handleViewDicom = async (req, res) => {
+export const handleViewDicom = async (req, res, next) => {
     const { checkUpId } = req.parsedParams;
 
     try {
         const dicomStudyRecord = await DicomStudy.findOne({ checkUpId });
-        if (!dicomStudyRecord) return res.status(404).json({ success: false, err: "no record found with this check-up" });
+
+        if (!dicomStudyRecord) {
+            return next(
+                new APIError(404, "Dicom record not found")
+            );
+        }
 
         const studyUid = dicomStudyRecord.studyInstanceId;
         const seriesUid = dicomStudyRecord.seriesInstanceId;
@@ -23,7 +28,6 @@ export const handleViewDicom = async (req, res) => {
         res.send(dicomBuffer);
 
     } catch (err) {
-        console.log("failed viewing dicom\n", err.message);
-        return res.status(500).json({ success: false, err: 'INTERNAL SERVER ERROR' });
+        return next(err);
     }
 };

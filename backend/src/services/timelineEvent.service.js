@@ -1,6 +1,6 @@
 import { TimelineEvent } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
-import { addEventDataSchema } from "../zodSchemas/timelineEvent.schema.js";
+import { addEventDataSchema } from "../zodSchemas/timeline.schema.js";
 
 export const logTimelineEvent = async (data) => {
     try {

@@ -49,6 +49,8 @@ import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import express from "express";
 import { handleCreateDoctor, handleGetDoctorDetails, handleUpdateDoctor } from "../controllers/doctor.controller.js";
 import { createDoctorSchema, updateDoctorSchema } from "../zodSchemas/doctor.schema.js";
+import { handleCreateLabTechnician, handleGetLabTechDetails, handleUpdateLabTechnician } from "../controllers/labTechnician.controller.js";
+import { createLabTechnician, updateLabTechnician } from "../zodSchemas/labTech.schema.js";
 const router = express.Router();
 
 router.use(authenticate);
@@ -130,5 +132,20 @@ router.route("/:staffId/doctor")
         parseIncomingReq(updateDoctorSchema),
         handleUpdateDoctor
     );
+
+router.route("/:staffId/lab-technician")
+    .get(
+        parseIncomingReq(staffIdSchema),
+        handleGetLabTechDetails
+    )
+    .post(
+        parseIncomingReq(createLabTechnician),
+        handleCreateLabTechnician
+    )
+    .patch(
+        parseIncomingReq(updateLabTechnician),
+        handleUpdateLabTechnician
+    )
+
 
 export default router;

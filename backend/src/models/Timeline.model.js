@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
 
-const timelineEventSchema = new Schema({
+const timelineSchema = new Schema({
      patientId: {
           type: Schema.Types.ObjectId,
           ref: "Patient",
@@ -82,10 +82,9 @@ const timelineEventSchema = new Schema({
                     eventReferenceModel: {
                          type: String,
                          enum: [
-                              'CheckUp',
-                              'MedicalCase',
-                              'DicomFile',
-                              'LabReport', 'FailedDicomFiles'
+                              "CheckUp",
+                              "DicomFile",
+                              "LabReport",
                          ],
                          required: true
                     },
@@ -96,7 +95,6 @@ const timelineEventSchema = new Schema({
                     },
                }
           ],
-          default: [],
           required: true
      },
 
@@ -104,11 +102,12 @@ const timelineEventSchema = new Schema({
           type: Date,
           default: Date.now
      },
+
      endedAt: {
           type: Date,
           default: null
      },
 });
 
-const TimelineEvent = model("TimelineEvent", timelineEventSchema);
-export default TimelineEvent;
+const Timeline = model("Timeline", timelineSchema);
+export default Timeline;

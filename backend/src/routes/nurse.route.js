@@ -27,8 +27,8 @@ import {
      handleDeleteTimelimeEvent,
      handleCreatePatientTimeline,
      handleUpdatePatientTimeline,
-     handleGetPatientTimelines,
-} from "../controllers/timelineEvent.controller.js";
+     handleGetPatientTimeline,
+} from "../controllers/timeline.controller.js";
 
 import {
      handleViewDicomFile
@@ -61,14 +61,18 @@ import {
 } from "../zodSchemas/medicalCase.schema.js";
 
 import {
+     addEventDataSchema,
      addNewEventDataSchema,
      checkpatientIdSchema,
-     checkTimelineEventIdSchema,
+     checkTimelineIdSchema,
      createPatientTimelineSchema,
-} from "../zodSchemas/timelineEvent.schema.js";
+     getTimelineSchema,
+     updateTimelineSchema,
+} from "../zodSchemas/timeline.schema.js";
 
 import express from "express";
-import { handleCreateCheckup, handleGetCheckups, handleUpdateCheckup } from "../controllers/checkup.controller.js";
+import { handleAssignCheckup, handleCreateCheckup, handleGetCheckups, handleUpdateCheckup } from "../controllers/checkup.controller.js";
+import { handleGetLabTechByDept } from "../controllers/labTechnician.controller.js";
 const router = express.Router();
 
 router.use(authenticate);
@@ -129,6 +133,11 @@ router.get("/doctors",
      handleGetDoctorsByDept
 );
 
+router.get("/lab-technicians",
+     parseIncomingReq(getStaffByDept),
+     handleGetLabTechByDept
+)
+
 router.patch(
      "/medical-case/:medicalCaseId/nurse/:nurseId",
      parseIncomingReq(changeNurseSchema),
@@ -158,31 +167,32 @@ router.patch("/check-up/:checkupId",
      handleUpdateCheckup
 );
 
-// assignment route to labTechnician $push
+router.patch(
+     "/assign-check-up/:checkupId/lab-tech/;:labTechId",
+     parseIncomingReq(assignLabTechSchema),
+     handleAssignCheckup
+);
 
 // frontend form should uses a standard browser date picker 
 // (<input type="date" />), YYYY-MM-DD format 
 
-router.route("/timeline-event/:patientId")
+
+// add emergency situation for other timeline events and medical cases analysis by nurse / doctor => log it
+
+router.route("/timeline/:patientId/medical-case/:medicalCaseId")
      .get(
-          parseIncomingReq(patientIdSchema),
-          handleGetPatientTimelines
+          parseIncomingReq(getTimelineSchema),
+          handleGetPatientTimeline      //refine this route if needed
      )
      .post(
-          validateBody(createPatientTimelineSchema),
+          parseIncomingReq(createPatientTimelineSchema),
           handleCreatePatientTimeline
      )
-
-router.route('/timeline-event/:timelineEventId',
-     validateParams(checkTimelineEventIdSchema)
-)
      .patch(
-          validateBody(addNewEventDataSchema),
-          handleAddNewEventData
-     )
-     .delete(
-          handleDeleteTimelimeEvent
+          parseIncomingReq(updateTimelineSchema),
+          handleUpdatePatientTimeline
      );
+
 
 router.get("/view/dicom-file/:checkUpId",
      validateParams(checkUpIdSchema),

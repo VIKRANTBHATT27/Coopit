@@ -1,42 +1,52 @@
 import mongoose from "mongoose";
-import * as z from "zod";
+import { z } from "zod";
 
 const mongooseObjectIdValidator = (fieldName) => z.string()
      .refine(val => mongoose.Types.ObjectId.isValid(val), {
           error: `Invalid ObjectId for the field ${fieldName}`
      });
 
+export const createLabTechnician = z.object({
+     body: z.object({
+          labType: z.enum([
+               "ANATOMIC_PATHOLOGY",
+               "BIOCHEMISTRY",
+               "CYTOLOGY",
+               "GENETICS_GENOMICS",
+               "HEMATOLOGY",
+               "HISTOLOGY",
+               "IMAGING_MRI_CT_X_RAY",
+               "IMMUNOLOGY_SEROLOGY",
+               "MICROBIOLOGY",
+               "MOLECULAR_DIAGNOSTICS",
+               "NUCLEAR_MEDICINE",
+               "PHLEBOTOMY",
+               "RADIOLOGY",
+               "TOXICOLOGY",
+               "URINALYSIS",
+               "VIROLOGY"
+          ]),
 
-export const labTechSchema = z.object({
-     staffId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId"),
-     pfp_url: z.string().default("/default-pfp/default-lab-technician.png"),
-     labType: z.enum([
-          "Anatomic Pathology",
-          "Biochemistry",
-          "Cytology",
-          "Genetics/Genomics",
-          "Hematology",
-          "Histology",
-          "Imaging (MRI/CT/X-Ray)",
-          "Immunology/Serology",
-          "Microbiology",
-          "Molecular Diagnostics",
-          "Nuclear Medicine",
-          "Phlebotomy",
-          "Radiology",
-          "Toxicology",
-          "Urinalysis",
-          "Virology"
-     ]),
-     qualification: z.string(),
-     shift: z.enum(["Morning", "Evening", "Night"])
-});
+          qualification: z.string(),
 
-export const labTechinicianUpdateSchema = z.object({
+          shift: z.enum([
+               "MORNING",
+               "EVENING",
+               "Night"
+          ])
+     }),
+
      params: z.object({
           staffId: mongooseObjectIdValidator('staffId'),
      }),
-     body: labTechSchema.partial()
+});
+
+export const updateLabTechnician = z.object({
+     body: labTechSchema.shape.body.shape.partial(),
+
+     params: z.object({
+          staffId: mongooseObjectIdValidator('staffId'),
+     })
 });
 
 const AVATAR_FILE_TYPES = [

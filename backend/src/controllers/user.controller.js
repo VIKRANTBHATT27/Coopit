@@ -76,6 +76,12 @@ export const handleUserSignup = async (req, res, next) => {
                passwordHash: password
           });
 
+          if (!tempUser) {
+               return next(
+                    new APIError(500, "Failed to create a temp user")
+               );
+          }
+
           await generateAndSendEmailOtp(tempUser);
 
           return res.status(201).json({

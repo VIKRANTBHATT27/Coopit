@@ -37,8 +37,8 @@ export const handleCreatePatientVisit = async (req, res) => {
                Visit.create(
                     [{
                          ...req.parsedBody,
-                         medicalCaseId: undefined,
-                         timelineEventId: undefined
+                         medicalCaseId: null,
+                         timelineEventId: null
                     }],
                     { returnDocument: true, runValidators: true, session }
                ),

@@ -33,6 +33,42 @@ dotenv.config();
 //      }
 // };
 
+export const handleGetLabTechDetails = async (req, res, next) => {
+     try {
+          const { staffId } = req.parsedParams;
+
+          const staff = await Staff.exists({ _id: staffId }).lean();
+
+          if (!staff) {
+               return next(
+                    new APIError(404, "No staff record found")
+               );
+          }
+
+          const labTechDetails = await LabTechnician.findOne({ staffId })
+               .populate({
+                    path: "staffId",
+                    populate: {
+                         path: "userId"
+                    }
+               });
+
+          if (!labTechDetails) {
+               return next(
+                    new APIError(404, "No lab technician record found")
+               );
+          }
+
+          return res.status(200).json({
+               message: "details of lab technician",
+               data: labTechDetails
+          });
+
+     } catch (err) {
+          return next(err);
+     }
+};
+
 export const handleGetLabTechnician = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
@@ -61,11 +97,38 @@ export const handleGetLabTechnician = async (req, res, next) => {
      }
 };
 
+export const handleCreateLabTechnician = async (req, res, next) => {
+     try {
+          const { staffId } = req.parsedParams;
+
+          const staff = await Staff.exists({ _id: staffId }).lean();
+
+          if (!staff) {
+               return next(
+                    new APIError(404, "No staff record found")
+               );
+          }
+
+          const labTech = await LabTechnician.create({
+               ...req.parsedBody,
+               staffId
+          });
+
+          return res.status(201).json({
+               message: "lab technician record created",
+               data: labTech
+          });
+
+     } catch (err) {
+          return next(err);
+     }
+};
+
 export const handleUpdateLabTechnician = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
 
-          const staffRecord = await Staff.exists({ _id: staffId });
+          const staffRecord = await Staff.exists({ _id: staffId }).lean();
 
           if (!staffRecord)
                return next(
@@ -83,8 +146,8 @@ export const handleUpdateLabTechnician = async (req, res, next) => {
           );
 
           return res.status(200).json({
-               msg: "lab technician updated successfully",
-               labTechId: updatedLabTechnician._id
+               message: "lab technician updated successfully",
+               data: updatedLabTechnician
           });
      } catch (err) {
           console.error("failed during updating a lab-technician profile\n", err.message);
@@ -96,13 +159,11 @@ export const handleUploadAvatar = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
 
-          const staffRecord = await Staff.exists({ _id: staffId });
+          const staffRecord = await Staff.exists({ _id: staffId }).lean();
+
           if (!staffRecord)
                return next(
-                    new APIError(
-                         404,
-                         "No staff record exist with this Id"
-                    )
+                    new APIError(404, "No staff record found")
                );
 
           const updatedLabTech = await LabTechnician.findOneAndUpdate(
@@ -116,19 +177,18 @@ export const handleUploadAvatar = async (req, res, next) => {
                { returnDocument: "after", runValidators: true }
           );
 
-          if (!updatedLabTech)
-               return res.status(404).json({
-                    err: "no lab techinician found with this staff ID"
-               });
+          if (!updatedLabTech) {
+               return next(
+                    new APIError(404, "Lab Technician record not found")
+               );
+          }
 
           return res.status(200).json({
-               msg: "successfully uploaded profile image",
+               message: "Successfully uploaded profile image",
                url: updatedLabTech.pfp_url
           });
 
      } catch (err) {
-          console.error("failed during uploading profile pic\n", err.message);
-
           if (req.pfpAvatarPublicId) {
                const result = await deleteUserAvatar(req.pfpAvatarPublicId);
 
@@ -144,47 +204,79 @@ export const handleDeleteAvatar = async (req, res, next) => {
      try {
           const { staffId } = req.parsedParams;
 
-          const staffRecord = await Staff.exists({ _id: staffId });
-          if (!staffRecord)
+          const staffRecord = await Staff.exists({ _id: staffId }).lean();
+
+          if (!staffRecord) {
                return next(
-                    new APIError(
-                         404,
-                         "No patient record exist with this staffId."
-                    )
+                    new APIError(404, "No staff record found")
                );
+          }
 
           const labTech = await LabTechnician.findOne({ staffId });
-          if (!labTech)
-               return res.status(404).json({
-                    err: "no lab-techinician found with that staffId"
-               });
+
+          if (!labTech) {
+               return next(
+                    new APIError(404, "No lab technician record found")
+               );
+          }
 
           const result = await deleteUserAvatar(labTech.pfp_publicId);
 
 
-          if (!result)
+          if (!result) {
                return res.status(500).json({
                     sucess: false,
                     err: "Failed to delete image from cloudinary"
                });
+          }
 
-          await LabTechnician.findOneAndUpdate(
-               { staffId },
-               {
-                    $set: {
-                         pfp_publicId: undefined,
-                         pfp_url: "/default-pfp/default-lab-technician.png"
-                    }
-               },
-               { returnDocument: "after" }
-          );
+          labTech.pfp_publicId = undefined;
+          labTech.pfp_url = "/default-pfp/default-lab-technician.png";
 
-          return res.status(204).json({
-               message: "successfully deleted profile image"
+          await labTech.save();
+
+          return res.status(200).json({
+               message: "successfully deleted profile image",
+               data: labTech
           });
-     } catch (err) {
-          console.error("profile image deletion request Failed\n", err.message);
 
+     } catch (err) {
+          return next(err);
+     }
+};
+
+export const handleGetLabTechByDept = async (req, res, next) => {
+     try {
+          const { hospitalId } = req.user;
+          const { department } = req.parsedQuery;
+
+          const allDoctors = await Staff.find({
+               hospitalId,
+               department,
+               role: "LAB_TECHNICIAN",
+               status: "ACTIVE",
+          });
+
+          if (!allDoctors) {
+               return next(
+                    new APIError(404, "No doctor records found")
+               );
+          }
+
+          const allDoctorDetails = [];
+
+          for (const doctor of allDoctors) {
+               const userDetails = await User.findById(doctor.userId).select("fullName emailId gender dateOfBirth");
+
+               allDoctorDetails.push(userDetails);
+          }
+
+          return res.status(200).json({
+               message: "details of all the doctors",
+               data: allDoctorDetails
+          });
+
+     } catch (err) {
           return next(err);
      }
 };
@@ -417,7 +509,6 @@ export const handleDicomZip = async (req, res, next) => {
 //           next(err);
 //      }
 // };
-
 
 
 export const handleGetAllLabReports = async (req, res, next) => {

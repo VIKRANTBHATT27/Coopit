@@ -144,6 +144,13 @@ export const handleUploadAvatar = async (req, res, next) => {
           });
 
      } catch (err) {
+          if (req.pfpAvatarPublicId) {
+               const result = await deleteUserAvatar(req.pfpAvatarPublicId);
+
+               if (!result)
+                    throw new Error(500, "Cloudinary profile image deletion failed!");
+          }
+
           return next(err);
      }
 };
@@ -174,7 +181,6 @@ export const handleDeleteAvatar = async (req, res, next) => {
                );
           }
 
-
           nurse.pfp_publicId = null;
           nurse.pfp_url = "/default-pfp/default-nurse.png";
           await nurse.save();
@@ -192,7 +198,7 @@ export const handleDeleteAvatar = async (req, res, next) => {
 export const handleGetNursesByDept = async (req, res, next) => {
      try {
           const { hospitalId } = req.user;
-          const { department } = req.parsedParams;
+          const { department } = req.parsedQuery;
 
           const allNurses = await Staff.find({
                hospitalId,

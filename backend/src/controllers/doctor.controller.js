@@ -102,7 +102,6 @@ export const handleUpdateDoctor = async (req, res, next) => {
      }
 };
 
-
 export const handleUploadAvatar = async (req, res, next) => {
      try {
           const { staffId } = req.user;
@@ -128,6 +127,13 @@ export const handleUploadAvatar = async (req, res, next) => {
           });
 
      } catch (err) {
+          if (req.pfpAvatarPublicId) {
+               const result = await deleteUserAvatar(req.pfpAvatarPublicId);
+
+               if (!result)
+                    throw new Error(500, "Cloudinary profile image deletion failed!");
+          }
+
           return next(err);
      }
 };
@@ -236,7 +242,7 @@ export const handlePreviewDicomFile = async (req, res) => {
 export const handleGetDoctorsByDept = async (req, res, next) => {
      try {
           const { hospitalId } = req.user;
-          const { department } = req.parsedParams;
+          const { department } = req.parsedQuery;
 
           const allDoctors = await Staff.find({
                hospitalId,
