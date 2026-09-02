@@ -5,7 +5,7 @@ export const handleGetCheckups = async (req, res, next) => {
     try {
         const { medicalCaseId } = req.parsedParams;
 
-        const medicalCase = await MedicalCase.exists({ _id: medicalCaseId }).lean();
+        const medicalCase = await MedicalCase.exists({ _id: medicalCaseId });
 
         if (!medicalCase) {
             return next(
@@ -106,7 +106,7 @@ export const handleAssignCheckup = async (req, res, next) => {
         const { checkupId, labTechId } = req.parsedParams;
 
         const [checkupRecord, labTechRecord] = await Promise.all([
-            Checkup.exists({ _id: checkupId }).lean(),
+            Checkup.exists({ _id: checkupId }),
             LabTechnician.findOne({ _id: labTechId })
         ]);
 

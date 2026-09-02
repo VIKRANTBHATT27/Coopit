@@ -1,14 +1,17 @@
 import {
-    handleAddAdmin,
-    handleCreateAdmin,
-    handleGetAdmin,
-    handleGetAllDetails,
+    handleGetAllHospitals,
     handleGetHospitalDetails,
     handleRegisterHospital,
-    handleRemoveAdmin,
     handleToggleHospitalStatus,
     handleUpdateHospital
+} from "../controllers/hospital.controller.js";
+
+import {
+    handlePromoteToAdmin,
+    handleCreateAdmin,
+    handleRemoveAdmin,
 } from "../controllers/superAdmin.controller.js";
+
 
 import {
     hospitalIdSchema,
@@ -34,7 +37,7 @@ router.use(authorize(['SUPER_ADMIN']));
 
 //to see what all hospitals and which admin are  registered
 router.get("/",
-    handleGetAllDetails
+    handleGetAllHospitals
 );
 
 router.post("/",
@@ -57,15 +60,16 @@ router.patch("/:hospitalId/status",
     handleToggleHospitalStatus
 );
 
-router.post("/:hospitalId/admin",
-    parseIncomingReq(createAdminSchema),
-    handleCreateAdmin
-);
+// router.post("/:hospitalId/admin",
+//     parseIncomingReq(createAdminSchema),
+//     handleCreateAdmin
+// );
 
 router.route("/:hospitalId/admin/:adminId")
     .post(
         parseIncomingReq(promoteStaffSchema),
-        handleAddAdmin)
+        handlePromoteToAdmin
+    )
     .delete(
         parseIncomingReq(degradeStaffSchema),
         handleRemoveAdmin

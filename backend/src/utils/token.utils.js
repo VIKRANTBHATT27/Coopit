@@ -6,18 +6,20 @@ config();
 const secretKey = process.env.JWT_SECRET_KEY;
 
 export const generateToken = ({ _id: userId, role }, { staffId = null, roleDocId = null }) => {
-     return jwt.sign({
-          userId,
-          role,
-          staffId,
-          roleRefId,
-          hospitalId
-     }, secretKey, { expiresIn: "24h" });
+    return jwt.sign({
+        userId,
+        role,
+        staffId,
+        staffRole,
+        roleRefId,
+        hospitalId
+    }, secretKey, { expiresIn: "24h" });
 };
 
 // token verify
 export const getDataFromToken = (token) => {
-     if (!token) throw new APIError(401, "NO AUTHENTICATION TOKEN");
+    if (!token)
+        throw new APIError(401, "NO AUTHENTICATION TOKEN");
 
-     return jwt.verify(token, secretKey);
+    return jwt.verify(token, secretKey);
 };

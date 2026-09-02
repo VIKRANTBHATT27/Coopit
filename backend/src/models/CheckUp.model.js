@@ -1,168 +1,167 @@
 import { model, Schema } from "mongoose";
 
 const labInstructionSchema = new Schema({
-     testType: {
-          type: String,
-          enum: [
-               "MRI",
-               "X_RAY",
-               "CT_SCAN",
-               "URINE_TEST",
-               "BLOOD_SAMPLE",
-               "OTHERS",
-          ],
-          required: true
-     },
+    testType: {
+        type: String,
+        enum: [
+            "MRI",
+            "X_RAY",
+            "CT_SCAN",
+            "URINE_TEST",
+            "BLOOD_SAMPLE",
+            "OTHERS",
+        ],
+        required: true
+    },
 
-     customNotes: {
-          type: String,
-          required: false
-     },
+    customNotes: {
+        type: String,
+        required: false
+    },
 
-     status: {
-          type: String,
-          enum: [
-               "REQUESTED",
-               "SAMPLE_COLLECTED",
-               "PROCESSING",
-               "COMPLETED",
-               "CANCELLED"
-          ],
-          default: "REQUESTED"
-     },
+    status: {
+        type: String,
+        enum: [
+            "REQUESTED",
+            "SAMPLE_COLLECTED",
+            "PROCESSING",
+            "COMPLETED",
+            "CANCELLED"
+        ],
+        default: "REQUESTED"
+    },
 
-     requestedAt: {
-          type: Date,
-          required: true
-     }
+    requestedAt: {
+        type: Date,
+        required: true
+    }
 }, { _id: false });
-// Prevents Mongoose from generating unnecessary nested sub-IDs
 
 const checkupSchema = new Schema({
-     medicalCaseId: {
-          type: Schema.Types.ObjectId,
-          ref: "medicalCase",
-          required: true,
-     },
+    medicalCaseId: {
+        type: Schema.Types.ObjectId,
+        ref: "medicalCase",
+        required: true,
+    },
 
-     patientId: {
-          type: Schema.Types.ObjectId,
-          ref: "Patient",
-          required: true,
-     },
+    patientId: {
+        type: Schema.Types.ObjectId,
+        ref: "Patient",
+        required: true,
+    },
 
-     doctorId: {
-          type: Schema.Types.ObjectId,
-          ref: "Doctor",
-          required: true,
-     },
+    doctorId: {
+        type: Schema.Types.ObjectId,
+        ref: "Doctor",
+        required: true,
+    },
 
-     symptoms: {
-          type: [String],
-          default: []
-     },
+    symptoms: {
+        type: [String],
+        default: []
+    },
 
-     progressStatus: {
-          type: String,
-          enum: [
-               "STABLE",
-               "IMPROVING",
-               "WORSENING",
-               "FIRST_VISIT"
-          ],
-     },
+    progressStatus: {
+        type: String,
+        enum: [
+            "STABLE",
+            "IMPROVING",
+            "WORSENING",
+            "FIRST_VISIT"
+        ],
+    },
 
-     vitals: {
-          oxygenSaturation: Number,
-          respirationRate: Number,
-          temperature: Number,     //*c or *fahrenheit
-          pulse: Number,      //bpm => beats per minute
+    vitals: {
+        oxygenSaturation: Number,
+        respirationRate: Number,
+        temperature: Number,     //*c or *fahrenheit
+        pulse: Number,      //bpm => beats per minute
 
-          bloodPressure: {
-               systolic: Number,
-               diastolic: Number
-          }
-     },
+        bloodPressure: {
+            systolic: Number,
+            diastolic: Number
+        }
+    },
 
-     vaccinationsGiven: {
-          type: [
-               {
-                    vaccineName: {
-                         type: String,
-                         required: true
-                    },
-
-                    doseNumber: {
-                         type: Number,
-                         required: true
-                    },
-
-                    administeredAt: {
-                         type: Date,
-                         default: Date.now
-                    },
-
-                    administeredBy: {
-                         type: Schema.Types.ObjectId,
-                         ref: "Doctor",
-                         required: true
-                    }
-               }
-          ],
-          default: [],
-     },
-
-     treatments: [
-          {
-               treatmentType: {      //Procedure => dressing, Therapy => physiotherapy
-                    type: String,
-                    enum: [
-                         "IV",
-                         "TABLET",
-                         "SURGERY",
-                         "THERAPY",
-                         "PROCEDURE",
-                    ]
-               },
-
-               name: {
+    vaccinationsGiven: {
+        type: [
+            {
+                vaccineName: {
                     type: String,
                     required: true
-               },
+                },
 
-               dosage: String,
+                doseNumber: {
+                    type: Number,
+                    required: true
+                },
 
-               frequency: Number,
+                administeredAt: {
+                    type: Date,
+                    default: Date.now
+                },
 
-               duration: String
-          }
-     ],
+                administeredBy: {
+                    type: Schema.Types.ObjectId,
+                    ref: "Doctor",
+                    required: true
+                }
+            }
+        ],
+        default: [],
+    },
 
-     clinicalNotes: {
-          type: String,
-          required: true,
-     },
+    treatments: [
+        {
+            treatmentType: {      //Procedure => dressing, Therapy => physiotherapy
+                type: String,
+                enum: [
+                    "IV",
+                    "TABLET",
+                    "SURGERY",
+                    "THERAPY",
+                    "PROCEDURE",
+                ]
+            },
 
-     labInstructions: {
-          type: [labInstructionSchema],
-          default: [],
-     },
+            name: {
+                type: String,
+                required: true
+            },
 
-     nextFollowUp: {
-          type: Date,
-          required: false
-     },
+            dosage: String,
 
-     visitDate: {
-          type: Date,
-          required: true
-     },
+            frequency: Number,
 
-     timelineEventId: {
-          type: Schema.Types.ObjectId,
-          ref: "TimeLineEvent",
-          required: false,
-     }
+            duration: String
+        }
+    ],
+
+    clinicalNotes: {
+        type: String,
+        required: true,
+    },
+
+    labInstructions: {
+        type: [labInstructionSchema],
+        default: [],
+    },
+
+    nextFollowUp: {
+        type: Date,
+        required: false
+    },
+
+    visitDate: {
+        type: Date,
+        required: true
+    },
+
+    timelineEventId: {
+        type: Schema.Types.ObjectId,
+        ref: "TimeLineEvent",
+        required: false,
+    }
 });
 
 checkupSchema.index({ patientId: 1 });

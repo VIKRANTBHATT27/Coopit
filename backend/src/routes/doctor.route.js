@@ -1,20 +1,21 @@
-import express from "express";
+
 import { uploadImg } from "../middlewares/multer.js";
 import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.js";
 import cloudinary_pfpUploader from "../middlewares/cloudinaryImgUpload.js";
 
 import {
-     handleGetDoctor,
-     handleUploadImg,
-     handleDeletePfpImage,
-     handleAddDoctor,
-     handleUpdateDoctor,
-     handleGetDiseaseCase,
-     handleApproveDiseaseCase,
-     handleGetAllCheckUps,
-     handlePreviewDicomFile,
-     handleUploadAvatar,
-     handleDeleteAvatar
+    handleGetDoctor,
+    handleUploadImg,
+    handleDeletePfpImage,
+    handleAddDoctor,
+    handleUpdateDoctor,
+    handleGetDiseaseCase,
+    handleApproveDiseaseCase,
+    handleGetAllCheckUps,
+    handlePreviewDicomFile,
+    handleUploadAvatar,
+    handleDeleteAvatar,
+    handleGetDoctorDetails,
 } from "../controllers/doctor.controller.js";
 
 import { validateBody, validateParams } from "../middlewares/validateReq.middleware.js";
@@ -24,48 +25,54 @@ import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
+import authenticate from "../middlewares/authenticate.middleware.js";
+import authorize from "../middlewares/authorize.middleware.js";
+
+import express from "express";
+import { handleApproveMedicalCase, handleGetAllMedicalCases, handleGetDoctorMedicalCases } from "../controllers/medicalCase.controller.js";
+import { medicalCaseIdSchema } from "../zodSchemas/medicalCase.schema.js";
+import { handleGetCheckups } from "../controllers/checkup.controller.js";
 const router = express.Router();
 
-router.post("/add-doctor",
-     validateBody(doctorSchema),
-     handleAddDoctor
-);
+router.use(authenticate);
+router.use(authorize(["STAFF", "DOCTOR"]));
 
-router.route("/:staffId")
-     .get(validateParams(staffIdSchema), handleGetDoctor)
-     .post(
-          validateParams(staffIdSchema),
-          validateBody(doctorUpdateSchema),
-          handleUpdateDoctor
-     );
+// router.post("/add-doctor",
+//      validateBody(doctorSchema),
+//      handleAddDoctor
+// );
+
+router.get("/:staffId",
+    parseIncomingReq(staffIdSchema),
+    handleGetDoctorDetails
+);
 
 router.route('/avatar')
-     .post(
-          uploadAvatar.single("avatar"),
-          cleanupTempFiles,
-          parseIncomingReq(avatarUploadSchema),
-          uploadUserAvatar,
-          handleUploadAvatar
-     )
-     .delete(handleDeleteAvatar);
+    .post(
+        uploadAvatar.single("avatar"),
+        cleanupTempFiles,
+        parseIncomingReq(avatarUploadSchema),
+        uploadUserAvatar,
+        handleUploadAvatar
+    )
+    .delete(handleDeleteAvatar);
 
-router.get('/diseaseCase/:doctorId',
-     validateParams(doctorIdSchema),
-     handleGetDiseaseCase
+router.get('/medical-cases',
+    handleGetDoctorMedicalCases
 );
 
-router.post('/approve-diseaseCase/:Id',
-     validateParams(diseaseIdSchema),
-     handleApproveDiseaseCase
+router.post('/medical-case/:medicalCaseId/approve',
+    parseIncomingReq(medicalCaseIdSchema),
+    handleApproveMedicalCase
 );
 
-router.get('/get-allCheckups',
-     validateParams(doctorIdSchema),
-     handleGetAllCheckUps
+router.get('/checkups/:medicalCaseId',
+    parseIncomingReq(medicalCaseIdSchema),
+    handleGetCheckups
 );
 
-router.get('/preview-dicomFiles',
-     handlePreviewDicomFile
+router.get('/preview-dicom-file',
+    handlePreviewDicomFile
 );
 
 // export const handleDocumentUpload = async (req, res) => {
@@ -84,8 +91,8 @@ router.get('/preview-dicomFiles',
 // };
 
 router.post("/view/dicom-file/:checkUpId",
-     validateParams(checkUpIdSchema),
-     handleViewDicomFile
+    validateParams(checkUpIdSchema),
+    handleViewDicomFile
 );
 
 export default router;

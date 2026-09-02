@@ -45,7 +45,7 @@ const doctorSchema = new Schema({
         default: ["GENERAL_CHECKUP"],
         required: true
     },
-    
+
     experienceYears: {
         type: Number,
         required: true,
@@ -87,6 +87,17 @@ const doctorSchema = new Schema({
             default: []
         },
     },
+
+    assignedMedicalCases: {
+        type: [{
+            type: Schema.Types.ObjectId,
+            ref: "MedicalCase",
+            required: true,
+            unique: true
+        }],
+        default: []
+    },
+    
 }, { timestamps: true });
 
 const Doctor = model('Doctor', doctorSchema);

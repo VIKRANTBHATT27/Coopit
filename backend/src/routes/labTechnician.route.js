@@ -1,96 +1,86 @@
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
 import { uploadDicom, uploadAvatar } from "../middlewares/multer.middleware.js";
-import express from "express";
 import {
-     handleAddLabTech,
-     handleGetLabTechnician,
-     handleUpdateLabTechnician,
-     handleUploadAvatar,
-     handleDicomZip,
-     handleDeleteAvatar,
-     handleUploadReport,
-     handleUploadDicomStudy,
-     handleGetReport,
-     handleGetAllLabReports,
-     handlePreviewDicomStudy,
-     handleGetAllDicomStudies
+    handleAddLabTech,
+    handleGetLabTechnician,
+    handleUpdateLabTechnician,
+    handleUploadAvatar,
+    handleDeleteAvatar,
+    handleUploadReport,
+    handleGetReport,
+    handleGetAllLabReports,
 } from "../controllers/labTechnician.controller.js";
 
 import { extractAndUploadDicoms, uploadDicomToGoogleCloud } from "../middlewares/dicom.middleware.js";
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import {
-     labTechSchema,
-     labTechinicianUpdateSchema,
-     labTechAvatarUploadSchema
+    labTechSchema,
+    labTechinicianUpdateSchema,
+    labTechAvatarUploadSchema
 } from "../zodSchemas/labTech.schema.js";
 import { checkupIdSchema } from "../zodSchemas/checkup.schema.js";
 import { uploadReport } from "../middlewares/multer.middleware.js";
 import { labReportIdSchema, labReportUploadSchema } from "../zodSchemas/labReport.schema.js";
-import { dicomZIPSchema, dicomUploadSchema } from "../zodSchemas/dicom.schema.js";
+import { dicomZIPSchema, dicomUploadSchema, dicomStudyIdSchema } from "../zodSchemas/dicom.schema.js";
 
-import { validateData } from "../middlewares/dbCheck.middleware.js";
+import { validateCheckupId } from "../middlewares/dbCheck.middleware.js";
 import { staffIdSchema } from "../zodSchemas/staff.schema.js";
-import checkForAuthentication from "../middlewares/authenticate.middleware.js";
-import checkForAuthorization from "../middlewares/authorize.middleware.js";
+import authenticate from "../middlewares/authenticate.middleware.js";
+import authorize, { guardCheckupAccess } from "../middlewares/authorize.middleware.js";
 
+import express from "express";
+import { handleDicomZip, handleGetAllDicomStudies, handlePreviewDicomStudy, handleUploadDicomStudy } from "../controllers/dicom.controller.js";
 const router = express.Router();
 
-router.use(checkForAuthentication);
-router.use(checkForAuthorization(['LAB_TECH']));
+router.use(authenticate);
+router.use(authorize(["STAFF"], ["LAB_TECH"]));
 
-router.route('/:staffId')
-     .get(
-          parseIncomingReq(staffIdSchema),
-          handleGetLabTechnician
-     )
-     .patch(
-          parseIncomingReq(labTechinicianUpdateSchema),
-          handleUpdateLabTechnician
-     );
+router.get("/",
+    handleGetLabTechnician
+);
 
-router.route('/avatar/:staffId')
-     .post(
-          uploadAvatar.single("avatar"),
-          cleanupTempFiles,
-          parseIncomingReq(labTechAvatarUploadSchema),
-          uploadUserAvatar,
-          handleUploadAvatar
-     )
-     .delete(
-          parseIncomingReq(staffIdSchema),
-          handleDeleteAvatar
-     );
+router.route('/avatar')
+    .post(
+        uploadAvatar.single("avatar"),
+        cleanupTempFiles,
+        parseIncomingReq(labTechAvatarUploadSchema),
+        uploadUserAvatar,
+        handleUploadAvatar
+    )
+    .delete(handleDeleteAvatar);
 
-
-router.get('/dicom-studies/:dicomStudyId',
-     handlePreviewDicomStudy
+router.get('/dicom-study/:dicomStudyId',
+    parseIncomingReq(dicomStudyIdSchema),
+    handlePreviewDicomStudy
 );
 
 router.route('/checkups/:checkUpId/dicom')
-     .get(
-          parseIncomingReq(checkupIdSchema),
-          handleGetAllDicomStudies
-     )
-     .post(
-          uploadDicom.single("dicom"),
-          cleanupTempFiles,
-          parseIncomingReq(dicomUploadSchema),
-          validateData,
-          uploadDicomToGoogleCloud,
-          handleUploadDicomStudy
-     );
+    .get(
+        parseIncomingReq(checkupIdSchema),
+        guardCheckupAccess,
+        handleGetAllDicomStudies
+    )
+    .post(
+        uploadDicom.single("dicom"),
+        cleanupTempFiles,
+        parseIncomingReq(dicomUploadSchema),
+        validateCheckupId,
+        uploadDicomToGoogleCloud,
+        handleUploadDicomStudy
+    );
 
-router.post('/checkups/:checkUpId/dicom-zip',
-     uploadDicom.single("dicom"),
-     cleanupTempFiles,
-     parseIncomingReq(dicomZIPSchema),
-     validateData,
-     extractAndUploadDicoms,
-     handleDicomZip
+router.post('/checkups/:checkupId/dicom-zip',
+    uploadDicom.single("dicom"),
+    cleanupTempFiles,
+    parseIncomingReq(dicomZIPSchema),
+    validateCheckupId,
+    extractAndUploadDicoms,
+    handleDicomZip
 );
 
 // const cron = require('node-cron');
+// for dicom auto delete if it stayed more than 50-60 days inactive or so
 
 // // Schedules a task to run every minute
 // cron.schedule('* * * * *', () => {
@@ -98,20 +88,20 @@ router.post('/checkups/:checkUpId/dicom-zip',
 // });
 
 router.get('/report/:labReportId',
-     validateParams(labReportIdSchema),
-     handleGetReport
+    validateParams(labReportIdSchema),
+    handleGetReport
 );
 
 router.route('/checkups/:checkUpId/report')
-     .get(
-          parseIncomingReq(checkUpIdSchema),
-          handleGetAllLabReports
-     )
-     .post(
-          uploadReport('report'),
-          cleanupTempFiles,
-          parseIncomingReq(labReportUploadSchema),
-          handleUploadReport
-     );
+    .get(
+        parseIncomingReq(checkUpIdSchema),
+        handleGetAllLabReports
+    )
+    .post(
+        uploadReport('report'),
+        cleanupTempFiles,
+        parseIncomingReq(labReportUploadSchema),
+        handleUploadReport
+    );
 
 export default router;

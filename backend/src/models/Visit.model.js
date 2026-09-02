@@ -1,62 +1,56 @@
 import { model, Schema } from "mongoose";
 
-const visitSchema = new Schema({         // i don't know why i putted this model 
-     patientId: {
-          type: Schema.Types.ObjectId,
-          ref: "Patient",
-          required: true
-     },
+const visitSchema = new Schema({
+    patientId: {
+        type: Schema.Types.ObjectId,
+        ref: "Patient",
+        required: true
+    },
 
-     createdBy: {
-          type: Schema.Types.ObjectId,
-          ref: "Receptionist",
-          required: true
-     },
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: "Receptionist",
+        required: true
+    },
 
-     hospitalId: {
-          type: Schema.Types.ObjectId,
-          ref: "Hospital",
-          required: true
-     },
+    hospitalId: {
+        type: Schema.Types.ObjectId,
+        ref: "Hospital",
+        required: true
+    },
 
-     assignedNurseId: {
-          type: Schema.Types.ObjectId,
-          ref: "Nurse",
-          required: true
-     },
+    assignedNurseId: {
+        type: Schema.Types.ObjectId,
+        ref: "Nurse",
+        required: true
+    },
 
-     medicalCaseId: {
-          type: Schema.Types.ObjectId,
-          ref: "medicalCase",
-          required: false
-     },
+    medicalCaseId: {
+        type: Schema.Types.ObjectId,
+        ref: "medicalCase",
+        required: false
+    },
 
-     timelineEventId: {
-          type: Schema.Types.ObjectId,
-          ref: "TimeLineEvent",
-          required: false,
-     },
+    reason: {
+        type: String,
+        required: false
+    },
 
-     reason: {
-          type: String,
-          required: false
-     },
+    status: {
+        type: String,
+        enum: [
+            "WAITING",
+            "CONSULTING",
+            "CHECKUP_DONE",
+            "CLOSED"
+        ],
+        default: "WAITING"
+    },
 
-     status: {
-          type: String,
-          enum: [
-               "WAITING",
-               "CONSULTING",
-               "CHECKUP_DONE",
-               "CLOSED"
-          ],
-          default: "WAITING"
-     },
-
-     visitDate: {
-          type: Date,
-          default: Date.now
-     },
+    visitDate: {
+        type: Date,
+        default: Date.now
+    },
 });
 
 visitSchema.index({ hospitalId: 1, visitDate: -1 });

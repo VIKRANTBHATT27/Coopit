@@ -15,23 +15,21 @@ import {
 import {
      handleCreateMedicalCase,
      handleUpdateMedicalCase,
-     handleGetAllMedicalCase,
-     handleGetAllMedicalCases,
+     handleGetNurseMedicalCases,
      handleChangeNurse,
      handleChangeDoctor,
+     handleAssignMedicalCase,
 } from "../controllers/medicalCase.controller.js";
 
 import {
-     handleAddNewEventData,
      handleGetPatientTimeline,
-     handleDeleteTimelimeEvent,
      handleCreatePatientTimeline,
      handleUpdatePatientTimeline,
      handleGetPatientTimeline,
 } from "../controllers/timeline.controller.js";
 
 import {
-     handleViewDicomFile
+     handleViewDicom
 } from "../controllers/dicom.controller.js";
 
 
@@ -49,10 +47,11 @@ import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
 import { getStaffByDept } from "../zodSchemas/staff.schema.js";
 import { checkUpIdSchema, createCheckupSchema, updateCheckupSchema } from "../zodSchemas/checkup.schema.js";
-import { avatarUploadSchema } from "../zodSchemas/nurse.schema.js";
-import { patientIdSchema, updatePatientSchema } from "../zodSchemas/patient.schema.js";
+import { avatarUploadSchema, getNursesQuerySchema } from "../zodSchemas/nurse.schema.js";
+import { updatePatientSchema } from "../zodSchemas/patient.schema.js";
 
 import {
+     assignMedicalCase,
      changeDoctorSchema,
      changeNurseSchema,
      createmedicalCaseIdSchema,
@@ -61,10 +60,6 @@ import {
 } from "../zodSchemas/medicalCase.schema.js";
 
 import {
-     addEventDataSchema,
-     addNewEventDataSchema,
-     checkpatientIdSchema,
-     checkTimelineIdSchema,
      createPatientTimelineSchema,
      getTimelineSchema,
      updateTimelineSchema,
@@ -77,7 +72,7 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get('/',
+router.get('/department',
      authorize(["STAFF"], ["RECEPTIONIST", "NURSE", "ADMIN"]),
      parseIncomingReq(getNursesQuerySchema),
      handleGetNursesByDept
@@ -85,8 +80,9 @@ router.get('/',
 
 router.use(authorize(["STAFF"], ["NURSE"]));
 
-router.route('/')
-     .get(handleGetNurse);
+router.get("/",
+     handleGetNurse
+);
 
 router.route('/avatar')
      .post(
@@ -107,11 +103,10 @@ router.patch("/patients/:patientId",
      handleUpdatePatient
 );
 
-
 router.route("/medical-case/:patientId")
      .get(
           parseIncomingReq(getmedicalCaseIdSchema),
-          handleGetAllMedicalCases
+          handleGetNurseMedicalCases
      )
      .post(
           parseIncomingReq(createmedicalCaseIdSchema),
@@ -121,6 +116,12 @@ router.route("/medical-case/:patientId")
 router.patch("/medical-case/:medicalCaseId",
      parseIncomingReq(medicalCaseUpdationSchema),
      handleUpdateMedicalCase
+);
+
+router.patch(
+     "/assign-medical-case/:medicalCaseId/doctor/:doctorId",
+     parseIncomingReq(assignMedicalCase),
+     handleAssignMedicalCase
 );
 
 router.get("/nurses",
@@ -196,7 +197,7 @@ router.route("/timeline/:patientId/medical-case/:medicalCaseId")
 
 router.get("/view/dicom-file/:checkUpId",
      validateParams(checkUpIdSchema),
-     handleViewDicomFile
+     handleViewDicom
 );
 
 export default router;

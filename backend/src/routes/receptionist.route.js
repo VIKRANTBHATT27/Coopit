@@ -61,7 +61,6 @@ router.post("/patients/:patientId/visits",
      handleCreatePatientVisit
 );
 
-
-
+// route for deassign patients from nurse
 
 export default router;

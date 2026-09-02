@@ -1,10 +1,10 @@
 import {
-    handleChangeRole,
-    handleLookUp,
-    handleRegister,
-    handleChangeDetails,
-    handleGetAll,
-    handleToggleStatus,
+    handleChangeStaffRole,
+    handleStaffLookUp,
+    handleRegisterStaffMember,
+    handleChangeStaffDetails,
+    handleGetAllStaffMembers,
+    handleToggleStaffStatus,
 } from "../controllers/admin.controller.js";
 
 import {
@@ -19,7 +19,7 @@ import {
     handleUpdateNurse
 } from "../controllers/nurse.controller.js";
 
-import { handleGetUser } from "../controllers/user.controller.js";
+import { handleGetUserId } from "../controllers/user.controller.js";
 import { getUserSchema } from "../zodSchemas/user.schema.js";
 
 import {
@@ -54,41 +54,41 @@ import { createLabTechnician, updateLabTechnician } from "../zodSchemas/labTech.
 const router = express.Router();
 
 router.use(authenticate);
-router.use(authorize(["HOSPITAL_ADMIN"]));
+router.use(authorize(["STAFF"], ["HOSPITAL_ADMIN"]));
 
 router.get("/user",
     parseIncomingReq(getUserSchema),
-    handleGetUser
+    handleGetUserId
 )
 
 router.get("/staff",
     parseIncomingReq(getAllSchema),
-    handleGetAll
+    handleGetAllStaffMembers
 );
 
 router.post("/staff",
     parseIncomingReq(registrationSchema),
-    handleRegister
+    handleRegisterStaffMember
 );
 
 router.route("/staff/:staffId")
     .get(
         parseIncomingReq(staffIdSchema),
-        handleLookUp
+        handleStaffLookUp
     )
     .patch(
         parseIncomingReq(detailChangeSchema),
-        handleChangeDetails
+        handleChangeStaffDetails
     );
 
 router.patch("/staff/:staffId/role",
     parseIncomingReq(roleChangeSchema),
-    handleChangeRole
+    handleChangeStaffRole
 );
 
 router.post("/staff/:staffId/status",
     parseIncomingReq(toggleStaffStatusSchema),
-    handleToggleStatus
+    handleToggleStaffStatus
 );
 
 router.route("/:staffId/receptionist")

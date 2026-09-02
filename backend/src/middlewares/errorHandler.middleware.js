@@ -1,5 +1,7 @@
 import APIError from "../utils/APIError.utils.js";
 import logger from "../../config/logger.js";
+import { deleteDicomInstance } from "../services/dicom.service.js";
+import deleteUserAvatar from "../infrastructure/cloudinary.js";
 
 export const errorHandler = async (err, req, res, next) => {
     logger.error({
@@ -8,6 +10,17 @@ export const errorHandler = async (err, req, res, next) => {
         url: req.originalUrl,
         userId: req.user?._id
     });
+
+    if (req.pfpAvatarPublicId) {
+        const result = await deleteUserAvatar(req.pfpAvatarPublicId);
+
+        if (!result)
+            throw new Error(500, "Cloudinary profile image deletion failed!");
+    }
+
+    if (req.dicomPayload.studyUid) {
+        await deleteDicomInstance(req.dicomPayload.studyUid);
+    }
 
     if (err instanceof APIError) {
         return res.status(err.statusCode).json({

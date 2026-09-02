@@ -6,7 +6,9 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
         message: `Invalid mongoose ObjectId for field ${fieldName}`
     });
 
-export const checkupIdSchema = mongooseObjectIdValidator("Checkup");
+export const checkupIdSchema = z.object({
+    checkupId: mongooseObjectIdValidator("Checkup")
+});
 
 export const createCheckupSchema = z.object({
     body: z.object({

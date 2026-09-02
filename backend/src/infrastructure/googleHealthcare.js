@@ -1,4 +1,3 @@
-// import * as google from "@googleapis/healthcare";
 import { fileURLToPath } from "url";
 import { google } from "googleapis";
 

@@ -18,7 +18,6 @@ const AVATAR_FILE_TYPES = [
      "image/webp"
 ];
 
-
 export const createNurseSchema = z.object({
      body: z.object({
           wardAssigned: z.enum([
@@ -85,9 +84,25 @@ export const avatarUploadSchema = z.object({
 export const getNursesQuerySchema = z.object({
      query: z.object({
           department: z.enum([
+               "ANESTHESIOLOGY",
+               "CARDIOLOGY",
+               "DERMATOLOGY",
                "EMERGENCY_MEDICINE",
+               "ENDOCRINOLOGY",
+               "GASTROENTEROLOGY",
                "GENERAL_MEDICINE",
-               "GENERAL_SURGERY"
+               "GENERAL_SURGERY",
+               "GYNECOLOGY_OBSTETRICS",
+               "NEUROLOGY",
+               "ONCOLOGY",
+               "ORTHOPEDICS",
+               "PEDIATRICS",
+               "PSYCHIATRY",
+               "PULMONOLOGY",
+               "RADIOLOGY",
+               "UROLOGY",
+               "FRONT_DESK",
+               "MANAGEMENT"
           ], {
                required_error: "Department query parameter is required",
                invalid_type_error: "Invalid hospital department selected"

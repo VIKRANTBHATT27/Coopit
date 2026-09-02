@@ -20,7 +20,7 @@ import APIError from "../utils/APIError.utils.js";
 import resolveRoleReferences from "../utils/roleReference.utils.js";
 import mongoose from "mongoose";
 
-export const handleGetUser = async (req, res, next) => {
+export const handleGetUserId = async (req, res, next) => {
      try {
           const { emailId } = req.parsedBody;
 

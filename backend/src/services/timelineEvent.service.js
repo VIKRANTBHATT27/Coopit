@@ -1,23 +1,21 @@
-import { TimelineEvent } from "../models/index.js";
+import { Timeline } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
 import { addEventDataSchema } from "../zodSchemas/timeline.schema.js";
 
-export const logTimelineEvent = async (data) => {
+export const logTimelineEvent = async (timelineData, session) => {
     try {
-        const parsedData = addEventDataSchema.parse(data);
+        const parsedData = addEventDataSchema.parse(timelineData);
 
-        const { patientId, eventData } = parsedData;
+        const { timlineId, eventData } = parsedData;
 
-        const timelineEvent = await TimelineEvent.findOneAndUpdate(
-            { patientId },
+        const timline = await Timeline.findByIdAndUpdate(
+            timlineId,
             { $push: { eventData } },
-            { returnDocument: "after", runValidators: true }
+            { returnDocument: "after", runValidators: true, session }
         );
 
-        return timelineEvent;
+        return timline;
     } catch (err) {
-        console.error("failed during updating an event in timeline\n", err.message);
-
         throw new APIError(500, "INTERNAL SERVER ERROR");
     }
 };

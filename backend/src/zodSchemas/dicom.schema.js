@@ -31,13 +31,8 @@ export const dicomUploadSchema = z.object({
     }),
 
     params: z.object({
-        checkUpId: mongooseObjectIdValidator('Checkup')
-    }),
-
-    body: z.object({
-        patientId: mongooseObjectIdValidator('Patient'),
-        medicalCaseId: mongooseObjectIdValidator('MedicalCase')
-    }),
+        checkupId: mongooseObjectIdValidator('Checkup')
+    })
 });
 
 export const dicomZIPSchema = z.object({
@@ -55,11 +50,10 @@ export const dicomZIPSchema = z.object({
     }),
 
     params: z.object({
-        checkUpId: mongooseObjectIdValidator('Checkup')
-    }),
+        checkupId: mongooseObjectIdValidator('Checkup')
+    })
+});
 
-    body: z.object({
-        patientId: mongooseObjectIdValidator('Patient'),
-        medicalCaseId: mongooseObjectIdValidator('MedicalCase')
-    }),
+export const dicomStudyIdSchema = z.object({
+    dicomStudyId: mongooseObjectIdValidator("Dicom Study")
 });

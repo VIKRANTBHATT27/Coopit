@@ -1,7 +1,7 @@
 import { Staff, User } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
 
-export const handleGetAll = async (req, res, next) => {
+export const handleGetAllStaffMembers = async (req, res, next) => {
     try {
         const { page, limit, role } = req.parsedQuery;
         const { hospitalId } = req.user;
@@ -42,7 +42,7 @@ export const handleGetAll = async (req, res, next) => {
     }
 };
 
-export const handleLookUp = async (req, res, next) => {
+export const handleStaffLookUp = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { hospitalId } = req.user;
@@ -70,7 +70,7 @@ export const handleLookUp = async (req, res, next) => {
     }
 };
 
-export const handleRegister = async (req, res, next) => {
+export const handleRegisterStaffMember = async (req, res, next) => {
     try {
         const { userId } = req.parsedBody;
         const { hospitalId } = req.user;
@@ -109,7 +109,7 @@ export const handleRegister = async (req, res, next) => {
     }
 };
 
-export const handleChangeRole = async (req, res, next) => {
+export const handleChangeStaffRole = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { role } = req.parsedBody;
@@ -141,7 +141,7 @@ export const handleChangeRole = async (req, res, next) => {
     }
 };
 
-export const handleChangeDetails = async (req, res, next) => {
+export const handleChangeStaffDetails = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { hospitalId } = req.user;
@@ -170,7 +170,7 @@ export const handleChangeDetails = async (req, res, next) => {
     }
 };
 
-export const handleToggleStatus = async (req, res, next) => {
+export const handleToggleStaffStatus = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
         const { status } = req.parsedBody;

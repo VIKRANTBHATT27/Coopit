@@ -67,9 +67,5 @@ export const labTechAvatarUploadSchema = z.object({
                .min(1, "Temporary storage file path is missing"),
      }, {
           message: "file is required for avatar uplaod"
-     }),
-
-     params: z.object({
-          staffId: mongooseObjectIdValidator('staffId')
      })
 });

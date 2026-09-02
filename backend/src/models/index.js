@@ -17,21 +17,21 @@ import Visit from "./Visit.model.js";
 import Otp from "./OTP.model.js";
 
 export {
-     Checkup,
-     DicomStudy,
-     Doctor,
-     Hospital,
-     LabReport,
-     LabTechnician,
-     MedicalCase,
-     Nurse,
-     PasswordReset,
-     Patient,
-     PendingUser,
-     Receptionist,
-     Staff,
-     Timeline,
-     User,
-     Visit,
-     Otp
+    Checkup,
+    DicomStudy,
+    Doctor,
+    Hospital,
+    LabReport,
+    LabTechnician,
+    MedicalCase,
+    Nurse,
+    PasswordReset,
+    Patient,
+    PendingUser,
+    Receptionist,
+    Staff,
+    Timeline,
+    User,
+    Visit,
+    Otp
 };

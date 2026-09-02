@@ -31,9 +31,7 @@ export const previewDicomInstance = async (
 
         return Buffer.from(instance.data);
     } catch (err) {
-        console.error("failed during previewing dicom instance\n", err.message);
-
-        throw new APIError(500, "Failed to preview DICOM instance");
+        throw new APIError(500, `Failed to preview DICOM instance\n${err.message}`);
     }
 };
 

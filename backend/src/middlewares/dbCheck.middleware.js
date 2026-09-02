@@ -1,35 +1,20 @@
-import { Checkup, Patient, MedicalCase } from "../models/index.js";
+import { Checkup } from "../models/index.js";
+import APIError from "../utils/APIError.utils.js";
 
-export const validateData = async (req, res, next) => {
-    const { checkUpId } = req.parsedQuery;
-    const { patientId, medicalCaseId } = req.parsedBody;
-
+export const validateCheckupId = async (req, res, next) => {
     try {
-        const [patientRecord, medicalCaseRecord, checkupRecord] = await Promise.all([
-            Patient.exists({ _id: patientId }),
-            MedicalCase.exists({ _id: medicalCaseId }),
-            Checkup.exists({ _id: checkUpId })
-        ]);
+        const { checkupId } = req.parsedParams;
 
-        if (!patientRecord)
-            return res.status(404).json({
-                message: "No patient record exist with this patientId."
-            });
+        const checkupRecord = await Checkup.exists({ _id: checkupId });
 
-        if (!medicalCaseRecord)
-            return res.status(404).json({
-                message: "No medical case record exist with this medicalCaseId."
-            });
-
-        if (!checkupRecord)
-            return res.status(404).json({
-                message: "No checkup record exist with this CheckupId."
-            });
+        if (!checkupRecord) {
+            return next(
+                new APIError(404, "Checkup record not found")
+            );
+        }
 
         return next();
     } catch (err) {
-        console.error(`failed during validating Data on request ${req.route.path}\nerrorMsg => `, err.message);
-        
         return next(err);
     }
 };

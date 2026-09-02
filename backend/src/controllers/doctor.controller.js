@@ -7,30 +7,30 @@ import APIError from "../utils/APIError.utils.js";
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
 
 export const handleCreateDoctor = async (req, res, next) => {
-     try {
-          const { staffId } = req.parsedParams;
+    try {
+        const { staffId } = req.parsedParams;
 
-          const staffExists = await Staff.exists({ _id: staffId }).lean();
+        const staffExists = await Staff.exists({ _id: staffId }).lean();
 
-          if (!staffExists) {
-               return next(
-                    new APIError(404, "No staff record found")
-               );
-          }
+        if (!staffExists) {
+            return next(
+                new APIError(404, "No staff record found")
+            );
+        }
 
-          const doctor = await Doctor.create({
-               ...req.parsedBody,
-               staffId
-          });
+        const doctor = await Doctor.create({
+            ...req.parsedBody,
+            staffId
+        });
 
-          return res.status(201).json({
-               message: "successfully created doctor record",
-               data: doctor
-          });
+        return res.status(201).json({
+            message: "successfully created doctor record",
+            data: doctor
+        });
 
-     } catch (err) {
-          return next(err);
-     }
+    } catch (err) {
+        return next(err);
+    }
 };
 
 // export const handleGetDoctor = async (req, res) => {
@@ -48,228 +48,221 @@ export const handleCreateDoctor = async (req, res, next) => {
 // };
 
 export const handleGetDoctorDetails = async (req, res, next) => {
-     try {
-          const { staffId } = req.parsedParams;
+    try {
+        const { staffId } = req.parsedParams;
 
-          const doctorDetails = await Doctor.findOne({ staffId })
-               .populate({
-                    path: "staffId",
-                    populate: {
-                         path: "userId",
-                         select: "-passwordHash -phoneNumberHash -phoneNumberEnc -phoneIV -phoneAuthTag"
-                    }
-               });
+        const doctorDetails = await Doctor.findOne({ staffId })
+            .populate({
+                path: "staffId",
+                populate: {
+                    path: "userId",
+                    select: "-passwordHash -phoneNumberHash -phoneNumberEnc -phoneIV -phoneAuthTag"
+                }
+            });
 
-          if (!doctorDetails) {
-               return next(
-                    new APIError(400, "Doctor record not found")
-               );
-          }
+        if (!doctorDetails) {
+            return next(
+                new APIError(400, "Doctor record not found")
+            );
+        }
 
-          return res.status(200).json({
-               message: "All details of doctor",
-               data: doctorDetails
-          });
+        return res.status(200).json({
+            message: "All details of doctor",
+            data: doctorDetails
+        });
 
-     } catch (err) {
-          return next(err);
-     }
+    } catch (err) {
+        return next(err);
+    }
 };
 
 export const handleUpdateDoctor = async (req, res, next) => {
-     try {
-          const { staffId } = req.parsedParams;
+    try {
+        const { staffId } = req.parsedParams;
 
-          const doctor = await doctorModel.findOneAndUpdate(
-               { staffId },
-               { ...req.parsedBody },
-               { returnDocument: "after", runValidators: true }
-          );
+        const doctor = await doctorModel.findOneAndUpdate(
+            { staffId },
+            { ...req.parsedBody },
+            { returnDocument: "after", runValidators: true }
+        );
 
-          if (!doctor) {
-               return next(
-                    new APIError(404, "Doctor record not found")
-               );
-          }
+        if (!doctor) {
+            return next(
+                new APIError(404, "Doctor record not found")
+            );
+        }
 
-          return res.status(200).json({
-               message: "successfully updated doctor record",
-               data: doctor
-          });
+        return res.status(200).json({
+            message: "successfully updated doctor record",
+            data: doctor
+        });
 
-     } catch (err) {
-          return next(err);
-     }
+    } catch (err) {
+        return next(err);
+    }
 };
 
 export const handleUploadAvatar = async (req, res, next) => {
-     try {
-          const { staffId } = req.user;
+    try {
+        const { staffId } = req.user;
 
-          const pfp_url = req.pfpImageURL;
-          const pfp_publicId = req.pfpImagePublicId;
+        const pfp_url = req.pfpImageURL;
+        const pfp_publicId = req.pfpImagePublicId;
 
-          const doctor = await Doctor.findOneAndUpdate(
-               { staffId },
-               { $set: { pfp_url, pfp_publicId } },
-               { returnDocument: "after" }
-          );
+        const doctor = await Doctor.findOneAndUpdate(
+            { staffId },
+            { $set: { pfp_url, pfp_publicId } },
+            { returnDocument: "after" }
+        );
 
-          if (!doctor) {
-               return next(
-                    new APIError(404, "Doctor record not found")
-               );
-          }
+        if (!doctor) {
+            return next(
+                new APIError(404, "Doctor record not found")
+            );
+        }
 
-          return res.status(200).json({
-               message: "Successfully uploaded avatar",
-               url: doctor.pfp_url
-          });
+        return res.status(200).json({
+            message: "Successfully uploaded avatar",
+            url: doctor.pfp_url
+        });
 
-     } catch (err) {
-          if (req.pfpAvatarPublicId) {
-               const result = await deleteUserAvatar(req.pfpAvatarPublicId);
-
-               if (!result)
-                    throw new Error(500, "Cloudinary profile image deletion failed!");
-          }
-
-          return next(err);
-     }
+    } catch (err) {
+        return next(err);
+    }
 };
 
 export const handleDeleteAvatar = async (req, res, next) => {
-     try {
-          const { staffId } = req.user;
+    try {
+        const { staffId } = req.user;
 
-          const doctor = await Doctor.findOne({ staffId });
+        const doctor = await Doctor.findOne({ staffId });
 
-          if (!doctor) {
-               return next(
-                    new APIError(404, "Doctor record not found")
-               );
-          }
+        if (!doctor) {
+            return next(
+                new APIError(404, "Doctor record not found")
+            );
+        }
 
-          if (!doctor.pfp_publicId) {
-               return next(
-                    new APIError(400, "Doesn't have custom profile picture")
-               );
-          }
+        if (!doctor.pfp_publicId) {
+            return next(
+                new APIError(400, "Doesn't have custom profile picture")
+            );
+        }
 
-          const result = await deleteUserAvatar(doctor.pfp_publicId);
+        const result = await deleteUserAvatar(doctor.pfp_publicId);
 
-          if (!result) {
-               return next(
-                    new APIError(500, "Failed to delete avatar")
-               );
-          }
+        if (!result) {
+            return next(
+                new APIError(500, "Failed to delete avatar")
+            );
+        }
 
-          doctor.pfp_publicId = null;
-          doctor.pfp_url = "/default-pfp/default-doctor.png";
+        doctor.pfp_publicId = null;
+        doctor.pfp_url = "/default-pfp/default-doctor.png";
 
-          await doctor.save();
+        await doctor.save();
 
-          return res.status(200).json({
-               messae: "successfully deleted avatar"
-          });
+        return res.status(200).json({
+            messae: "successfully deleted avatar"
+        });
 
-     } catch (err) {
-          return next(err);
-     }
+    } catch (err) {
+        return next(err);
+    }
 };
 
 // show all the disease case
 export const handleGetDiseaseCase = async (req, res) => {
-     try {
-          const allDiseaseCase = await diseaseCaseModel.find({ diagnosedBy: req.params.doctorId });
+    try {
+        const allDiseaseCase = await diseaseCaseModel.find({ diagnosedBy: req.params.doctorId });
 
-          return res.status(200).json(allDiseaseCase);
-     } catch (err) {
-          console.log("error: ", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
-     }
+        return res.status(200).json(allDiseaseCase);
+    } catch (err) {
+        console.log("error: ", err);
+        return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+    }
 };
 
 // approve and disapprove the disease 
-export const handleApproveMedicalCase = async (req, res) => {
-     try {
-          const medicalCase = await MedicalCase.findByIdAndUpdate(req.params.diseaseId,
-               { $set: { status: "Approved" } },
-               { returnDocument: "after" }
-          );
+// export const handleApproveMedicalCase = async (req, res) => {
+//      try {
+//           const medicalCase = await MedicalCase.findByIdAndUpdate(req.params.diseaseId,
+//                { $set: { status: "Approved" } },
+//                { returnDocument: "after" }
+//           );
 
-          return res.status(204).json({ msg: "successfully updated", Id: diseaseCase._id });
-     } catch (err) {
-          console.log("error: ", err.message);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
-     }
-};
+//           return res.status(204).json({ msg: "successfully updated", Id: diseaseCase._id });
+//      } catch (err) {
+//           console.log("error: ", err.message);
+//           return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+//      }
+// };
 
 // pick those only checkups which have labResults
 export const handleGetAllCheckups = async (req, res) => {
-     try {
-          const allCheckUps = await checkupModel.find({ doctorId: req.params.doctorId });
+    try {
+        const allCheckUps = await checkupModel.find({ doctorId: req.params.doctorId });
 
-          return res.status(200).json(allCheckUps);
-     } catch (err) {
-          console.log("error: ", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
-     }
+        return res.status(200).json(allCheckUps);
+    } catch (err) {
+        console.log("error: ", err);
+        return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+    }
 };
 
 // see the dicom files 
 export const handlePreviewDicomFile = async (req, res) => {
-     const { studyInstanceId: studyUid, seriesInstanceId: seriesUid, sopInstanceUid: instanceUid } = req.body;
+    const { studyInstanceId: studyUid, seriesInstanceId: seriesUid, sopInstanceUid: instanceUid } = req.body;
 
-     if (!studyUid)
-          return res.status(400).json({ err: "study instance Id is not provided" });
+    if (!studyUid)
+        return res.status(400).json({ err: "study instance Id is not provided" });
 
-     if (!seriesUid)
-          return res.status(400).json({ err: "series instance Id is not provided" });
+    if (!seriesUid)
+        return res.status(400).json({ err: "series instance Id is not provided" });
 
-     if (!instanceUid)
-          return res.status(400).json({ err: "sop Instance Uid is not provided" });
+    if (!instanceUid)
+        return res.status(400).json({ err: "sop Instance Uid is not provided" });
 
-     try {
-          await previewDicomInstance(res, studyUid, seriesUid, instanceUid);
+    try {
+        await previewDicomInstance(res, studyUid, seriesUid, instanceUid);
 
-     } catch (err) {
-          console.log("error: ", err);
-          return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
-     }
+    } catch (err) {
+        console.log("error: ", err);
+        return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
+    }
 };
 
 export const handleGetDoctorsByDept = async (req, res, next) => {
-     try {
-          const { hospitalId } = req.user;
-          const { department } = req.parsedQuery;
+    try {
+        const { hospitalId } = req.user;
+        const { department } = req.parsedQuery;
 
-          const allDoctors = await Staff.find({
-               hospitalId,
-               department,
-               role: "DOCTOR",
-               status: "ACTIVE",
-          });
+        const allDoctors = await Staff.find({
+            hospitalId,
+            department,
+            role: "DOCTOR",
+            status: "ACTIVE",
+        });
 
-          if (!allDoctors) {
-               return next(
-                    new APIError(404, "No doctor records found")
-               );
-          }
+        if (!allDoctors) {
+            return next(
+                new APIError(404, "No doctor records found")
+            );
+        }
 
-          const allDoctorDetails = [];
+        const allDoctorDetails = [];
 
-          for (const doctor of allDoctors) {
-               const userDetails = await User.findById(doctor.userId).select("fullName emailId gender dateOfBirth");
+        for (const doctor of allDoctors) {
+            const userDetails = await User.findById(doctor.userId).select("fullName emailId gender dateOfBirth");
 
-               allDoctorDetails.push(userDetails);
-          }
+            allDoctorDetails.push(userDetails);
+        }
 
-          return res.status(200).json({
-               message: "details of all the doctors",
-               data: allDoctorDetails
-          });
-     } catch (err) {
-          return next(err);
-     }
+        return res.status(200).json({
+            message: "details of all the doctors",
+            data: allDoctorDetails
+        });
+    } catch (err) {
+        return next(err);
+    }
 };
