@@ -61,11 +61,6 @@ export const nurseUpdationSchema = z.object({
      })
 });
 
-// pfp_url: z.string().default('/default-pfp/default-nurse.png'),
-// assignedPatients: z.array(mongooseObjectIdValidator("patientId")).unique().default([]),
-// patientId: mongooseObjectIdValidator("patientId"),
-
-
 export const avatarUploadSchema = z.object({
      file: z.object({
           originalName: z.string()

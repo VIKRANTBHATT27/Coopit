@@ -46,16 +46,15 @@ export const handleGetAllDicomStudies = async (req, res, next) => {
             );
         }
 
-        const dicoms = await DicomStudy.find({
+        const allDicoms = await DicomStudy.find({
             checkupId,
             isDeactivated: false
         }).lean();
 
         return res.status(200).json({
-            data: dicoms,
-            message: dicoms.length === 0 ? "No dicom files found" : "Dicom files fetched"
+            data: allDicoms,
+            message: allDicoms.length === 0 ? "No dicom files found" : "Dicom files fetched"
         });
-
     } catch (err) {
         return next(err);
     }

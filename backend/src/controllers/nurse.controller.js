@@ -178,9 +178,8 @@ export const handleDeleteAvatar = async (req, res, next) => {
         nurse.pfp_url = "/default-pfp/default-nurse.png";
         await nurse.save();
 
-
         return res.status(200).json({
-            messae: "successfully deleted avatar"
+            message: "successfully deleted avatar"
         });
 
     } catch (err) {

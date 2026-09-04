@@ -5,14 +5,15 @@ config();
 
 const secretKey = process.env.JWT_SECRET_KEY;
 
-export const generateToken = ({ _id: userId, role }, { staffId = null, roleDocId = null }) => {
+export const generateToken = ({ _id: userId, role }, { staffId = null, roleRefId = null }) => {
     return jwt.sign({
         userId,
         role,
         staffId,
         staffRole,
         roleRefId,
-        hospitalId
+        hospitalId,
+        patientId
     }, secretKey, { expiresIn: "24h" });
 };
 

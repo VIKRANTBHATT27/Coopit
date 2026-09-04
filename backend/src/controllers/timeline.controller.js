@@ -1,5 +1,21 @@
-import { Checkup, DicomStudy, Doctor, LabReport, LabTechnician, MedicalCase, Nurse, Patient, Receptionist, Staff, Timeline } from "../models/index.js";
+import { Checkup, DicomStudy, LabReport, MedicalCase, Patient, Timeline } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
+
+export const handleGetTimelines = async (req, res, next) => {
+    try {
+        const { patientId } = req.user;
+
+        const allTimelines = await Timeline.find({ patientId });
+
+        return res.status(200).json({
+            message: allTimelines.length === 0 ? "No timeline record present" : "all timeline record fetched",
+            data: allTimelines
+        })
+
+    } catch (err) {
+        return next(err);
+    }
+};
 
 export const handleGetPatientTimeline = async (req, res, next) => {
     try {

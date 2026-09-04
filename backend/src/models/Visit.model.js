@@ -25,24 +25,16 @@ const visitSchema = new Schema({
         required: true
     },
 
-    medicalCaseId: {
-        type: Schema.Types.ObjectId,
-        ref: "medicalCase",
-        required: false
-    },
-
     reason: {
         type: String,
-        required: false
+        required: true
     },
 
     status: {
         type: String,
         enum: [
             "WAITING",
-            "CONSULTING",
-            "CHECKUP_DONE",
-            "CLOSED"
+            "CHECKUP_DONE"
         ],
         default: "WAITING"
     },
@@ -55,7 +47,7 @@ const visitSchema = new Schema({
 
 visitSchema.index({ hospitalId: 1, visitDate: -1 });
 visitSchema.index({ assignedDoctor: 1 });
-visitSchema.index({ patient: 1 });
+visitSchema.index({ patientId: 1 });
 
 const Visit = model("Visit", visitSchema);
 export default Visit;

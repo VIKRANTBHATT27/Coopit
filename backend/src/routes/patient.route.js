@@ -1,57 +1,69 @@
-import express from "express";
-import { uploadAvatar } from "../middlewares/multer.js";
-import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.middleware.js";
+import { uploadAvatar } from "../middlewares/multer.middleware.js";
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
+import parseIncomingReq from "../middlewares/parseReq.middleware.js";
+import { authorize } from "../middlewares/authorize.middleware.js";
+import { authenticate } from "../middlewares/authenticate.middleware.js";
+import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
 
 import {
-    handleGetPatient,
-    handleUpdatePatient,
-    handlePatientSignup,
     handleUploadPatientAvatar,
     handleDeleteAvatar,
+    handlePatientLookup,
 } from "../controllers/patient.controller.js";
+import { handleGetTimelines } from "../controllers/timeline.controller.js";
+import { handleGetMedicalCase } from "../controllers/medicalCase.controller.js";
+import { handleGetCheckups } from "../controllers/checkup.controller.js";
+import { handleGetAllDicomStudies } from "../controllers/dicom.controller.js";
+import { handleGetAllLabReports } from "../controllers/labReport.controller.js";
 
-import {
-    validateBody,
-    validateParams
-} from "../middlewares/validateReq.middleware.js";
+import { avatarUploadSchema } from "../zodSchemas/patient.schema.js";
+import { userIdSchema } from "../zodSchemas/user.schema.js";
+import { medicalCaseIdSchema } from "../zodSchemas/medicalCase.schema.js";
+import { checkupIdSchema } from "../zodSchemas/checkup.schema.js";
 
-import {
-    patientSchema,
-    userIdSchema,
-    checkUpIdSchema,
-    patientUpdationSchema,
-} from "../zodSchemas/patient.schema.js";
-
-import checkForAuthentication from "../middlewares/authenticate.middleware.js";
-
-import checkForAuthorization from "../middlewares/authorize.middleware.js";
-
-
+import express from "express";
 const router = express.Router();
 
-
-router.use(checkForAuthentication);
-router.use(checkForAuthorization('PATIENT'));
+router.use(authenticate);
+router.use(authorize('PATIENT'));
 
 router.get("/:userId",
-    validateParams(userIdSchema),
-    handleGetPatient
+    parseIncomingReq(userIdSchema),
+    handlePatientLookup
 );
 
-router.route('/avatar/:userId',
-    validateParams(userIdSchema),
-)
-    .patch(
+router.route('/avatar')
+    .post(
         uploadAvatar.single("avatar"),
+        cleanupTempFiles,
+        parseIncomingReq(avatarUploadSchema),
         uploadUserAvatar,
-        deleteLocalImgFile,
         handleUploadPatientAvatar
     )
-    .delete(
-        handleDeleteAvatar
-    );
+    .delete(handleDeleteAvatar);
 
-// router.post('/:id/document-upload', handleDocumentUpload);
+router.get("/timeline",
+    handleGetTimelines
+);
+
+router.get("/medical-case/:medicalCaseId",
+    parseIncomingReq(medicalCaseIdSchema),
+    handleGetMedicalCase
+);
+
+router.get("/checkups/:medicalCaseId",
+    parseIncomingReq(medicalCaseIdSchema),
+    handleGetCheckups
+);
+
+router.get("/dicom-study/:checkupId",
+    parseIncomingReq(checkupIdSchema),
+    handleGetAllDicomStudies
+);
+
+router.get("/report/:checkupId",
+    parseIncomingReq(checkupIdSchema),
+    handleGetAllLabReports
+);
 
 export default router;

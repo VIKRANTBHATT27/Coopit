@@ -2,7 +2,28 @@ import mongoose from "mongoose";
 import { Nurse, Doctor, MedicalCase, Patient } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
 
-export const handleGetNurseMedicalCases = async (req, res) => {
+export const handleGetMedicalCase = async (req, res, next) => {
+    try {
+        const { medicalCaseId } = req.parsedParams;
+
+        const medicalCase = await MedicalCase.findById(medicalCaseId);
+
+        if (!medicalCase) {
+            return next(
+                new APIError(404, "No medicalCase record found")
+            );
+        }
+
+        return res.status(200).json({
+            message: "medical record fetched",
+            data: medicalCase
+        });
+    } catch (err) {
+        return next(err);
+    }
+};
+
+export const handleGetNurseMedicalCases = async (req, res, next) => {
     try {
         const { roleRefId } = req.user;
         const { patientId } = req.parsedParams;
@@ -334,15 +355,6 @@ export const handleChangeDoctor = async (req, res, next) => {
             message: "New doctor is added to the medical case.",
             data: updatedMedicalCase
         });
-
-    } catch (err) {
-        return next(err);
-    }
-};
-
-export const handleChangeTimelineEvent = async (req, res, next) => {
-    try {
-
 
     } catch (err) {
         return next(err);
