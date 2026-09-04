@@ -3,16 +3,19 @@ import fs from "node:fs/promises";
 
 import {
     S3Client,
+    GetObjectCommand,
     CreateBucketCommand,
     DeleteObjectCommand,
     DeleteBucketCommand,
     paginateListObjectsV2,
     PutObjectCommand,
     NoSuchKey,
-    GetObjectCommand,
     S3ServiceException,
     waitUntilObjectNotExists,
 } from "@aws-sdk/client-s3";
+
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import logger from "../../config/logger.js";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -28,64 +31,56 @@ export const getSignedUrlFromS3 = async (s3Key) => {
     });
 
     try {
-        const redirectingURL = await getSignedUrl(s3Client, getCommand, {
+        const signedUrl = await getSignedUrl(s3Client, getCommand, {
             expiresIn: 300
         });
 
-        return redirectingURL;
+        return signedUrl;
     } catch (err) {
         if (err instanceof NoSuchKey) {
-            console.error(`Error from S3 while getting object "${s3Key}" from "${bucketName}". No such key exists.`);
+            logger.error("S3 error:", { key: s3Key, error: err.message });
 
-            throw new APIError(404, 'invalid s3Key, no file exist with this key');
+            throw new APIError(404, "File not found");
         } else if (err instanceof S3ServiceException) {
-            console.error(`Error from S3 while getting object from ${bucketName}. ${err.name}: ${err.message}`);
+            logger.error("S3 service error: ", { errName: err.name, error: err.message });
 
-            throw new APIError(503, 'AWS service unavailable');
+            throw new APIError(503, "AWS service unavailable");
         } else {
-            console.error(`failed during getting pdf url from aws service\n`, err.message);
+            logger.error("Unexpected S3 error: ", { error: err.message });
 
-            throw new APIError(500, 'INTERNAL SERVER ERROR');
+            throw new APIError(500, "INTERNAL SERVER ERROR");
         }
     }
 };
 
 export const uploadFileToS3 = async (s3Key, filePath) => {
-    try {
-        const putCommand = new PutObjectCommand({
-            Bucket: bucketName,
-            Key: s3Key,
-            Body: await fs.readFile(filePath),
-        });
+    const putCommand = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: s3Key,
+        Body: await fs.readFile(filePath),
+    });
 
-        const response = await client.send(putCommand);
-        console.log(response);
+    try {
+        await s3Client.send(putCommand);
 
         return true;
     } catch (err) {
-        if (
-            err instanceof S3ServiceException &&
-            err.name === "EntityTooLarge"
-        ) {
-            console.error(
-                `Error from S3 while uploading object to ${bucketName}. \
-The object was too large. To upload objects larger than 5GB, use the S3 console (160GB max) \
-or the multipart upload API (5TB max).`,
-            );
+        if (err instanceof S3ServiceException && err.name === "EntityTooLarge") {
+            logger.error("S3 error: ", {
+                error: err.message,
+                hint: "use the S3 console (160GB max) \ or the multipart upload API (5TB max)"
+            });
 
-            throw new APIError(413, 'file size greater than 5GB');
+            throw new APIError(413, 'File size greater than 5GB');
         } else if (err instanceof S3ServiceException) {
-            console.error(
-                `Error from S3 while uploading object to ${bucketName}.  ${err.name}: ${err.message}`,
-            );
+            logger.error("S3 service error: ", { errName: err.name, error: err.message });
+
             throw new APIError(503, 'AWS service unavailable');
         } else {
-            console.error(`failed during uploading pdf to AWS\n`, err.message);
+            logger.error("Unexpected S3 error: ", { error: err.message });
 
             throw new APIError(500, 'INTERNAL SERVER ERROR');
         }
-
-        return false;
     }
 };
 
@@ -93,29 +88,23 @@ export const deleteFileFromS3 = async (s3Key) => {
     const deleteCommand = new DeleteObjectCommand({
         Bucket: bucketName,
         Key: s3Key,
-    }),
+    });
 
     try {
-        const response = await client.send(putCommand);
-        console.log(response);
+        await s3Client.send(deleteCommand);
+
+        return true;
     } catch (err) {
-        if (
-            err instanceof S3ServiceException &&
-            err.name === "NoSuchBucket"
-        ) {
-            console.error(
-                `Error from S3 while deleting object from ${bucketName}. The bucket doesn't exist.`,
-            );
+        if (err instanceof S3ServiceException && err.name === "NoSuchBucket") {
+            logger.error("S3 error: ", { bucketName, error: err.message })
 
             throw new APIError(404, `${bucketName} bucket not found`);
         } else if (err instanceof S3ServiceException) {
-            console.error(
-                `Error from S3 while deleting object from ${bucketName}.  ${err.name}: ${err.message}`,
-            );
+            logger.error("S3 service error: ", { errName: err.name, error: err.message });
 
             throw new APIError(503, 'AWS service unavailable');
         } else {
-            console.error('failed during deletion of an object from AWS\n', err.message);
+            logger.error("Unexpected S3 error: ", { error: err.message });
 
             throw new APIError(500, 'INTERNAL SERVER ERROR');
         }

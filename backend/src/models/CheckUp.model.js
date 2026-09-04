@@ -99,12 +99,6 @@ const checkupSchema = new Schema({
                 administeredAt: {
                     type: Date,
                     default: Date.now
-                },
-
-                administeredBy: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Doctor",
-                    required: true
                 }
             }
         ],
@@ -113,14 +107,14 @@ const checkupSchema = new Schema({
 
     treatments: [
         {
-            treatmentType: {      //Procedure => dressing, Therapy => physiotherapy
+            treatmentType: {
                 type: String,
                 enum: [
                     "IV",
                     "TABLET",
                     "SURGERY",
                     "THERAPY",
-                    "PROCEDURE",
+                    "PROCEDURE",    //dressing
                 ]
             },
 
@@ -157,9 +151,9 @@ const checkupSchema = new Schema({
         required: true
     },
 
-    timelineEventId: {
+    timelineId: {
         type: Schema.Types.ObjectId,
-        ref: "TimeLineEvent",
+        ref: "TimeLine",
         required: false,
     }
 });

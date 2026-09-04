@@ -210,28 +210,6 @@ export const handleGetAllCheckups = async (req, res) => {
     }
 };
 
-// see the dicom files 
-export const handlePreviewDicomFile = async (req, res) => {
-    const { studyInstanceId: studyUid, seriesInstanceId: seriesUid, sopInstanceUid: instanceUid } = req.body;
-
-    if (!studyUid)
-        return res.status(400).json({ err: "study instance Id is not provided" });
-
-    if (!seriesUid)
-        return res.status(400).json({ err: "series instance Id is not provided" });
-
-    if (!instanceUid)
-        return res.status(400).json({ err: "sop Instance Uid is not provided" });
-
-    try {
-        await previewDicomInstance(res, studyUid, seriesUid, instanceUid);
-
-    } catch (err) {
-        console.log("error: ", err);
-        return res.status(500).json({ err: "INTERNAL SERVER ERROR", errorMsg: err.message });
-    }
-};
-
 export const handleGetDoctorsByDept = async (req, res, next) => {
     try {
         const { hospitalId } = req.user;

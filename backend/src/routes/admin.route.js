@@ -19,7 +19,26 @@ import {
     handleUpdateNurse
 } from "../controllers/nurse.controller.js";
 
+import {
+    handleCreateDoctor,
+    handleGetDoctorDetails,
+    handleUpdateDoctor
+} from "../controllers/doctor.controller.js";
+
+import {
+    handleCreateLabTechnician,
+    handleGetLabTechDetails,
+    handleUpdateLabTechnician
+} from "../controllers/labTechnician.controller.js";
+
 import { handleGetUserId } from "../controllers/user.controller.js";
+
+import { authorize } from "../middlewares/authorize.middleware.js";
+
+import { authenticate } from "../middlewares/authenticate.middleware.js";
+
+import parseIncomingReq from "../middlewares/parseReq.middleware.js";
+
 import { getUserSchema } from "../zodSchemas/user.schema.js";
 
 import {
@@ -41,16 +60,17 @@ import {
     nurseUpdationSchema
 } from "../zodSchemas/nurse.schema.js";
 
-import authorize from "../middlewares/authorize.middleware.js";
-import authenticate from "../middlewares/authenticate.middleware.js";
+import {
+    createDoctorSchema,
+    updateDoctorSchema
+} from "../zodSchemas/doctor.schema.js";
 
-import parseIncomingReq from "../middlewares/parseReq.middleware.js";
+import {
+    createLabTechnician,
+    updateLabTechnician
+} from "../zodSchemas/labTech.schema.js";
 
 import express from "express";
-import { handleCreateDoctor, handleGetDoctorDetails, handleUpdateDoctor } from "../controllers/doctor.controller.js";
-import { createDoctorSchema, updateDoctorSchema } from "../zodSchemas/doctor.schema.js";
-import { handleCreateLabTechnician, handleGetLabTechDetails, handleUpdateLabTechnician } from "../controllers/labTechnician.controller.js";
-import { createLabTechnician, updateLabTechnician } from "../zodSchemas/labTech.schema.js";
 const router = express.Router();
 
 router.use(authenticate);

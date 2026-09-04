@@ -6,29 +6,35 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
         message: `invalid mongoose objectId for the field ${fieldName}`
     })
 
-export const labReportIdSchema = mongooseObjectIdValidator("labReport");
+export const labReportIdSchema = z.object({
+    params: z.object({
+        labReportId: mongooseObjectIdValidator("Lab Report")
+    })
+});
 
 export const labReportUploadSchema = z.object({
     file: z.object({
         originalname: z.string()
-            .min(1, "Original filename is required"),
+            .min(1, "Original filename is required")
+            .refine((name) => name.toLowerCase().endsWith(".pdf"), {
+                message: "Only PDF files are allowed",
+            }),
         mimetype: z.string()
-            .refine((mime) => DICOM_FILE_TYPES.includes(mime), {
-                message: "Invalid file type. Only valid medical DICOM (.dcm) files are permitted.",
+            .refine((mime) => mime === "application/pdf", {
+                message: "Invalid file type. Only PDF documents are permitted.",
             }),
         path: z.string()
             .min(1, "Temporary storage file path is missing"),
     }, {
-        error: "Medical imaging file upload is mandatory"
+        error: "PDF lab report upload is mandatory"
     }),
 
     params: z.object({
-        checkUpId: mongooseObjectIdValidator('Checkup')
+        checkupId: mongooseObjectIdValidator('Checkup')
     }),
 
     body: z.object({
         patientId: mongooseObjectIdValidator('patient'),
-        medicalCaseId: mongooseObjectIdValidator('medicalCase'),
         testName: z.string(),
         result: z.string(),
         normalRange: z.string().optional(),

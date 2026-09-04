@@ -25,8 +25,8 @@ import {
 
 import { getAdminSchema } from "../zodSchemas/admin.schema.js";
 
-import authenticate from "../middlewares/authenticate.middleware.js";
-import authorize from "../middlewares/authorize.middleware.js";
+import { authenticate } from "../middlewares/authenticate.middleware.js";
+import { authorize } from "../middlewares/authorize.middleware.js";
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 
 import express from "express";

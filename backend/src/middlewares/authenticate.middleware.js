@@ -1,13 +1,13 @@
 import { getDataFromToken } from "../utils/token.utils.js";
 
 export const authenticate = (req, res, next) => {
-     const tokenCookie = req.cookies?.token;
-     req.user = null;
+    const tokenCookie = req.cookies?.token;
+    req.user = null;
 
-     if (!tokenCookie) return next();
+    if (!tokenCookie) return next();
 
-     const user = getDataFromToken(tokenCookie);
-     req.user = user;
+    const user = getDataFromToken(tokenCookie);
+    req.user = user;
 
-     return next(); 
+    return next();
 };

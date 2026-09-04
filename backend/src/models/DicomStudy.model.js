@@ -51,7 +51,7 @@ const dicomStudySchema = new Schema({
         required: true
     },
 
-    studyInstanceId: {       // unique ID for the study (GCP returns this)
+    studyInstanceId: {      // unique ID for the study (GCP returns this)
         type: String,
         required: true
     },
@@ -72,7 +72,7 @@ const dicomStudySchema = new Schema({
         default: Date.now
     },
 
-    isDeleted: {
+    isDeactivated: {
         type: Boolean,
         default: false,
     }

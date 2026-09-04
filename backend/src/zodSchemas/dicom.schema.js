@@ -6,10 +6,6 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
         error: `Invalid ObjectId for the field ${fieldName}`
     });
 
-const DICOM_FILE_TYPES = [
-    "application/dicom",
-];
-
 const ZIP_FILE_TYPES = [
     "application/zip",
     "application/x-zip-compressed",
@@ -21,7 +17,7 @@ export const dicomUploadSchema = z.object({
         originalname: z.string()
             .min(1, "Original filename is required"),
         mimetype: z.string()
-            .refine((mime) => DICOM_FILE_TYPES.includes(mime), {
+            .refine((mime) => mime === "application/dicom", {
                 message: "Invalid file type. Only valid medical DICOM (.dcm) files are permitted.",
             }),
         path: z.string()
@@ -55,5 +51,7 @@ export const dicomZIPSchema = z.object({
 });
 
 export const dicomStudyIdSchema = z.object({
-    dicomStudyId: mongooseObjectIdValidator("Dicom Study")
+    params: z.object({
+        dicomStudyId: mongooseObjectIdValidator("Dicom Study")
+    })
 });

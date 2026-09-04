@@ -55,10 +55,6 @@ export const handleCreateCheckup = async (req, res, next) => {
 
         const checkup = await Checkup.create({
             ...req.parsedBody,
-            vaccinationsGiven: {
-                ...req.parsedBody.vaccinationsGiven,
-                administeredBy: doctorId
-            },
             visitDate: Date.now(),
             medicalCaseId,
             patientId,

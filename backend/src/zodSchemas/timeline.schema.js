@@ -48,7 +48,7 @@ export const createPatientTimelineSchema = z.object({
     })
 });
 
-export const updateTimelineSchema = z.object({
+export const updatePatientTimelineSchema = z.object({
     body: createPatientTimelineSchema.shape.body.partial().extend({
         eventReferenceType: z.enum([
             "Checkup",

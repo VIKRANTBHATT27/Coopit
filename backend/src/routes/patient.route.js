@@ -4,23 +4,23 @@ import { deleteLocalImgFile } from "../middlewares/deleteLocalFile.middleware.js
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
 import {
-     handleGetPatient,
-     handleUpdatePatient,
-     handlePatientSignup,
-     handleUploadPatientAvatar,
-     handleDeleteAvatar,
+    handleGetPatient,
+    handleUpdatePatient,
+    handlePatientSignup,
+    handleUploadPatientAvatar,
+    handleDeleteAvatar,
 } from "../controllers/patient.controller.js";
 
 import {
-     validateBody,
-     validateParams
+    validateBody,
+    validateParams
 } from "../middlewares/validateReq.middleware.js";
 
 import {
-     patientSchema,
-     userIdSchema,
-     checkUpIdSchema,
-     patientUpdationSchema,
+    patientSchema,
+    userIdSchema,
+    checkUpIdSchema,
+    patientUpdationSchema,
 } from "../zodSchemas/patient.schema.js";
 
 import checkForAuthentication from "../middlewares/authenticate.middleware.js";
@@ -35,22 +35,22 @@ router.use(checkForAuthentication);
 router.use(checkForAuthorization('PATIENT'));
 
 router.get("/:userId",
-     validateParams(userIdSchema),
-     handleGetPatient
+    validateParams(userIdSchema),
+    handleGetPatient
 );
 
 router.route('/avatar/:userId',
-     validateParams(userIdSchema),
+    validateParams(userIdSchema),
 )
-     .patch(
-          uploadAvatar.single("avatar"),
-          uploadUserAvatar,
-          deleteLocalImgFile,
-          handleUploadPatientAvatar
-     )
-     .delete(
-          handleDeleteAvatar
-     );
+    .patch(
+        uploadAvatar.single("avatar"),
+        uploadUserAvatar,
+        deleteLocalImgFile,
+        handleUploadPatientAvatar
+    )
+    .delete(
+        handleDeleteAvatar
+    );
 
 // router.post('/:id/document-upload', handleDocumentUpload);
 

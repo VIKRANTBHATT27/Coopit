@@ -7,14 +7,14 @@ import { logTimelineEvent } from "../services/timelineEvent.service.js";
 
 export const handlePreviewDicomStudy = async (req, res, next) => {
     try {
-        const { DicomStudyId } = req.parsedParams;
+        const { dicomStudyId } = req.parsedParams;
 
-        const DicomStudy = await DicomStudy.findOne({
-            _id: DicomStudyId,
+        const dicomStudy = await DicomStudy.findOne({
+            _id: dicomStudyId,
             isDeleted: false
         }).lean();
 
-        if (!DicomStudy) {
+        if (!dicomStudy) {
             return next(
                 new APIError(404, "Dicom study record not found")
             );
@@ -24,7 +24,7 @@ export const handlePreviewDicomStudy = async (req, res, next) => {
             studyInstanceId,
             seriesInstanceId,
             sopInstanceUid
-        } = DicomStudy;
+        } = dicomStudy;
 
         const buffer = await previewDicomInstance(studyInstanceId, seriesInstanceId, sopInstanceUid);
 
@@ -33,35 +33,6 @@ export const handlePreviewDicomStudy = async (req, res, next) => {
         return next(err);
     }
 };
-
-// export const handleViewDicom = async (req, res, next) => {
-//     const { checkUpId } = req.parsedParams;
-
-//     try {
-//         const dicomStudyRecord = await DicomStudy.findOne({ checkUpId });
-
-//         if (!dicomStudyRecord) {
-//             return next(
-//                 new APIError(404, "Dicom record not found")
-//             );
-//         }
-
-//         const studyUid = dicomStudyRecord.studyInstanceId;
-//         const seriesUid = dicomStudyRecord.seriesInstanceId;
-//         const instanceUid = dicomStudyRecord.sopInstanceUid;
-
-//         const dicomBuffer = await previewDicomInstance(
-//             studyUid, seriesUid, instanceUid
-//         );
-
-//         res.setHeader('Cache-Control', 'public, max-age=3600');
-//         res.setHeader("Content-Type", "application/dicom");
-//         res.send(dicomBuffer);
-
-//     } catch (err) {
-//         return next(err);
-//     }
-// };
 
 export const handleGetAllDicomStudies = async (req, res, next) => {
     try {
@@ -77,8 +48,8 @@ export const handleGetAllDicomStudies = async (req, res, next) => {
 
         const dicoms = await DicomStudy.find({
             checkupId,
-            isDeleted: false
-        });
+            isDeactivated: false
+        }).lean();
 
         return res.status(200).json({
             data: dicoms,

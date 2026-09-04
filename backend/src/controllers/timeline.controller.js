@@ -35,7 +35,7 @@ export const handleGetPatientTimeline = async (req, res, next) => {
 
         if (!Timeline) {
             return next(
-                new APIError(404, "No timeline events found for this patient")
+                new APIError(404, "No timeline record found for this patient")
             );
         }
 

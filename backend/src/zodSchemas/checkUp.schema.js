@@ -7,7 +7,9 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
     });
 
 export const checkupIdSchema = z.object({
-    checkupId: mongooseObjectIdValidator("Checkup")
+    params: z.object({
+        checkupId: mongooseObjectIdValidator("Checkup")
+    })
 });
 
 export const createCheckupSchema = z.object({
@@ -45,7 +47,6 @@ export const createCheckupSchema = z.object({
 
                 administeredAt: z.string().date()
                     .transform((val) => new Date(val)),
-
             })
         ).default([]),
 

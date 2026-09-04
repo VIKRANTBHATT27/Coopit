@@ -41,7 +41,7 @@ export const handleGetDoctorMedicalCases = async (req, res, next) => {
     try {
         const { staffId } = req.user;
 
-        const doctor = await MedicalCase.findOne({ staffId });
+        const doctor = await Doctor.findOne({ staffId });
 
         const allMedicalCase = [];
 
@@ -75,12 +75,24 @@ export const handleGetDoctorMedicalCases = async (req, res, next) => {
 };
 
 export const handleApproveMedicalCase = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
+        const { roleRefId } = req.user;
         const { medicalCaseId } = req.parsedParams;
 
-        const medicalCase = await MedicalCase.findByIdAndUpdate(
-            medicalCaseId,
-            { $set: { isApproved: true } }
+        // const [doctor, medicalCase] = await Promise.all([
+
+        // ]);
+
+        const medicalCase = await MedicalCase.findOneAndUpdate(
+            {
+                medicalCaseId,
+                diagnosedBy: roleRefId,
+            },
+            { $set: { isApproved: true } },
+            { session }
         );
 
         if (!medicalCase) {
@@ -89,12 +101,24 @@ export const handleApproveMedicalCase = async (req, res, next) => {
             );
         }
 
+        await Doctor.findByIdAndUpdate(
+            roleRefId,
+            { $pull: { assignedMedicalCases: medicalCaseId } },
+            { session }
+        );
+
+        await session.commitTransaction();
+
         return res.status(200).json({
             message: "Successfully approved the medical case"
         });
 
     } catch (err) {
+        await session.abortTransaction();
+
         return next(err);
+    } finally {
+        await session.endSession();
     }
 };
 
