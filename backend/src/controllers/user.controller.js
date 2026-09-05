@@ -15,7 +15,7 @@ import {
     generateAndSendPhoneOtp
 } from "../utils/otp.utils.js";
 
-import { fetchPhoneNumber } from "../infrastructure/twilio.service.js";
+import { fetchPhoneNumber } from "../infrastructure/twilio.js";
 import APIError from "../utils/APIError.utils.js";
 import resolveRoleReferences from "../utils/roleReference.utils.js";
 import mongoose from "mongoose";
@@ -167,7 +167,6 @@ export const handleUserLogin = async (req, res, next) => {
     }
 };
 
-// issue in this route
 export const handleVerifyUserLogin = async (req, res, next) => {
     try {
         const { emailId, otpCode } = req.parsedBody;

@@ -4,8 +4,7 @@ const patientSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: "User",
-        unique: true
+        ref: "User"
     },
 
     pfp_url: {

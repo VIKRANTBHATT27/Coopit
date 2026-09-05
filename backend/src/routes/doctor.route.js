@@ -4,7 +4,10 @@ import {
     handleGetDoctorDetails,
 } from "../controllers/doctor.controller.js";
 
-import { handleApproveMedicalCase, handleGetDoctorMedicalCases } from "../controllers/medicalCase.controller.js";
+import {
+    handleApproveMedicalCase,
+    handleGetDoctorMedicalCases
+} from "../controllers/medicalCase.controller.js";
 
 import { handleGetCheckups } from "../controllers/checkup.controller.js";
 
@@ -17,7 +20,8 @@ import { authenticate } from "../middlewares/authenticate.middleware.js";
 import { authorize } from "../middlewares/authorize.middleware.js";
 
 import { medicalCaseIdSchema } from "../zodSchemas/medicalCase.schema.js";
-import { staffIdSchema, avatarUploadSchema } from "../zodSchemas/doctor.schema.js";
+import { avatarUploadSchema } from "../zodSchemas/doctor.schema.js";
+import { staffIdSchema } from "../zodSchemas/staff.schema.js";
 
 import express from "express";
 const router = express.Router();

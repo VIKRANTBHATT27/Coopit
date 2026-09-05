@@ -66,8 +66,8 @@ import {
 } from "../zodSchemas/doctor.schema.js";
 
 import {
-    createLabTechnician,
-    updateLabTechnician
+    createLabTechnicianSchema,
+    updateLabTechnicianSchema
 } from "../zodSchemas/labTech.schema.js";
 
 import express from "express";
@@ -159,11 +159,11 @@ router.route("/:staffId/lab-technician")
         handleGetLabTechDetails
     )
     .post(
-        parseIncomingReq(createLabTechnician),
+        parseIncomingReq(createLabTechnicianSchema),
         handleCreateLabTechnician
     )
     .patch(
-        parseIncomingReq(updateLabTechnician),
+        parseIncomingReq(updateLabTechnicianSchema),
         handleUpdateLabTechnician
     )
 

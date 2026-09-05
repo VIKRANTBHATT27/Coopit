@@ -30,7 +30,7 @@ export const createCheckupSchema = z.object({
             pulse: z.number().optional(),
 
             bloodPressure: z.object({
-                systolic: z.number.optional(),
+                systolic: z.number().optional(),
                 diastolic: z.number().optional()
             })
         }),
@@ -109,7 +109,7 @@ export const createCheckupSchema = z.object({
 });
 
 export const updateCheckupSchema = z.object({
-    body: createCheckupSchema.shape.body.shape.partial(),
+    body: z.object(createCheckupSchema.shape.body.shape).partial(),
 
     params: z.object({
         checkupId: mongooseObjectIdValidator("Checkup")

@@ -1,61 +1,60 @@
 import { model, Schema } from "mongoose";
 
 const receptionistSchema = new Schema({
-     hospitalId: {
-          type: Schema.Types.ObjectId,
-          ref: "Hospital",
-          required: true
-     },
+    hospitalId: {
+        type: Schema.Types.ObjectId,
+        ref: "Hospital",
+        required: true
+    },
 
-     staffId: {
-          type: Schema.Types.ObjectId,
-          ref: "Staff",
-          required: true,
-          unique: true
-     },
+    staffId: {
+        type: Schema.Types.ObjectId,
+        ref: "Staff",
+        required: true
+    },
 
-     pfp_url: {
-          type: String,
-          required: false,
-          default: "/default-pfp/default-receptionist.png"
-     },
+    pfp_url: {
+        type: String,
+        required: false,
+        default: "/default-pfp/default-receptionist.png"
+    },
 
-     pfp_publicId: {
-          type: String,
-          required: false
-     },
+    pfp_publicId: {
+        type: String,
+        required: false
+    },
 
-     department: {
-          type: String,
-          enum: [
-               "Front Desk",
-               "Billing Desk",
-               "Emergency Desk"
-          ],
-          default: "Front Desk"
-     },
+    department: {
+        type: String,
+        enum: [
+            "Front Desk",
+            "Billing Desk",
+            "Emergency Desk"
+        ],
+        default: "Front Desk"
+    },
 
-     shift: {
-          type: String,
-          enum: ["Morning", "Evening", "Night"],
-          required: true
-     },
-     
-     workingHours: {
-          start: {
-               type: String,
-               required: true,
-          },
-          end: {
-               type: String,
-               required: true,
-          }
-     },
+    shift: {
+        type: String,
+        enum: ["Morning", "Evening", "Night"],
+        required: true
+    },
 
-     qualifications: {
-          type: [String],
-          required: false
-     }
+    workingHours: {
+        start: {
+            type: String,
+            required: true,
+        },
+        end: {
+            type: String,
+            required: true,
+        }
+    },
+
+    qualifications: {
+        type: [String],
+        required: false
+    }
 
 }, { timestamps: true });
 

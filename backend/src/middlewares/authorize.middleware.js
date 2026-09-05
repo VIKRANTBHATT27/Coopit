@@ -1,4 +1,4 @@
-import accessChecker from "../services/accessControl.service";
+import accessChecker from "../services/accessControl.service.js";
 
 export const authorize = (roles = [], staffRoles = []) => {
     return (req, res, next) => {

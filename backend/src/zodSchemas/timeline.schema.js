@@ -49,15 +49,21 @@ export const createPatientTimelineSchema = z.object({
 });
 
 export const updatePatientTimelineSchema = z.object({
-    body: createPatientTimelineSchema.shape.body.partial().extend({
-        eventReferenceType: z.enum([
-            "Checkup",
-            "DicomStudy",
-            "LabReport",
-        ]),
+    body: z.object(createPatientTimelineSchema.shape.body).partial()
+        .extend({
+            eventReferenceType: z.enum([
+                "Checkup",
+                "DicomStudy",
+                "LabReport",
+            ]),
 
-        eventReferenceId: mongooseObjectIdValidator(eventReferenceType),
-    }),
+            eventReferenceId: z.string(),
+        }).refine((data) => {
+            return mongooseObjectIdValidator(data.eventReferenceType);
+        }, {
+            message: "Invalid event reference ID",
+            path: ["eventReferenceId"],
+        }),
 
     params: z.object({
         patientId: mongooseObjectIdValidator("Patient"),

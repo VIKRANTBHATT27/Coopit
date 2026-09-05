@@ -25,7 +25,6 @@ import {
     handleGetPatientTimeline,
     handleCreatePatientTimeline,
     handleUpdatePatientTimeline,
-    handleGetPatientTimeline,
 } from "../controllers/timeline.controller.js";
 
 import {
@@ -45,7 +44,7 @@ import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
 
 import { getStaffByDept } from "../zodSchemas/staff.schema.js";
-import { createCheckupSchema, updateCheckupSchema } from "../zodSchemas/checkup.schema.js";
+import { assignLabTechSchema, createCheckupSchema, updateCheckupSchema } from "../zodSchemas/checkup.schema.js";
 import { avatarUploadSchema, getNursesQuerySchema } from "../zodSchemas/nurse.schema.js";
 import { updatePatientSchema } from "../zodSchemas/patient.schema.js";
 
@@ -53,7 +52,8 @@ import {
     assignMedicalCase,
     changeDoctorSchema,
     changeNurseSchema,
-    createmedicalCaseIdSchema,
+    createMedicalCaseSchema,
+    getMedicalCaseSchema,
     medicalCaseIdSchema,
     medicalCaseUpdationSchema
 } from "../zodSchemas/medicalCase.schema.js";
@@ -102,11 +102,11 @@ router.patch("/patients/:patientId",
 
 router.route("/medical-case/:patientId")
     .get(
-        parseIncomingReq(getmedicalCaseIdSchema),
+        parseIncomingReq(getMedicalCaseSchema),
         handleGetNurseMedicalCases
     )
     .post(
-        parseIncomingReq(createmedicalCaseIdSchema),
+        parseIncomingReq(createMedicalCaseSchema),
         handleCreateMedicalCase
     );
 

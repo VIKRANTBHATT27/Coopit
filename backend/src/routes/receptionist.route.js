@@ -2,8 +2,8 @@ import { uploadAvatar } from "../middlewares/multer.middleware.js";
 import cleanupTempFiles from "../middlewares/deleteLocalFile.middleware.js";
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import uploadUserAvatar from "../middlewares/cloudinary.middleware.js";
-import authenticate from "../middlewares/authenticate.middleware.js";
-import authorize from "../middlewares/authorize.middleware.js";
+import { authenticate } from "../middlewares/authenticate.middleware.js";
+import { authorize } from "../middlewares/authorize.middleware.js";
 
 import {
     handleCreatePatientVisit,

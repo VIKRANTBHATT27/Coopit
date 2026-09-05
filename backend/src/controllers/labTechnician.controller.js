@@ -1,11 +1,5 @@
-import { previewDicomInstance, deleteDicomInstance } from "../services/dicom.service.js";
-import { Checkup, User, LabTechnician, Patient, LabReport, DicomStudy, Staff } from "../models/index.js";
-import mongoose, { Promise } from "mongoose";
-import { getSignedUrlFromS3, uploadFileToS3 } from "../infrastructure/aws.js";
-import { logTimelineEvent } from "../services/timelineEvent.service.js";
-import crypto from 'node:crypto';
+import { User, LabTechnician, Staff } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
-import { createDicomStudy } from "../services/dicomStudy.service.js";
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
 
 import dotenv from "dotenv";

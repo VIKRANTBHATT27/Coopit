@@ -1,10 +1,10 @@
-// import mongoose from "mongoose";
+import mongoose from "mongoose";
 import { z } from "zod";
 
-// const mongooseObjectIdValidator = (fieldName) => z.string()
-//      .refine((val) => mongoose.Types.ObjectId.isValid(val), {
-//           message: `Invalid ObjectId for field ${fieldName}`
-//      });
+const mongooseObjectIdValidator = (fieldName) => z.string()
+    .refine((val) => mongoose.Types.ObjectId.isValid(val), {
+        message: `Invalid ObjectId for field ${fieldName}`
+    });
 
 export const getUserSchema = z.object({
     body: z.object({
@@ -62,14 +62,16 @@ export const loginSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-    body: userProfileSchema.pick({
-        fullName: true,
-        gender: true,
-        dateOfBirth: true,
-        state: true,
-        districtName: true,
-        landmark: true
-    }).partial(),
+    body: z.object(
+        userProfileSchema.pick({
+            fullName: true,
+            gender: true,
+            dateOfBirth: true,
+            state: true,
+            districtName: true,
+            landmark: true
+        })
+    ).partial(),
 });
 
 export const changePhoneSchema = z.object({

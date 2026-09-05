@@ -8,7 +8,6 @@ import {
 
 import {
     handlePromoteToAdmin,
-    handleCreateAdmin,
     handleRemoveAdmin,
 } from "../controllers/superAdmin.controller.js";
 
@@ -18,12 +17,9 @@ import {
     updateHospitalSchema,
     hospitalRegistrationSchema,
     toggleHospitalStatusSchema,
-    createAdminSchema,
     promoteStaffSchema,
     degradeStaffSchema,
 } from "../zodSchemas/hospital.schema.js";
-
-import { getAdminSchema } from "../zodSchemas/admin.schema.js";
 
 import { authenticate } from "../middlewares/authenticate.middleware.js";
 import { authorize } from "../middlewares/authorize.middleware.js";
@@ -35,7 +31,6 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorize(['SUPER_ADMIN']));
 
-//to see what all hospitals and which admin are  registered
 router.get("/",
     handleGetAllHospitals
 );
@@ -59,11 +54,6 @@ router.patch("/:hospitalId/status",
     parseIncomingReq(toggleHospitalStatusSchema),
     handleToggleHospitalStatus
 );
-
-// router.post("/:hospitalId/admin",
-//     parseIncomingReq(createAdminSchema),
-//     handleCreateAdmin
-// );
 
 router.route("/:hospitalId/admin/:adminId")
     .post(

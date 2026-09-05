@@ -1,8 +1,4 @@
-import cloudinary_Delete_pfp from "../service/cloudinaryImgDelete.js";
-
-import { previewDicomInstance } from "../service/dicomFileService.js";
-
-import { Doctor, MedicalCase, Staff } from "../models/index.js";
+import { Doctor, Staff } from "../models/index.js";
 import APIError from "../utils/APIError.utils.js";
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
 

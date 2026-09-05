@@ -33,11 +33,13 @@ export const createPatientSchema = z.object({
         chronicConditions: z.array(z.string()).default([]),
     }),
 
-    params: userIdSchema
+    params: z.object({
+        userId: mongooseObjectIdValidator("User")
+    })
 });
 
 export const updatePatientSchema = z.object({
-    body: createPatientSchema.shape.body.shape.partial(),
+    body: z.object(createPatientSchema.shape.body.shape).partial(),
 
     params: patientIdSchema
 });

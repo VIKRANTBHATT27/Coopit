@@ -1,38 +1,38 @@
 import { Schema, model } from "mongoose";
 
 const OtpSchema = new Schema({
-     userId: {
-          type: Schema.Types.ObjectId,
-          required: true
-     },
+    userId: {
+        type: Schema.Types.ObjectId,
+        required: true
+    },
 
-     otpType: {
-          type: String,
-          enum: ['EMAIL', 'PHONE'],
-          required: true
-     },
+    otpType: {
+        type: String,
+        enum: ['EMAIL', 'PHONE'],
+        required: true
+    },
 
-     otpCode: {
-          type: String,
-          required: true
-     },
+    otpCode: {
+        type: String,
+        required: true
+    },
 
-     createdAt: {
-          type: Date,
-          default: Date.now,
-          expires: 180
-     },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: 180
+    },
 
-     attempts: {
-          type: Number,
-          default: 0,
-          max: 3
-     }
+    attempts: {
+        type: Number,
+        default: 0,
+        max: 3
+    }
 });
 
-otpSchema.index({ userId: 1 });
+OtpSchema.index({ userId: 1 });
 
-otpSchema.index({ userId: 1, otpType: 1 }, { unique: true });
+OtpSchema.index({ userId: 1, otpType: 1 }, { unique: true });
 
 const Otp = model("Otp", OtpSchema);
 export default Otp;
