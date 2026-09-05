@@ -12,18 +12,18 @@ export const errorHandler = async (err, req, res, next) => {
         userId: req.user?._id
     });
 
-    if (req.pfpAvatarPublicId) {
+    if (req?.pfpAvatarPublicId) {
         const result = await deleteUserAvatar(req.pfpAvatarPublicId);
 
         if (!result)
             throw new Error(500, "Cloudinary profile image deletion failed!");
     }
 
-    if (req.dicomPayload.studyUid) {
+    if (req?.dicomPayload?.studyUid) {
         await deleteDicomInstance(req.dicomPayload.studyUid);
     }
 
-    if (req.s3Key) {
+    if (req?.s3Key) {
         await deleteFileFromS3(req.s3Key);
     }
 

@@ -15,7 +15,7 @@ import {
     generateAndSendPhoneOtp
 } from "../utils/otp.utils.js";
 
-import { fetchPhoneNumber } from "../infrastructure/twilio.service.js";
+import { fetchPhoneNumber } from "../infrastructure/twilio.js";
 import APIError from "../utils/APIError.utils.js";
 import resolveRoleReferences from "../utils/roleReference.utils.js";
 import mongoose from "mongoose";
@@ -45,7 +45,7 @@ export const handleGetUserId = async (req, res, next) => {
 export const handleUserSignup = async (req, res, next) => {
     try {
         const { emailId, phoneNumber } = req.parsedBody;
-
+        
         const [existingUser, existingPending] = await Promise.all([
             User.exists({ emailId }),
             PendingUser.exists({ emailId })
@@ -56,19 +56,20 @@ export const handleUserSignup = async (req, res, next) => {
                 new APIError(409, "emailId already registered")
             );
         }
-
+        
         if (existingPending) {
             return next(
                 new APIError(409, "OTP already sent, please verify")
             );
         }
-
+        
         const isValid = await fetchPhoneNumber(phoneNumber);
         if (!isValid) {
             return next(
                 new APIError(400, "Invalid Phone Number")
             );
         }
+        console.log("wronfd");
 
         const tempUser = await PendingUser.create({
             ...req.parsedBody,
@@ -167,7 +168,6 @@ export const handleUserLogin = async (req, res, next) => {
     }
 };
 
-// issue in this route
 export const handleVerifyUserLogin = async (req, res, next) => {
     try {
         const { emailId, otpCode } = req.parsedBody;

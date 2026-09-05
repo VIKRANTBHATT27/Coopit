@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import logger from "../../config/logger";
+import logger from "../../config/logger.js";
 
 const cleanupTempFiles = (req, res, next) => {
     let isCleanedUp = false;

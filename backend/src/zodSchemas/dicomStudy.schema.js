@@ -9,8 +9,6 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
         message: `Invalid ${fieldName}'s mongoose ObjectId`
     });
 
-
-
 const dicomSliceSchema = z.object({
     fileName: z.string()
         .min(5, "File name is too short")

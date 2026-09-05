@@ -1,4 +1,4 @@
-import { Checkup, LabTechnician, MedicalCase, Staff } from "../models/index.js";
+import { Checkup, LabTechnician, MedicalCase } from "../models/index.js";
 
 const accessChecker = async (user, checkupId) => {
     const { staffRole, roleRefId } = user;
@@ -45,17 +45,3 @@ const accessChecker = async (user, checkupId) => {
 };
 
 export default accessChecker;
-
-/*
-// middleware/authorize.js
-import { canAccessCheckup } from '../services/accessControl.js';
-
-// routes/dicomRoutes.js
-import { guardCheckupAccess } from '../middleware/authorize.js';
-import { handleGetAllDicomStudies } from '../controllers/dicomController.js';
-
-// Clean, secure, and entirely reusable across Doctor, Nurse, and Lab Assistant
-router.get('/dicoms', isAuthenticated, guardCheckupAccess, handleGetAllDicomStudies);
-
-
-*/

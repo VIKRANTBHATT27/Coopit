@@ -11,7 +11,6 @@ const userSchema = new Schema({
     emailId: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
     },
     passwordHash: {
@@ -105,7 +104,6 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.getPhoneNumber = function () {
     return decryptPhoneFn(this.phoneNumberEnc, this.phoneIV, this.phoneAuthTag);
 };
-
 
 userSchema.index({ emailId: 1 });
 

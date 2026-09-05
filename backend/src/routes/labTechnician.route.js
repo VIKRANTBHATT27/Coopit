@@ -76,7 +76,7 @@ router.get('/report/:labReportId',
 );
 
 router.post("/checkups/:checkupId/report",
-    uploadReport('report'),
+    uploadReport.single('report'),
     cleanupTempFiles,
     parseIncomingReq(labReportUploadSchema),
     handleUploadReport

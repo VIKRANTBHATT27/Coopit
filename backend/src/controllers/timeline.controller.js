@@ -3,9 +3,9 @@ import APIError from "../utils/APIError.utils.js";
 
 export const handleGetTimelines = async (req, res, next) => {
     try {
-        const { patientId } = req.user;
+        const { roleRefId } = req.user;
 
-        const allTimelines = await Timeline.find({ patientId });
+        const allTimelines = await Timeline.find({ patientId: roleRefId });
 
         return res.status(200).json({
             message: allTimelines.length === 0 ? "No timeline record present" : "all timeline record fetched",

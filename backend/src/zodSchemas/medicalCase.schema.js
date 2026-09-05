@@ -35,7 +35,9 @@ export const createMedicalCaseSchema = z.object({
 });
 
 export const medicalCaseUpdationSchema = z.object({
-    body: medicalCaseUpdationSchema.shape.body.shape.omit({ doctorId: true }).partial(),
+    body: z.object(
+        z.object(createMedicalCaseSchema.shape.body.shape).omit({ doctorId: true })
+    ).partial(),
 
     params: z.object({
         medicalCaseId: mongooseObjectIdValidator("Medical Case"),

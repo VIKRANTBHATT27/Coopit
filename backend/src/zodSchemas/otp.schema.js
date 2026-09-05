@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { userIdSchema } from "./patient.schema.js";
+import { userIdSchema } from "./user.schema.js";
 
 const OTPGenerationSchema = z.object({
     otpType: z.enum(['EMAIL', 'PHONE'], {

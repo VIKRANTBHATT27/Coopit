@@ -15,11 +15,11 @@ const parseIncomingReq = (schema) => (req, res, next) => {
         req.parsedParams = parsedData.params;
         req.parsedQuery = parsedData.query;
         req.parsedFile = parsedData.file;
-
+        
         return next();
     } catch (err) {
-        if (err instanceof ZodError) {
-            const formattedError = err.errors.map(e => ({
+        if (err instanceof ZodError) {            
+            const formattedError = err.issues.map(e => ({
                 field: e.path.join("."),
                 message: e.message
             }));
@@ -32,7 +32,7 @@ const parseIncomingReq = (schema) => (req, res, next) => {
                 )
             );
         };
-
+        
         logger.error("Validation Error: ", { error: err.message });
 
         return next(err);

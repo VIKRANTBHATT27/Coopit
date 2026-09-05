@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Hospital, Staff, User } from "../models/index.js";
+import APIError from "../utils/APIError.utils.js";
 
 export const handleGetAllHospitals = async (req, res, next) => {
     try {
@@ -20,94 +21,73 @@ export const handleGetAllHospitals = async (req, res, next) => {
 };
 
 export const handleRegisterHospital = async (req, res, next) => {
+
+    const {
+        hospitalName,
+        hospitalAddress,
+        hospitalType,
+        hospitalPhones,
+        hospitalDepts,
+        licenseNumber,
+        location,
+    } = req.parsedBody.hospital;
+
+    const { adminEmailId } = req.parsedBody.admin;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-        const {
-            hospitalName,
-            hospitalAddress,
-            hospitalType,
-            hospitalPhones,
-            hospitalDepts,
-            licenseNumber,
-            location,
-        } = req.parsedBody?.hospital;
+        const adminRecord = await User.findOne({ emailId: adminEmailId }).select("_id");
 
-        const {
-            adminName,
-            adminEmailId,
-            adminPhone,
-            adminPassword,
-            adminGender,
-            adminDOB,
-            adminState,
-            adminDistrict,
-            adminEmployeeId
-        } = req.parsedBody?.admin;
-
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
-        try {
-            const [hospital] = await Hospital.create(
-                [{
-                    name: hospitalName,
-                    address: hospitalAddress,
-                    hospitalType,
-                    phones: hospitalPhones,
-                    departments: hospitalDepts,
-                    licenseNumber,
-                    location
-                }],
-                { returnDocument: true, runValidators: true, session }
+        if (!adminRecord) {
+            return next(
+                new APIError("No admin record found")
             );
-
-            const [adminUser] = await User.create(
-                [{
-                    fullName: adminName,
-                    emailId: adminEmailId,
-                    phoneNumber: adminPhone,
-                    password: adminPassword,
-                    gender: adminGender,
-                    dateOfBirth: adminDOB,
-                    role: "STAFF",
-                    state: adminState,
-                    districtName: adminDistrict,
-                }],
-                { returnDocument: true, runValidators: true, session }
-            );
-
-
-            const [adminStaff] = await Staff.create(
-                [{
-                    userId: adminUser._id,
-                    employeeId: adminEmployeeId,
-                    department: "Management",
-                    role: "Admin",
-                }],
-                { returnDocument: true, runValidators: true, session }
-            );
-
-            await Hospital.findByIdAndUpdate(
-                hospital._id,
-                { $push: { adminIds: adminStaff._id } },
-                { session }
-            );
-
-            await session.commitTransaction();
-
-            return res.status(201).json({
-                message: "Hospital Registration is complete",
-                hospital: hospital._id
-            });
-
-        } catch (err) {
-            await session.abortTransaction();
-
-            return next(err);
-        } finally {
-            session.endSession();
         }
+
+        const [hospital] = await Hospital.create(
+            [{
+                name: hospitalName,
+                address: hospitalAddress,
+                hospitalType,
+                phones: hospitalPhones,
+                departments: hospitalDepts,
+                licenseNumber,
+                location
+            }],
+            { returnDocument: true, runValidators: true, session }
+        );
+
+        const [adminStaff] = await Staff.create(
+            [{
+                userId: adminRecord._id,
+                employeeId: adminEmployeeId,
+                department: "MANAGEMENT",
+                role: "HOSPITAL_ADMIN",
+            }],
+            { returnDocument: true, runValidators: true, session }
+        );
+
+        await Hospital.findByIdAndUpdate(
+            hospital._id,
+            { $push: { adminIds: adminStaff._id } },
+            { session }
+        );
+
+        await session.commitTransaction();
+
+        return res.status(201).json({
+            message: "Hospital Registration is complete",
+            hospital: hospital._id
+        });
+
     } catch (err) {
+        await session.abortTransaction();
+
         return next(err);
+    } finally {
+        await session.endSession();
     }
 };
 

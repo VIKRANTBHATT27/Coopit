@@ -12,7 +12,6 @@ import {
     labTechnicianRoutes
 } from "./src/routes/index.js";
 
-import serviceRoutes from "./src/routes/service.js";
 const app = express();
 
 app.use('/user', userRoutes);
@@ -21,10 +20,8 @@ app.use('/admin', adminRoutes);
 app.use('/nurse', nurseRoutes);
 app.use('/doctor', doctorRoutes);
 app.use('/patient', patientRoutes);
-app.use('/services', serviceRoutes);
-app.use('/receptionist', receptionRoutes);
+app.use('/receptionist', receptionistRoutes);
 app.use('/lab-technician', labTechnicianRoutes);
 app.use('/super-admin/hospital', superAdminRoutes);
-
 
 export default app;
