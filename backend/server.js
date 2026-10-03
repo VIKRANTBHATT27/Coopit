@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 config();
+import "./debug-casecheck.js";
 
 import path from "path";
 import cors from 'cors';
