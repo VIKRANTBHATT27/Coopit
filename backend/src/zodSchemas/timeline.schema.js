@@ -1,0 +1,77 @@
+import mongoose from "mongoose";
+import { z } from "zod";
+
+const mongooseObjectIdValidator = (fieldName) => z.string()
+    .refine(val => mongoose.Types.ObjectId(val), {
+        message: `Invalid ${fieldName}'s mongoose-Id`
+    });
+
+const eventDataSchema = z.object({
+    eventType: z.enum([
+        'CHECKUP_CREATED',
+        'DICOM_UPLOADED',
+        'REPORT_UPLOADED',
+        'MEDICATION_CHANGED',
+        'MEDICAL_CASE_CREATED',
+        'MEDICAL_CASE_UPDATED',
+        'FOLLOW_UP_COMPLETED',
+        'PRESCRIPTION_ADDED',
+    ]),
+
+    note: z.string().optional(),
+});
+
+export const getTimelineSchema = z.object({
+    params: z.object({
+        patientId: mongooseObjectIdValidator("Patient"),
+        medicalCaseId: mongooseObjectIdValidator("Medical Case"),
+    })
+});
+
+export const createPatientTimelineSchema = z.object({
+    body: z.object({
+        medicalConditionName: z.string(),
+
+        currentStatus: z.enum([
+            "ACTIVE",
+            "RECOVERED",
+            "CHRONIC",
+            "DECEASED"
+        ]).default("ACTIVE"),
+
+        eventData: z.array({ eventDataSchema }),
+    }),
+
+    params: z.object({
+        patientId: mongooseObjectIdValidator("Patient"),
+        medicalCaseId: mongooseObjectIdValidator("Medical Case"),
+    })
+});
+
+export const updatePatientTimelineSchema = z.object({
+    body: z.object(createPatientTimelineSchema.shape.body).partial()
+        .extend({
+            eventReferenceType: z.enum([
+                "Checkup",
+                "DicomStudy",
+                "LabReport",
+            ]),
+
+            eventReferenceId: z.string(),
+        }).refine((data) => {
+            return mongooseObjectIdValidator(data.eventReferenceType);
+        }, {
+            message: "Invalid event reference ID",
+            path: ["eventReferenceId"],
+        }),
+
+    params: z.object({
+        patientId: mongooseObjectIdValidator("Patient"),
+        medicalCaseId: mongooseObjectIdValidator("Medical Case"),
+    })
+});
+
+export const addEventDataSchema = z.object({
+    timelineId: mongooseObjectIdValidator("Timeline"),
+    eventData: eventDataSchema
+});
