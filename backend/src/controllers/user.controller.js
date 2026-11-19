@@ -1,5 +1,5 @@
 
-import { User, PendingUser, Otp, PasswordReset } from "../models/index.js";
+import { User, Otp, PasswordReset } from "../models/index.js";
 import {
     hashPassword,
     passwordMatch
@@ -10,15 +10,23 @@ import {
 } from "../utils/token.utils.js";
 
 import {
+    checkEmailOtp,
     checkPhoneOtp,
     generateAndSendEmailOtp,
     generateAndSendPhoneOtp
 } from "../utils/otp.utils.js";
 
-import { fetchPhoneNumber } from "../infrastructure/twilio.js";
-import APIError from "../utils/APIError.utils.js";
+import { decryptSecret, encryptSecret } from "../utils/encryptionSecret.utils.js";
 import resolveRoleReferences from "../utils/roleReference.utils.js";
+import APIError from "../utils/ApiError.utils.js";
+
+import QRCode from "qrcode";
+import crypto from "node:crypto";
+import speakeasy from "speakeasy";
 import mongoose from "mongoose";
+
+import 'dotenv/config';
+import ApiResponse from "../utils/ApiResponse.utilis.js";
 
 export const handleGetUserId = async (req, res, next) => {
     try {
@@ -44,34 +52,26 @@ export const handleGetUserId = async (req, res, next) => {
 
 export const handleUserSignup = async (req, res, next) => {
     try {
-        const { emailId, phoneNumber } = req.parsedBody;
-        
-        const [existingUser, existingPending] = await Promise.all([
-            User.exists({ emailId }),
-            PendingUser.exists({ emailId })
-        ]);
+        const { emailId, password, phoneNumber } = req.parsedBody;
+
+        const existingUser = await User.exists({ emailId });
 
         if (existingUser) {
-            return next(
-                new APIError(409, "emailId already registered")
-            );
-        }
-        
-        if (existingPending) {
-            return next(
-                new APIError(409, "OTP already sent, please verify")
-            );
-        }
-        
-        // const isValid = await fetchPhoneNumber(phoneNumber);
-        // if (!isValid) {
-        //     return next(
-        //         new APIError(400, "Invalid Phone Number")
-        //     );
-        // }
-        // console.log("wronfd");
+            if (existingUser.emailIdVerified) {
+                return next(
+                    new APIError(409, "emailId already registered")
+                );
+            }
 
-        const tempUser = await PendingUser.create({
+            return next(
+                new APIError(
+                    409,
+                    "An OTP has already been sent. If it has expired, resend new OTP"
+                )
+            );
+        }
+
+        const tempUser = await User.create({
             ...req.parsedBody,
             phoneNumberEnc: phoneNumber,
             passwordHash: password
@@ -79,30 +79,92 @@ export const handleUserSignup = async (req, res, next) => {
 
         if (!tempUser) {
             return next(
-                new APIError(500, "Failed to create a temp user")
+                new APIError(500, "Failed to create a user profile")
             );
         }
 
         await generateAndSendEmailOtp(tempUser);
 
-        return res.status(201).json({
-            success: true,
-            message: 'an Email has been send containing OTP',
-            data: tempUser
-        });
+        const {
+            _id,
+            firstName,
+            middleName,
+            lastName,
+            emailIdVerified,
+            gender,
+            role,
+            districtName,
+            state,
+            createdAt,
+            mfaEnabled,
+        } = tempUser;
+
+        return res.status(201).json(
+            new ApiResponse(
+                201,
+                {
+                    emailId,
+                    _id,
+                    firstName,
+                    middleName,
+                    lastName,
+                    emailIdVerified,
+                    gender,
+                    role,
+                    districtName,
+                    state,
+                    createdAt,
+                    mfaEnabled,
+                },
+                'An OTP has been sent to the email address for verification.'
+            )
+        );
+
+
+
+    } catch (err) {
+        return next(err);
+    }
+};
+
+export const handleSendEmailOTP = async (req, res, next) => {
+    try {
+        const { emailId } = req.parsedBody;
+
+        const existingUser = await User.findOne({ emailId }).select("_id emailIdVerified").lean();
+
+        if (!existingUser) {
+            return next(
+                new APIError(404, "User not found")
+            );
+        }
+
+        if (existingUser.emailIdVerified) {
+            return next(
+                new APIError(409, "emailId already registered")
+            );
+        }
+
+        await generateAndSendEmailOtp(existingUser);
+
+        return res.status(201).json(
+            new ApiResponse(
+                201,
+                existingUser,
+                'An OTP has been sent to the email address for verification.'
+            )
+        );
+
     } catch (err) {
         return next(err);
     }
 };
 
 export const handleVerifyEmailId = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { emailId, otpCode } = req.parsedBody;
 
-        const tempUser = await PendingUser.exists({ emailId });
+        const tempUser = await User.findOne({ emailId });
 
         if (!tempUser) {
             return next(
@@ -110,29 +172,110 @@ export const handleVerifyEmailId = async (req, res, next) => {
             );
         }
 
-        const [user, otp] = await Promise.all([
-            User.create([
-                {
-                    ...tempUser,
-                    isVerified: true
-                }
-            ], { session }),
-            Otp.findOneAndDelete({ userId: tempUser._id }).session(session),
-        ]);
+        await checkEmailOtp(tempUser._id, otpCode);
 
-        await session.commitTransaction();
+        tempUser.emailIdVerified = true;
+        await tempUser.save();
 
-        return res.status(201).json({
-            success: true,
-            message: "email has been successfully verified"
-        });
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                null,
+                "email has been successfully verified"
+            )
+        );
 
     } catch (err) {
-        await session.abortTransaction();
-
         return next(err);
-    } finally {
-        session.endSession();
+    }
+};
+
+export const handleSetMFA = async (req, res, next) => {
+    try {
+        const { emailId } = req.body;
+
+        const tempUser = await User.findOne({ emailId });
+
+        if (!tempUser) {
+            return next(
+                new APIError(404, "no user found with this Email Id")
+            );
+        }
+
+        if (!tempUser.emailIdVerified) {
+            return next(
+                new APIError(404, "Email Id is not verified")
+            );
+        }
+
+        const mfaSecret = speakeasy.generateSecret({
+            name: `Coopit (${emailId})`,
+        });
+
+        const encryptedPayload = encryptSecret(mfaSecret.base32);
+
+        tempUser.mfaEncryptedPayload = encryptedPayload;
+        tempUser.mfaEnabled = true;
+
+        tempUser.save();
+
+        // await is important even though it says doesn't require => DON'T TOUCH IT
+        const qrCodeUrl = await QRCode.toDataURL(mfaSecret.otpauth_url);
+
+        res.status(200).json(
+            new ApiResponse(
+                200,
+                qrCodeUrl,      // Render this string inside an <img> tag on your frontend
+                "Multi-factor authentication is required."
+            )
+        );
+
+    } catch (err) {
+        return next(err);
+    }
+};
+
+export const handleVerifyMFA = async (req, res, next) => {
+    try {
+        const { emailId, otpCode } = req.body;
+
+        const tempUser = await User.findOne({ emailId }).select("_id mfaEncryptedPayload");
+
+        if (!tempUser) {
+            return next(
+                new APIError(404, "No user found with this email address. Please sign up again.")
+            );
+        }
+
+        const mfaSecret = decryptSecret(tempUser.mfaEncryptedPayload);
+
+        const isVerified = speakeasy.totp.verify({
+            secret: mfaSecret,
+            encoding: 'base32',
+            token: otpCode,
+        });
+
+        console.log(isVerified);
+        console.log(otpCode);
+
+
+        if (!isVerified) {
+            return res.status(401).json({
+                verified: false,
+                message: 'Invalid OTP token'
+            });
+        }
+
+        return res.status(201).json(
+            new ApiResponse(
+                201,
+                tempUser,
+                "email has been successfully registered. Please login"
+            )
+        );
+
+    } catch (err) {
+        return next(err);
     }
 };
 
@@ -155,8 +298,6 @@ export const handleUserLogin = async (req, res, next) => {
                 new APIError(401, "Invalid Password")
             );
         }
-
-        await generateAndSendPhoneOtp(user);
 
         return res.status(200).json({
             success: true,
@@ -222,12 +363,12 @@ export const handleChangePhone = async (req, res, next) => {
             );
         }
 
-        const isValid = await fetchPhoneNumber(phoneNumber);
-        if (!isValid) {
-            return next(
-                new APIError(400, "Invalid Phone Number")
-            );
-        }
+        // const isValid = await fetchPhoneNumber(phoneNumber);
+        // if (!isValid) {
+        //     return next(
+        //         new APIError(400, "Invalid Phone Number")
+        //     );
+        // }
 
         await User.findByIdAndUpdate(user._id, {
             phoneNumberEnc: phoneNumber
@@ -389,13 +530,13 @@ export const handleUpdatePhone = async (req, res, next) => {
         const { userId } = req.user;
         const { phoneNumber } = req.parsedBody;
 
-        const isValid = await fetchPhoneNumber(phoneNumber);
+        // const isValid = await fetchPhoneNumber(phoneNumber);
 
-        if (!isValid) {
-            return next(
-                new APIError(400, "Invalid phone")
-            );
-        }
+        // if (!isValid) {
+        //     return next(
+        //         new APIError(400, "Invalid phone")
+        //     );
+        // }
 
         const user = await User.findById(userId);
         if (!user) {

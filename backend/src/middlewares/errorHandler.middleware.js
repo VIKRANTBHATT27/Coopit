@@ -1,4 +1,4 @@
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 import logger from "../../config/logger.js";
 import { deleteDicomInstance } from "../services/dicom.service.js";
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
@@ -35,8 +35,10 @@ export const errorHandler = async (err, req, res, next) => {
         });
     }
 
+    console.log(err);
+
     return res.status(500).json({
         success: false,
-        error: "INTERNAL SERVER ERROR"
+        error: "SOMETHING WENT WRONG"
     });
 };

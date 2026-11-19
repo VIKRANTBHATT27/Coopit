@@ -1,28 +1,29 @@
 import crypto from "node:crypto";
-import APIError from "./APIError.utils.js";
-import { dispatchSMS } from "../infrastructure/twilio.js";
+import APIError from "./ApiError.utils.js";
 import { decryptPhoneFn } from "./phoneNumber.utils.js";
-import { Otp, PendingUser } from "../models/index.js";
-import sendMail from "../infrastructure/sendGrid.js";
-
-import OTPGenerationSchema from "../zodSchemas/otp.schema.js";
+import { Otp, User } from "../models/index.js";
+import sendMail from "../infrastructure/resend.js";
 
 const generateOTP = async (data) => {
-    const { otpType, userId } = OTPGenerationSchema.parse(data);
+    const { otpType, userId } = data;
 
-    const oneTimePassword = crypto.randomInt(100000, 1000000).toString();
+    const plainOtp = crypto.randomInt(100000, 999999).toString();
+    const otpHash = crypto.createHash("sha256").update(plainOtp).digest("hex");
 
     await Otp.findOneAndUpdate(
         { userId },
         {
-            otpType,
-            otpCode: oneTimePassword,
-            createdAt: new Date()
+            $set: {
+                otpType,
+                otpCode: otpHash,
+                createdAt: new Date()
+            },
+            $setOnInsert: { userId }
         },
-        { upsert: true }
+        { upsert: true, setDefaultsOnInsert: true }
     );
 
-    return oneTimePassword;
+    return plainOtp;
 };
 
 export const generateAndSendPhoneOtp = async ({ _id: userId, phoneNumberEnc, phoneIV, phoneAuthTag }) => {
@@ -65,17 +66,17 @@ export const checkPhoneOtp = async (userId, otpCode) => {
 };
 
 export const generateAndSendEmailOtp = async ({ _id: userId, emailId }) => {
-    const oneTimePassword = await generateOTP({
+    const plainOtp = await generateOTP({
         userId,
         otpType: 'EMAIL',
     });
 
-    const response = await sendMail(emailId, oneTimePassword);
+    const response = await sendMail(emailId, plainOtp);
 
     if (!response) {
         await Otp.findOneAndDelete({ userId });
 
-        await PendingUser.findByIdAndDelete(userId);
+        await User.findByIdAndDelete(userId);
 
         throw new APIError(
             500,
@@ -88,22 +89,30 @@ export const generateAndSendEmailOtp = async ({ _id: userId, emailId }) => {
 
 export const checkEmailOtp = async (userId, otpCode) => {
     const otpRecord = await Otp.findOne({ userId });
+
     if (!otpRecord)
         throw new APIError(404, "OTP expired");
 
     if (otpRecord.attempts >= 3) {
         await Otp.findByIdAndDelete(otpRecord._id);
 
-        throw new APIError(429, "Too many attempts. Please login again.");
+        throw new APIError(429, "Too many attempts. Request a new OTP.");
     }
 
-    if (otpCode !== otpRecord.otpCode) {
-        await Otp.findByIdAndUpdate(otpRecord._id,
-            {
-                $inc: { attempts: 1 }
-            }
-        );
+    const incomingHash = crypto.createHash("sha256").update(otpCode.toString()).digest("hex");
 
-        throw new APIError(401, "Incorrect OTP");
+    const providedBuffer = Buffer.from(incomingHash, "hex");
+    const storedBuffer = Buffer.from(otpRecord.otpCode, "hex");
+
+    if (
+        providedBuffer.length !== storedBuffer.length ||
+        !crypto.timingSafeEqual(providedBuffer, storedBuffer)
+    ) {
+        otpRecord.attempts += 1;
+        await otpRecord.save();
+
+        throw new APIError(400, "Invalid OTP");
     }
+
+    await Otp.deleteOne({ userId });
 };

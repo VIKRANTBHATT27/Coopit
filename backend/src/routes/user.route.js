@@ -7,9 +7,12 @@ import {
     handleUpdatePhone,
     handleUpdateProfile,
     handleUserLogin,
+    handleVerifyUserLogin,
     handleUserSignup,
     handleVerifyEmailId,
-    handleVerifyUserLogin,
+    handleSetMFA,
+    handleSendEmailOTP,
+    handleVerifyMFA,
 } from "../controllers/user.controller.js";
 
 import {
@@ -38,9 +41,24 @@ router.post('/signup',
     handleUserSignup
 );
 
+router.post("/send/otp", 
+    parseIncomingReq(emailIdSchema),
+    handleSendEmailOTP
+);
+
 router.post('/verify/emailId',
     parseIncomingReq(verificationSchema),
     handleVerifyEmailId
+);
+
+router.get("/set/mfa",
+    parseIncomingReq(emailIdSchema),
+    handleSetMFA
+);
+
+router.post("/verify/mfa",
+    parseIncomingReq(verificationSchema),
+    handleVerifyMFA
 );
 
 router.post('/login',

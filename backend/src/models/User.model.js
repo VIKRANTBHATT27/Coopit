@@ -3,16 +3,34 @@ import { model, Schema } from "mongoose";
 import { hashPassword } from "../utils/password.utils.js";
 
 const userSchema = new Schema({
-    fullName: {
+    firstName: {
         type: String,
         required: true,
         trim: true,
     },
+
+    middleName: {
+        type: String,
+        required: false,
+        trim: true,
+    },
+
+    lastName: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+
     emailId: {
         type: String,
         required: true,
         trim: true,
     },
+    emailIdVerified: {
+        type: Boolean,
+        default: false
+    },
+
     passwordHash: {
         type: String,
         required: true,
@@ -21,7 +39,7 @@ const userSchema = new Schema({
 
     phoneNumberHash: {
         type: String,
-        required: true,
+        required: false,
         unique: true,
         select: false,
     },
@@ -49,41 +67,43 @@ const userSchema = new Schema({
 
     dateOfBirth: {
         type: Date,
-        required: true,
-    },
-
-    role: {
-        type: String,
-        enum: [
-            "PATIENT",
-            "STAFF",
-            "SUPER-ADMIN",
-        ],
-        default: "PATIENT"
+        required: false  //true in production, false in dev and test
     },
 
     state: {
         type: String,
         required: true
     },
-    districtName: {          //current city
+    districtName: {
         type: String,
         required: true
     },
-    landmark: {              //landmark => area wise calculation => only for patients
+    landmark: {
         type: String,
         required: false
     },
 
-    isVerified: {            //using phoneNo and otp procedure
+    mfaEncryptedPayload: {
+        type: String,
+        required: false,
+        select: false,
+    },
+    mfaEnabled: {
         type: Boolean,
         default: false
     }
 
 }, { timestamps: true });
 
-userSchema.pre('save', function (next) {
-    if (!this.isModified('phoneNumberEnc')) return next();
+userSchema.index({ emailId: 1 });
+
+
+userSchema.methods.getPhoneNumber = function () {
+    return decryptPhoneFn(this.phoneNumberEnc, this.phoneIV, this.phoneAuthTag);
+};
+
+userSchema.pre('save', function () {
+    if (!this.isModified('phoneNumberEnc')) return;
 
     const phone = this.phoneNumberEnc;
     this.phoneNumberHash = hashPhone(phone);
@@ -92,21 +112,13 @@ userSchema.pre('save', function (next) {
     this.phoneNumberEnc = encryptedPhone;
     this.phoneIV = iv;
     this.phoneAuthTag = authTag;
-    next();
 });
 
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('passwordHash')) return next();
+userSchema.pre('save', async function () {
+    if (!this.isModified('passwordHash')) return;
 
-    this.password = await hashPassword(this.password);
-    next();
+    this.passwordHash = await hashPassword(this.passwordHash);
 });
-
-userSchema.methods.getPhoneNumber = function () {
-    return decryptPhoneFn(this.phoneNumberEnc, this.phoneIV, this.phoneAuthTag);
-};
-
-userSchema.index({ emailId: 1 });
 
 const User = model('User', userSchema);
 export default User;

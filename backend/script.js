@@ -14,14 +14,14 @@ import {
 
 const app = express();
 
-app.use('/user', userRoutes);
-app.use('/staff', staffRoutes);
-app.use('/admin', adminRoutes);
-app.use('/nurse', nurseRoutes);
-app.use('/doctor', doctorRoutes);
-app.use('/patient', patientRoutes);
-app.use('/receptionist', receptionistRoutes);
-app.use('/lab-technician', labTechnicianRoutes);
-app.use('/super-admin/hospital', superAdminRoutes);
+app.use('/users', userRoutes);
+app.use('/staffs', staffRoutes);
+app.use('/admins', adminRoutes);
+app.use('/nurses', nurseRoutes);
+app.use('/doctors', doctorRoutes);
+app.use('/patients', patientRoutes);
+app.use('/receptionists', receptionistRoutes);
+app.use('/lab-technicians', labTechnicianRoutes);
+app.use('/super-admin/hospitals', superAdminRoutes);
 
 export default app;

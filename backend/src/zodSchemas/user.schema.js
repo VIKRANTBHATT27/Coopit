@@ -8,13 +8,15 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
 
 export const getUserSchema = z.object({
     body: z.object({
-        emailId: z.string().email({ message: "Invalid email address" })
+        emailId: z.email({ message: "Invalid email address" })
     })
 });
 
 export const userProfileSchema = z.object({
-    fullName: z.string().min(1).max(60),
-    emailId: z.string().email({ message: "Invalid email address" }),
+    firstName: z.string().min(1).max(50),
+    middleName: z.string().min(1).max(50).optional(),
+    lastName: z.string().min(1).max(50),
+    emailId: z.email({ message: "Invalid email address" }),
     password: z.string()
         .min(8, "Password must be at least 8 characters long")
         .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
@@ -37,17 +39,24 @@ export const userProfileSchema = z.object({
 
 export const createUserSchema = z.object({
     body: userProfileSchema.pick({
-        fullName: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
         emailId: true,
         password: true,
-        phoneNumber: true
+        phoneNumber: true,
+        role: true,
+        state: true,
+        gender: true,
+        districtName: true,
     })
 });
 
 export const verificationSchema = z.object({
     body: userProfileSchema.pick({
         emailId: true,
-        otp: z.string()
+    }).extend({
+        otpCode: z.string()
             .regex(/^\d{6}$/,
                 { message: "OTP must be exactly 6 digits" }
             )

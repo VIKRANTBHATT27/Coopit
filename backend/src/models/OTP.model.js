@@ -20,7 +20,7 @@ const OtpSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: 180
+        expires: 300
     },
 
     attempts: {

@@ -1,7 +1,5 @@
-import cypto from "node:crypto";
-
-import { config } from "dotenv";
-config();
+import crypto from "node:crypto";
+import 'dotenv/config';
 
 const SECRET_KEY = Buffer.from(process.env.PHONE_ENCRYPTION_KEY, 'hex');
 

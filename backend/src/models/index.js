@@ -8,7 +8,6 @@ import MedicalCase from "./MedicalCase.model.js";
 import Nurse from "./Nurse.model.js";
 import PasswordReset from "./PasswordReset.js";
 import Patient from "./Patient.model.js";
-import PendingUser from "./PendingUser.model.js";
 import Receptionist from "./Receptionist.model.js";
 import Staff from "./Staff.model.js";
 import Timeline from "./Timeline.model.js";
@@ -27,7 +26,6 @@ export {
     Nurse,
     PasswordReset,
     Patient,
-    PendingUser,
     Receptionist,
     Staff,
     Timeline,
