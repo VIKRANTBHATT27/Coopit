@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Nurse, Doctor, MedicalCase, Patient } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
 export const handleGetMedicalCase = async (req, res, next) => {
     try {

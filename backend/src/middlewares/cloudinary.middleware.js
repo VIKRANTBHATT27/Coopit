@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
 const uploadUserAvatar = async (req, res, next) => {
     try {

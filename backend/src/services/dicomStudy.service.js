@@ -1,5 +1,5 @@
 import { DicomStudy } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 import { createDicomStudySchema } from "../zodSchemas/dicomStudy.schema.js";
 
 export const createDicomStudy = async (dicomData, session) => {

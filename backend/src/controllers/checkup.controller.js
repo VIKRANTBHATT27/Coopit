@@ -1,5 +1,5 @@
 import { Checkup, LabTechnician, MedicalCase } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
 export const handleGetCheckups = async (req, res, next) => {
     try {

@@ -1,5 +1,5 @@
 import { Checkup } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
 export const validateCheckupId = async (req, res, next) => {
     try {

@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 import { Checkup, DicomStudy } from "../models/index.js";
 import { previewDicomInstance } from "../services/dicom.service.js";
 import { createDicomStudy } from "../services/dicomStudy.service.js";
-import APIError from "../utils/APIError.utils.js";
 import { logTimelineEvent } from "../services/timelineEvent.service.js";
+import APIError from "../utils/ApiError.utils.js";
 
 export const handlePreviewDicomStudy = async (req, res, next) => {
     try {

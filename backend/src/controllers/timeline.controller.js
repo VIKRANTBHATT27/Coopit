@@ -1,5 +1,5 @@
 import { Checkup, DicomStudy, LabReport, MedicalCase, Patient, Timeline } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
 export const handleGetTimelines = async (req, res, next) => {
     try {

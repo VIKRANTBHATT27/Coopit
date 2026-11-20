@@ -1,4 +1,4 @@
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 import fs from "node:fs/promises";
 
 import {

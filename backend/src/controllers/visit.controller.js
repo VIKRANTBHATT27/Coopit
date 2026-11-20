@@ -1,5 +1,5 @@
 import { Nurse, Visit, Patient } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 import mongoose from "mongoose";
 
 export const handleGetAllVisit = async (req, res, next) => {

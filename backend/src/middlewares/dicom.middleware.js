@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { healthcareClient } from '../infrastructure/googleHealthcare.js';
-import APIError from '../utils/APIError.utils.js';
+import APIError from "../utils/ApiError.utils.js";
 import dicomParser from 'dicom-parser';
 import AdmZip from 'adm-zip';
 

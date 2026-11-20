@@ -1,5 +1,5 @@
 import { Staff, User } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
 export const handleGetAllStaffMembers = async (req, res, next) => {
     try {

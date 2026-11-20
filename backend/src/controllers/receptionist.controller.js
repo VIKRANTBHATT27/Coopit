@@ -1,7 +1,6 @@
-
 import { Receptionist, Staff } from "../models/index.js";
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
 export const handleGetReceptionist = async (req, res, next) => {
     try {

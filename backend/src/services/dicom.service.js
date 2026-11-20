@@ -1,8 +1,7 @@
 import { healthcareClient } from "../infrastructure/googleHealthcare.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 
-import dotenv from "dotenv";
-dotenv.config();
+import 'dotenv/config';
 
 const projectId = process.env.GOOGLE_CLOUD_CONSOLE_PROJECT_ID;
 const cloudRegion = process.env.GOOGLE_CLOUD_CONSOLE_LOCATION;

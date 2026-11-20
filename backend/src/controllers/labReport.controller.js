@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { getSignedUrlFromS3, uploadFileToS3 } from "../infrastructure/aws.js";
 import { Checkup, LabReport, MedicalCase, Patient } from "../models/index.js";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 import { logTimelineEvent } from "../services/timelineEvent.service.js";
 
 export const handleGetAllLabReports = async (req, res, next) => {
