@@ -1,5 +1,5 @@
 import { ZodError } from "zod";
-import APIError from "../utils/APIError.utils.js";
+import APIError from "../utils/ApiError.utils.js";
 import logger from "../../config/logger.js";
 
 const parseIncomingReq = (schema) => (req, res, next) => {
