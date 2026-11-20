@@ -1,5 +1,5 @@
 import argon2 from "argon2";
-import APIError from "./ApiError.utils.js";
+import APIError from "./ApiError.utilis.js";
 
 export const hashPassword = async (password) => {
     try {

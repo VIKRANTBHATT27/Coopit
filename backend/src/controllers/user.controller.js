@@ -18,7 +18,7 @@ import {
 
 import { decryptSecret, encryptSecret } from "../utils/encryptionSecret.utils.js";
 import resolveRoleReferences from "../utils/roleReference.utils.js";
-import APIError from "../utils/ApiError.utils.js";
+import APIError from "../utils/ApiError.utilis.js";
 
 import QRCode from "qrcode";
 import crypto from "node:crypto";
@@ -26,7 +26,7 @@ import speakeasy from "speakeasy";
 import mongoose from "mongoose";
 
 import 'dotenv/config';
-import ApiResponse from "../utils/ApiResponse.utilis.js";
+import ApiResponse from "../utils/ApiResponse.utils.js";
 
 export const handleGetUserId = async (req, res, next) => {
     try {

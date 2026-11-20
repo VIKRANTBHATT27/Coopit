@@ -10,3 +10,4 @@ backend/public/uploaded-pdf-files/Vikrant_Resume.pdf
 backend/src/models/FailledDicomFiles.js
 backend/combined.log
 backend/error.log
+temp.html
