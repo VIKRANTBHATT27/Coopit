@@ -4,7 +4,7 @@ import 'dotenv/config';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const createMessage = (emailId, otpCode) => ({
-    from: process.env.RESEND_MAIL_FROM || "Coopit <onboarding@resend.dev>",
+    from: `Coopit <${process.env.RESEND_MAIL_FROM }>`|| "Coopit <onboarding@resend.dev>",
     to: emailId,
     subject: `${otpCode} is your Coopit verification code`,
     text: `Your Coopit verification code is ${otpCode}. It expires in 5 minutes. If you did not request this code, please ignore this email.`,
