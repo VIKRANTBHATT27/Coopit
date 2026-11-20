@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import APIError from "./ApiError.utilis.js";
+import APIError from "./ApiError.utils.js";
 
 const secretKey = Buffer.from(process.env.MFA_ENCRYPTION_KEY, "hex");
 

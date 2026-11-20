@@ -18,7 +18,7 @@ import {
 
 import { decryptSecret, encryptSecret } from "../utils/encryptionSecret.utils.js";
 import resolveRoleReferences from "../utils/roleReference.utils.js";
-import APIError from "../utils/ApiError.utilis.js";
+import APIError from "../utils/ApiError.utils.js";
 
 import QRCode from "qrcode";
 import crypto from "node:crypto";

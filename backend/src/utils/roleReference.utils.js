@@ -1,5 +1,5 @@
 import { Staff, Receptionist, Doctor, Nurse, LabTechnician, Patient } from "../models/index.js";
-import APIError from "./ApiError.utilis.js";
+import APIError from "./ApiError.utils.js";
 
 const roleModelMap = {
     NURSE: Nurse,

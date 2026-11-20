@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import APIError from "./ApiError.utilis.js";
+import APIError from "./ApiError.utils.js";
 import { decryptPhoneFn } from "./phoneNumber.utils.js";
 import { Otp, User } from "../models/index.js";
 import sendMail from "../infrastructure/resend.js";
