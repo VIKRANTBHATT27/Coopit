@@ -16,9 +16,8 @@ import {
     hospitalIdSchema,
     updateHospitalSchema,
     hospitalRegistrationSchema,
-    toggleHospitalStatusSchema,
-    promoteStaffSchema,
-    degradeStaffSchema,
+    // toggleHospitalStatusSchema,
+    hospitalIdAndStaffIdSchema
 } from "../zodSchemas/hospital.schema.js";
 
 import { authenticate } from "../middlewares/authenticate.middleware.js";
@@ -31,39 +30,37 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorize(['SUPER_ADMIN']));
 
-router.get("/",
-    handleGetAllHospitals
-);
+router.route("/")
+    .get(handleGetAllHospitals)
+    .post(
+        parseIncomingReq(hospitalRegistrationSchema),
+        handleRegisterHospital
+    );
 
-router.post("/",
-    parseIncomingReq(hospitalRegistrationSchema),
-    handleRegisterHospital
-);
-
-router.get("/:hospitalId",
-    parseIncomingReq(hospitalIdSchema),
-    handleGetHospitalDetails
-)
-
-router.post("/:hospitalId",
-    parseIncomingReq(updateHospitalSchema),
-    handleUpdateHospital
-);
+router.route("/:hospitalId")
+    .get(
+        parseIncomingReq(hospitalIdSchema),
+        handleGetHospitalDetails
+    )
+    .patch(
+        parseIncomingReq(updateHospitalSchema),
+        handleUpdateHospital
+    );
 
 router.patch("/:hospitalId/status",
-    parseIncomingReq(toggleHospitalStatusSchema),
+    parseIncomingReq(hospitalIdSchema),
     handleToggleHospitalStatus
 );
 
-router.route("/:hospitalId/admin/:adminId")
-    .post(
-        parseIncomingReq(promoteStaffSchema),
-        handlePromoteToAdmin
-    )
-    .delete(
-        parseIncomingReq(degradeStaffSchema),
-        handleRemoveAdmin
-    );
+router.patch("/:hospitalId/admin/:staffId/add",
+    parseIncomingReq(hospitalIdAndStaffIdSchema),
+    handlePromoteToAdmin
+);
+
+router.patch("/:hospitalId/admin/:staffId/remove",
+    parseIncomingReq(hospitalIdAndStaffIdSchema),
+    handleRemoveAdmin
+);
 
 // extra optional feature
 // .patch(

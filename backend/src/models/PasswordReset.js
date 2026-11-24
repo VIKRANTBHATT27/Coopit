@@ -27,7 +27,7 @@ const passwordResetSchema = new Schema({
     }
 });
 
-passwordResetSchema.index({ resetToken: 1 });
+passwordResetSchema.index({ resetToken: 1, expiresAt: 1 });
 
 const PasswordReset = model("PasswordReset", passwordResetSchema);
 export default PasswordReset;

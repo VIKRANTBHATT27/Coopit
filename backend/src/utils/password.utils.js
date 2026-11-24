@@ -10,9 +10,9 @@ export const hashPassword = async (password) => {
     }
 };
 
-export const passwordMatch = async (encryptedPassword, newPassword) => {
+export const passwordMatch = async (encryptedPassword, originalPass) => {
     try {
-        const isVerified = await argon2.verify(encryptedPassword, newPassword);
+        const isVerified = await argon2.verify(encryptedPassword, originalPass);
         return isVerified;
     } catch (err) {
         throw new APIError(500, `INTERNAL SERVER ERROR due to ${err.message}`);

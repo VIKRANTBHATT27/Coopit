@@ -7,8 +7,6 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
     });
 
 const staffSchema = z.object({
-    userId: mongooseObjectIdValidator("User"),
-
     employeeId: z.string()
         .regex(/^(NUR|REC|LAB|DOC|ADM)-\d{4}-\d{4}$/, {
             message: "Invalid employee ID format",
@@ -41,6 +39,7 @@ const staffSchema = z.object({
         "DOCTOR",
         "RECEPTIONIST",
         "LAB_TECHNICIAN",
+        "OTHERS"
     ]),
 
     shift: z.enum(["Morning", "Night"]),
@@ -49,7 +48,11 @@ const staffSchema = z.object({
 });
 
 export const registrationSchema = z.object({
-    body: staffSchema
+    body: staffSchema,
+
+    params: z.object({
+        userId: mongooseObjectIdValidator("User")
+    })
 });
 
 export const getAllSchema = z.object({
@@ -61,6 +64,7 @@ export const getAllSchema = z.object({
             "DOCTOR",
             "RECEPTIONIST",
             "LAB_TECHNICIAN",
+            "OTHERS"
         ]).optional(),
     })
 });
@@ -68,17 +72,23 @@ export const getAllSchema = z.object({
 export const roleChangeSchema = z.object({
     body: staffSchema.pick({ role: true }),
 
-    params: mongooseObjectIdValidator("Staff")
+    params: z.object({
+        staffId: mongooseObjectIdValidator("Staff")
+    })
 });
 
 export const detailChangeSchema = z.object({
-    body: staffSchema.omit({ userId: true, role: true }),
+    body: staffSchema.omit({ role: true }),
 
-    params: mongooseObjectIdValidator("Staff")
+    params: z.object({
+        staffId: mongooseObjectIdValidator("Staff")
+    })
 });
 
 export const staffIdSchema = z.object({
-    params: mongooseObjectIdValidator("Staff")
+    params: z.object({
+        staffId: mongooseObjectIdValidator("Staff")
+    })
 });
 
 export const toggleStaffStatusSchema = z.object({
@@ -86,7 +96,9 @@ export const toggleStaffStatusSchema = z.object({
         status: z.enum(["ACTIVE", "INACTIVE"])
     }),
 
-    params: mongooseObjectIdValidator("Staff")
+    params: z.object({
+        staffId: mongooseObjectIdValidator("Staff")
+    })
 });
 
 export const checkEmployeeId = z.object({

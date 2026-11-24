@@ -35,6 +35,16 @@ export const errorHandler = async (err, req, res, next) => {
         });
     }
 
+    if (err?.code === 11000) {
+        return res.status(409).json({
+            success: false,
+            message: "Duplicate key error",
+            errors: err.keyValue
+                ? [{ field: Object.keys(err.keyValue)[0], value: Object.values(err.keyValue)[0] }]
+                : [],
+        });
+    }
+
     console.log(err);
 
     return res.status(500).json({

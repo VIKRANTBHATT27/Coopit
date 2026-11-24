@@ -57,9 +57,10 @@ export const hospitalRegistrationSchema = z.object({
 
             licenseNumber: z.string(),
 
+            // Example: { type: "Point", coordinates: [77.5946, 12.9716] }
             location: z.object({
                 type: z.literal("Point").default("Point"),
-                coordinates: z.array(z.number()).length(2, "Coordinates must be [longitude, latitude]").optional()
+                coordinates: z.array(z.number()).length(2, "Coordinates must be [longitude, latitude]")
             })
         }),
 
@@ -75,42 +76,39 @@ export const hospitalRegistrationSchema = z.object({
 });
 
 export const hospitalIdSchema = z.object({
-    params: mongooseObjectIdValidator("Hospital")
-});
-
-export const updateHospitalSchema = z.object({
-    body: z.object(hospitalRegistrationSchema.shape.body.shape.hospital).partial(),
-
-    params: mongooseObjectIdValidator("Hospital")
-});
-
-export const toggleHospitalStatusSchema = z.object({
-    body: z.object({
-        status: z.enum(["ACTIVE", "INACTIVE"])
-    }),
-
-    params: mongooseObjectIdValidator("Hospital")
-});
-
-export const promoteStaffSchema = z.object({
     params: z.object({
-        hospitalId: mongooseObjectIdValidator("Hospital"),
-        adminId: mongooseObjectIdValidator("adminId", "Invalid staff Id")
+        hospitalId: mongooseObjectIdValidator("Hospital")
     })
 });
 
-export const degradeStaffSchema = z.object({
+export const updateHospitalSchema = z.object({
+    body: hospitalRegistrationSchema.shape.body.shape.hospital.partial(),
+
+    params: z.object({
+        hospitalId: mongooseObjectIdValidator("Hospital")
+    })
+});
+
+// export const toggleHospitalStatusSchema = z.object({
+//     body: z.object({
+//         status: z.enum(["ACTIVE", "INACTIVE"])
+//     }),
+
+//     params: z.object({
+//         hospitalId: mongooseObjectIdValidator("Hospital")
+//     })
+// });
+
+// export const promoteStaffSchema = z.object({
+//     params: z.object({
+//         hospitalId: mongooseObjectIdValidator("Hospital"),
+//         adminId: mongooseObjectIdValidator("adminId", "Invalid staff Id")
+//     })
+// });
+
+export const hospitalIdAndStaffIdSchema = z.object({
     params: z.object({
         hospitalId: mongooseObjectIdValidator("Hospital"),
-        adminId: mongooseObjectIdValidator("adminId", "Invalid staff Id")
-    }),
-
-    body: z.object({
-        role: z.enum([
-            "NURSE",
-            "DOCTOR",
-            "RECEPTIONIST",
-            "LAB_TECHNICIAN"
-        ])
+        staffId: mongooseObjectIdValidator("Staff")
     })
 });

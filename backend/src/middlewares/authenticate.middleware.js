@@ -1,13 +1,21 @@
-import { getDataFromToken } from "../utils/token.utils.js";
+import 'dotenv/config';
+import APIError from '../utils/ApiError.utils.js';
+import jwt from "jsonwebtoken";
 
-export const authenticate = (req, res, next) => {
-    const tokenCookie = req.cookies?.token;
-    req.user = null;
+export const authenticate = async (req, res, next) => {
+    try {
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
 
-    if (!tokenCookie) return next();
+        if (!token) {
+            throw new APIError(401, "NO AUTHENTICATION TOKEN");
+        }
 
-    const user = getDataFromToken(tokenCookie);
-    req.user = user;
+        const user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    return next();
+        req.user = user;
+
+        return next();
+    } catch (error) {
+        throw new APIError(401, error?.message || "Invalid access token")
+    }
 };

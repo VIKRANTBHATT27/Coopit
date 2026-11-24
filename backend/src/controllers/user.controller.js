@@ -1,12 +1,10 @@
-
 import { User, Otp, PasswordReset } from "../models/index.js";
 import {
     hashPassword,
     passwordMatch
 } from "../utils/password.utils.js";
 import {
-    generateToken,
-    getDataFromToken
+    generateAccessAndRefreshToken
 } from "../utils/token.utils.js";
 
 import {
@@ -192,7 +190,7 @@ export const handleVerifyEmailId = async (req, res, next) => {
 
 export const handleSetMFA = async (req, res, next) => {
     try {
-        const { emailId } = req.body;
+        const { emailId } = req.parsedBody;
 
         const tempUser = await User.findOne({ emailId });
 
@@ -209,7 +207,7 @@ export const handleSetMFA = async (req, res, next) => {
         }
 
         const mfaSecret = speakeasy.generateSecret({
-            name: `Coopit (${emailId})`,
+            name: "Coopit"
         });
 
         const encryptedPayload = encryptSecret(mfaSecret.base32);
@@ -217,7 +215,7 @@ export const handleSetMFA = async (req, res, next) => {
         tempUser.mfaEncryptedPayload = encryptedPayload;
         tempUser.mfaEnabled = true;
 
-        tempUser.save();
+        await tempUser.save();
 
         // await is important even though it says doesn't require => DON'T TOUCH IT
         const qrCodeUrl = await QRCode.toDataURL(mfaSecret.otpauth_url);
@@ -237,13 +235,19 @@ export const handleSetMFA = async (req, res, next) => {
 
 export const handleVerifyMFA = async (req, res, next) => {
     try {
-        const { emailId, otpCode } = req.body;
+        const { emailId, otpCode } = req.parsedBody;
 
-        const tempUser = await User.findOne({ emailId }).select("_id mfaEncryptedPayload");
+        const tempUser = await User.findOne({ emailId }).select("_id mfaEncryptedPayload mfaEnabled");
 
         if (!tempUser) {
             return next(
                 new APIError(404, "No user found with this email address. Please sign up again.")
+            );
+        }
+
+        if (!tempUser.mfaEnabled) {
+            return next(
+                new APIError(400, "multi factor authentication is not enabled.")
             );
         }
 
@@ -255,10 +259,6 @@ export const handleVerifyMFA = async (req, res, next) => {
             token: otpCode,
         });
 
-        console.log(isVerified);
-        console.log(otpCode);
-
-
         if (!isVerified) {
             return res.status(401).json({
                 verified: false,
@@ -269,7 +269,10 @@ export const handleVerifyMFA = async (req, res, next) => {
         return res.status(201).json(
             new ApiResponse(
                 201,
-                tempUser,
+                {
+                    _id: tempUser._id,
+                    mfaEnabled: tempUser.mfaEnabled
+                },
                 "email has been successfully registered. Please login"
             )
         );
@@ -281,9 +284,9 @@ export const handleVerifyMFA = async (req, res, next) => {
 
 export const handleUserLogin = async (req, res, next) => {
     try {
-        const { emailId, password } = req.parsedBody;
+        const { emailId, password, otpCode } = req.parsedBody;
 
-        const user = await User.findOne({ emailId });
+        const user = await User.findOne({ emailId }).select("_id passwordHash mfaEncryptedPayload mfaEnabled role");
 
         if (!user) {
             return next(
@@ -291,55 +294,61 @@ export const handleUserLogin = async (req, res, next) => {
             );
         }
 
-        const isVerified = await argon2.verify(user.passwordHash, password);
+        if (!user.mfaEnabled) {
+            return next(
+                new APIError(400, "multi factor authentication is not enabled.")
+            );
+        }
 
-        if (!isVerified) {
+        const isPassMatch = await passwordMatch(user.passwordHash, password);
+
+        if (!isPassMatch) {
             return next(
                 new APIError(401, "Invalid Password")
             );
         }
 
-        return res.status(200).json({
-            success: true,
-            emailId: user.emailId,
-            msg: "OTP has been send on phone Number"
+        const mfaSecret = decryptSecret(user.mfaEncryptedPayload);
+
+        const isVerified = speakeasy.totp.verify({
+            secret: mfaSecret,
+            encoding: 'base32',
+            token: otpCode,
         });
-    } catch (err) {
-        return next(err);
-    }
-};
 
-export const handleVerifyUserLogin = async (req, res, next) => {
-    try {
-        const { emailId, otpCode } = req.parsedBody;
-
-        const userData = await User.findOne({ emailId });
-        if (!userData) {
-            return next(
-                new APIError(404, "Invalid EmailId")
-            );
+        if (!isVerified) {
+            return res.status(401).json({
+                verified: false,
+                message: 'Invalid OTP token'
+            })
         }
-
-        await checkPhoneOtp(user._id, otpCode);
-
-        const user = await User.findByIdAndUpdate(
-            user._id,
-            { $set: { isVerified: true } },
-            { returnDocument: "after" }
-        );
 
         const roleRefDetails = await resolveRoleReferences(user);
 
-        const token = generateToken(user, roleRefDetails);
+        const {
+            accessToken,
+            refreshToken
+        } = generateAccessAndRefreshToken(user, roleRefDetails);
 
-        res.cookie("authToken", token, {
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        const options = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            maxAge: 24 * 60 * 60 * 1000
-        });
+            secure: true,
+            sameSite: "none"
+        };
 
-        return res.status(200).json({ success: true, msg: "login successful" });
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { accessToken, refreshToken },
+                    "login successful"
+                )
+            );
     } catch (err) {
         return next(err);
     }
@@ -349,30 +358,22 @@ export const handleChangePhone = async (req, res, next) => {
     try {
         const { emailId, password, phoneNumber } = req.parsedBody;
 
-        const user = await User.findOne({ emailId });
+        const user = await User.findOne({ emailId }).select("passwordHash");
         if (!user) {
             return next(
                 new APIError(404, "user not found")
             );
         }
 
-        const isVerified = await argon2.verify(user.passwordHash, password);
+        const isVerified = await passwordMatch(user.passwordHash, password);
         if (!isVerified) {
             return next(
                 new APIError(401, "Invalid Password")
             );
         }
 
-        // const isValid = await fetchPhoneNumber(phoneNumber);
-        // if (!isValid) {
-        //     return next(
-        //         new APIError(400, "Invalid Phone Number")
-        //     );
-        // }
-
-        await User.findByIdAndUpdate(user._id, {
-            phoneNumberEnc: phoneNumber
-        });
+        user.phoneNumberEnc = phoneNumber;
+        await user.save({ validateBeforeSave: false });
 
         return res.status(200).json({
             message: "updated user phone number"
@@ -403,11 +404,11 @@ export const handleForgotPassword = async (req, res, next) => {
             expiresAt: new Date(Date.now() + 5 * 60 * 1000)
         });
 
-        await generateAndSendPhoneOtp(user);
+        await generateAndSendEmailOtp(user);
 
         return res.status(200).json({
             success: true,
-            msg: "OTP has been send on phone Number",
+            msg: "OTP has been send on email",
             emailId: user.emailId,
             resetToken
         });
@@ -430,51 +431,47 @@ export const handleResetPassword = async (req, res, next) => {
 
         if (!resetRecord) {
             return next(
-                new APIError(404, "Password Reset Record not found")
+                new APIError(404, "Reset Token is expired")
             );
         }
 
-        const otpRecord = await Otp.findOne({ userId: resetRecord.userId });
-        if (!otpRecord) {
-            return next(
-                new APIError(404, "OTP expired or not found")
-            );
-        }
-
-        if (otpRecord.attempts >= 3) {
-            await Otp.findByIdAndDelete(otpRecord._id);
-
-            return next(
-                new APIError(429, "Too many attempts. Please login again.")
-            );
-        }
-
-        if (otpCode !== otpRecord.otpCode) {
-            await Otp.findByIdAndUpdate(
-                otpRecord._id,
-                {
-                    $inc: { attempts: 1 }
-                }
-            );
-
-            return next(
-                new APIError(401, "Incorrect OTP")
-            );
-        }
+        await checkEmailOtp(resetRecord.userId, otpCode);
 
         const user = await User.findById(resetRecord.userId);
 
         user.passwordHash = newPassword;
-        await user.save();
+        await user.save({ validateBeforeSave: false });
 
-        await Promise.all([
-            PasswordReset.deleteOne({ _id: resetRecord._id }),
-            Otp.deleteOne({ _id: otpRecord._id })
-        ]);
+        await PasswordReset.deleteOne({ _id: resetRecord._id });
 
         return res.status(200).json({
             msg: "Password reset successfully. Please login."
         });
+    } catch (err) {
+        return next(err);
+    }
+};
+
+export const handleGetUserData = async (req, res, next) => {
+    try {
+        const { userId } = req.user;
+
+        const userData = await User.findById(userId);
+
+        if (!userData) {
+            return next(
+                new APIError(404, "Invalid User Id")
+            );
+        }
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                userData,
+                "user data fetched successfully"
+            )
+        );
+
     } catch (err) {
         return next(err);
     }
@@ -488,9 +485,25 @@ export const handleLogout = async (req, res, next) => {
             );
         }
 
-        res.clearCookie("authToken");
+        await User.findByIdAndUpdate(
+            req.user.userId,
+            {
+                $unset: {
+                    refreshToken: 1         // this removes the field from document
+                }
+            }
+        )
 
-        return res.status(200).json({ success: true, msg: "logout successful" });
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        return res
+            .status(200)
+            .clearCookie("accessToken", options)
+            .clearCookie("refreshToken", options)
+            .json(new ApiResponse(200, {}, "User logged Out"))
     } catch (err) {
         return next(err);
     }
@@ -508,7 +521,7 @@ export const handleUpdateProfile = async (req, res, next) => {
         }
 
         Object.assign(user, req.parsedBody);
-        await user.save();
+        await user.save({ validateBeforeSave: false });
 
         const {
             phoneIV,
@@ -525,39 +538,39 @@ export const handleUpdateProfile = async (req, res, next) => {
     }
 };
 
-export const handleUpdatePhone = async (req, res, next) => {
-    try {
-        const { userId } = req.user;
-        const { phoneNumber } = req.parsedBody;
+// export const handleUpdatePhone = async (req, res, next) => {
+//     try {
+//         const { userId } = req.user;
+//         const { phoneNumber } = req.parsedBody;
 
-        // const isValid = await fetchPhoneNumber(phoneNumber);
+//         // const isValid = await fetchPhoneNumber(phoneNumber);
 
-        // if (!isValid) {
-        //     return next(
-        //         new APIError(400, "Invalid phone")
-        //     );
-        // }
+//         // if (!isValid) {
+//         //     return next(
+//         //         new APIError(400, "Invalid phone")
+//         //     );
+//         // }
 
-        const user = await User.findById(userId);
-        if (!user) {
-            return next(
-                new APIError(404, "User not found")
-            );
-        }
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return next(
+//                 new APIError(404, "User not found")
+//             );
+//         }
 
-        user.phoneNumberEnc = phoneNumber;
-        await user.save();
+//         user.phoneNumberEnc = phoneNumber;
+//         await user.save({ validateBeforeSave: false });
 
-        res.clearCookie("authToken");
+//         res.clearCookie("authToken");
 
-        return res.status(200).json({
-            msg: "Phone updated. Login again to verify."
-        });
+//         return res.status(200).json({
+//             msg: "Phone updated. Login again to verify."
+//         });
 
-    } catch (err) {
-        return next(err);
-    }
-};
+//     } catch (err) {
+//         return next(err);
+//     }
+// };
 
 export const handleUpdatePassword = async (req, res, next) => {
     try {
@@ -570,15 +583,14 @@ export const handleUpdatePassword = async (req, res, next) => {
             );
         }
 
-        const user = await User.findById(userId);
+        const user = await User.findById(userId).select("passwordHash");
         if (!user) {
             return next(
                 new APIError(404, "User not found")
             );
         }
 
-        const isPassMatch = await passwordMatch(user.passwordHash, newPassword);
-
+        const isPassMatch = await passwordMatch(user.passwordHash, currentPassword);
         if (!isPassMatch) {
             return next(
                 new APIError(401, "Password not matched!")
@@ -588,9 +600,10 @@ export const handleUpdatePassword = async (req, res, next) => {
         const hashedPassword = await hashPassword(newPassword);
 
         user.passwordHash = hashedPassword;
-        await user.save();
+        await user.save({ validateBeforeSave: false });
 
         res.clearCookie("authToken");
+        res.clearCookie("refreshToken");
 
         return res.status(200).json({
             msg: "Password updated. Login again to verify."
@@ -678,7 +691,7 @@ export const handleGetUserLookup = async (req, res, next) => {
 
         if (!user) {
             return next(
-                new APIError(400, "No user found")
+                new APIError(404, "user not found")
             );
         }
 
@@ -686,6 +699,30 @@ export const handleGetUserLookup = async (req, res, next) => {
             message: "User Exists",
             userId: user._id
         });
+    } catch (err) {
+        return next(err);
+    }
+};
+
+export const handleGetUserById = async (req, res, next) => {
+    try {
+        const { userId } = req.parsedParams;
+
+        const user = await User.findById(userId).select("_id firstName middleName lastName role");
+
+        if (!user) {
+            return next(
+                new APIError(404, "user not found")
+            );
+        }
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                user,
+                "user data fetched"
+            )
+        );
     } catch (err) {
         return next(err);
     }

@@ -52,6 +52,7 @@ const staffSchema = new Schema({
             "RECEPTIONIST",
             "LAB_TECHNICIAN",
             "HOSPITAL_ADMIN",
+            "OTHERS"
         ],
         required: true
     },

@@ -12,6 +12,12 @@ export const getUserSchema = z.object({
     })
 });
 
+export const getUserByUserId = z.object({
+    params: z.object({
+        userId: mongooseObjectIdValidator("User")
+    })
+});
+
 export const userProfileSchema = z.object({
     firstName: z.string().min(1).max(50),
     middleName: z.string().min(1).max(50).optional(),
@@ -56,7 +62,7 @@ export const verificationSchema = z.object({
     body: userProfileSchema.pick({
         emailId: true,
     }).extend({
-        otpCode: z.string()
+        otpCode: z.string().trim()
             .regex(/^\d{6}$/,
                 { message: "OTP must be exactly 6 digits" }
             )
@@ -67,20 +73,25 @@ export const loginSchema = z.object({
     body: userProfileSchema.pick({
         emailId: true,
         password: true
+    }).extend({
+        otpCode: z.string()
+            .regex(/^\d{6}$/,
+                { message: "OTP must be exactly 6 digits" }
+            )
     })
 });
 
 export const updateProfileSchema = z.object({
-    body: z.object(
-        userProfileSchema.pick({
-            fullName: true,
-            gender: true,
-            dateOfBirth: true,
-            state: true,
-            districtName: true,
-            landmark: true
-        })
-    ).partial(),
+    body: userProfileSchema.pick({
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        gender: true,
+        dateOfBirth: true,
+        state: true,
+        districtName: true,
+        landmark: true
+    }).partial(),
 });
 
 export const changePhoneSchema = z.object({

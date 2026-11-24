@@ -32,7 +32,7 @@ export const handleRegisterHospital = async (req, res, next) => {
         location,
     } = req.parsedBody.hospital;
 
-    const { adminEmailId } = req.parsedBody.admin;
+    const { adminEmailId, adminEmployeeId } = req.parsedBody.admin;
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -42,7 +42,7 @@ export const handleRegisterHospital = async (req, res, next) => {
 
         if (!adminRecord) {
             return next(
-                new APIError("No admin record found")
+                new APIError(400, "No admin record found")
             );
         }
 
@@ -62,6 +62,7 @@ export const handleRegisterHospital = async (req, res, next) => {
         const [adminStaff] = await Staff.create(
             [{
                 userId: adminRecord._id,
+                hospitalId: hospital._id,
                 employeeId: adminEmployeeId,
                 department: "MANAGEMENT",
                 role: "HOSPITAL_ADMIN",
@@ -93,7 +94,7 @@ export const handleRegisterHospital = async (req, res, next) => {
 
 export const handleGetHospitalDetails = async (req, res, next) => {
     try {
-        const { hospitalId } = req.parsedParams;
+        const { hospitalId } = req.params;
 
         const hospital = await Hospital.findOne({ _id: hospitalId })
             .populate({
@@ -143,7 +144,7 @@ export const handleUpdateHospital = async (req, res, next) => {
                 licenseNumber,
                 location
             },
-            { returnDocument: true, runValidators: true }
+            { new: true, runValidators: true }
         );
 
         if (!hospital) {
@@ -164,34 +165,21 @@ export const handleUpdateHospital = async (req, res, next) => {
 
 export const handleToggleHospitalStatus = async (req, res, next) => {
     try {
-        const { hospitalId } = req.parsedParams;
-        const { status } = req.parsedBody;
+        const { hospitalId } = req.parsedParams;``
 
-        const hospital = await Hospital.findOneAndUpdate(
-            {
-                _id: hospitalId,
-                status: { $ne: status }
-            },
-            { $set: { status } },
-            { returnDocument: true, runValidators: true }
-        );
+        const hospital = await Hospital.findById(hospitalId);
 
         if (!hospital) {
-            const exists = await Hospital.exists({ _id: hospitalId });
-
-            if (!exists) {
-                return next(
-                    new APIError(404, "Hospital not found")
-                );
-            }
-
-            return res.status(400).json({
-                message: `Hospital is already marked as ${status}`
-            })
+            return next(
+                new APIError(404, "Hospital not found")
+            );
         }
+        
+        hospital.isActive = !(hospital.isActive);
+        hospital.save({ new: true, validateBeforeSave: true });
 
         return res.status(200).json({
-            message: `Hospital status updated to ${status} successfully`,
+            message: `Hospital status updated to ${hospital.isActive ? "active" : "inactive"} successfully`,
             data: hospital
         });
 

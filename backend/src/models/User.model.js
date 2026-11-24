@@ -65,6 +65,16 @@ const userSchema = new Schema({
         required: true
     },
 
+    role: {
+        type: String,
+        role: [
+            "PATIENT",
+            "STAFF",
+            "SUPER_ADMIN",
+        ],
+        default: "PATIENT"
+    },
+
     dateOfBirth: {
         type: Date,
         required: false  //true in production, false in dev and test
@@ -91,12 +101,17 @@ const userSchema = new Schema({
     mfaEnabled: {
         type: Boolean,
         default: false
+    },
+
+    refreshToken: {
+        type: String,
+        required: false,
+        select: false
     }
 
 }, { timestamps: true });
 
 userSchema.index({ emailId: 1 });
-
 
 userSchema.methods.getPhoneNumber = function () {
     return decryptPhoneFn(this.phoneNumberEnc, this.phoneIV, this.phoneAuthTag);
@@ -112,12 +127,6 @@ userSchema.pre('save', function () {
     this.phoneNumberEnc = encryptedPhone;
     this.phoneIV = iv;
     this.phoneAuthTag = authTag;
-});
-
-userSchema.pre('save', async function () {
-    if (!this.isModified('passwordHash')) return;
-
-    this.passwordHash = await hashPassword(this.passwordHash);
 });
 
 const User = model('User', userSchema);

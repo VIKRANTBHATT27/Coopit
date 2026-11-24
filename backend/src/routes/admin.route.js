@@ -31,15 +31,20 @@ import {
     handleUpdateLabTechnician
 } from "../controllers/labTechnician.controller.js";
 
-import { handleGetUserId } from "../controllers/user.controller.js";
+import {
+    handleGetUserId,
+    handleGetUserById
+} from "../controllers/user.controller.js";
 
 import { authorize } from "../middlewares/authorize.middleware.js";
-
 import { authenticate } from "../middlewares/authenticate.middleware.js";
 
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 
-import { getUserSchema } from "../zodSchemas/user.schema.js";
+import {
+    getUserByUserId,
+    getUserSchema
+} from "../zodSchemas/user.schema.js";
 
 import {
     staffIdSchema,
@@ -79,6 +84,11 @@ router.use(authorize(["STAFF"], ["HOSPITAL_ADMIN"]));
 router.get("/user",
     parseIncomingReq(getUserSchema),
     handleGetUserId
+);
+
+router.get("/user/:userId",
+    parseIncomingReq(getUserByUserId),
+    handleGetUserById
 )
 
 router.get("/staff",
@@ -86,7 +96,7 @@ router.get("/staff",
     handleGetAllStaffMembers
 );
 
-router.post("/staff",
+router.post("/staff/:userId",
     parseIncomingReq(registrationSchema),
     handleRegisterStaffMember
 );
@@ -106,12 +116,12 @@ router.patch("/staff/:staffId/role",
     handleChangeStaffRole
 );
 
-router.post("/staff/:staffId/status",
+router.patch("/staff/:staffId/status",
     parseIncomingReq(toggleStaffStatusSchema),
     handleToggleStaffStatus
 );
 
-router.route("/:staffId/receptionist")
+router.route("/receptionist/:staffId")
     .get(
         parseIncomingReq(staffIdSchema),
         handleGetReceptionistDetails
@@ -119,11 +129,12 @@ router.route("/:staffId/receptionist")
     .post(
         parseIncomingReq(createReceptionistSchema),
         handleCreateReceptionist
-    )
-    .patch(
-        parseIncomingReq(updateReceptionistSchema),
-        handleUpdateReceptionist
     );
+
+router.patch("/receptionist/:receptionistId",
+    parseIncomingReq(updateReceptionistSchema),
+    handleUpdateReceptionist
+);
 
 router.route("/:staffId/nurse")
     .get(

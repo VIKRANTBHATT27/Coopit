@@ -97,7 +97,7 @@ import APIError from "../utils/ApiError.utils.js";
 
 export const handlePromoteToAdmin = async (req, res, next) => {
     try {
-        const { hospitalId, adminId: staffId } = req.parsedParams;
+        const { hospitalId, staffId } = req.parsedParams;
 
         const [hospitalExists, staffExists] = await Promise.all([
             Hospital.exists({ _id: hospitalId }),
@@ -106,13 +106,13 @@ export const handlePromoteToAdmin = async (req, res, next) => {
 
         if (!hospitalExists) {
             return next(
-                new APIError(404, "Hospital not found")
+                new APIError(404, "Hospital record not found")
             );
         }
 
         if (!staffExists) {
             return next(
-                new APIError(404, "Staff Member not found in this hospital")
+                new APIError(404, "Staff Member record not found")
             );
         }
 
@@ -125,13 +125,13 @@ export const handlePromoteToAdmin = async (req, res, next) => {
                 {
                     $addToSet: { adminIds: staffId }
                 },
-                { returnDocument: true, runValidators: true, session }
+                { new: true, runValidators: true, session }
             );
 
             await Staff.findOneAndUpdate(
-                { _id: adminId },
+                { _id: staffId },
                 {
-                    $set: { role: "Admin" }
+                    $set: { role: "HOSPITAL_ADMIN" }
                 },
                 { session }
             );
@@ -158,12 +158,11 @@ export const handlePromoteToAdmin = async (req, res, next) => {
 
 export const handleRemoveAdmin = async (req, res, next) => {
     try {
-        const { hospitalId, adminId } = req.parsedParams;
-        const { role } = req.parsedBody;
+        const { hospitalId, staffId } = req.parsedParams;
 
         const [hospitalExists, staffExists] = await Promise.all([
             Hospital.exists({ _id: hospitalId }),
-            Staff.exists({ _id: adminId, hospitalId })
+            Staff.exists({ _id: staffId, hospitalId })
         ]);
 
         if (!hospitalExists) {
@@ -185,13 +184,13 @@ export const handleRemoveAdmin = async (req, res, next) => {
             const hospital = await Hospital.findOneAndUpdate(
                 {
                     _id: hospitalId,
-                    adminIds: adminId,
+                    adminIds: staffId,
                     "adminIds.1": { $exists: true }
                 },
                 {
-                    $pull: { adminIds: adminId }
+                    $pull: { adminIds: staffId }
                 },
-                { returnDocument: true, runValidators: true, session }
+                { new: true, runValidators: true, session }
             );
 
             if (!hospital) {
@@ -204,9 +203,9 @@ export const handleRemoveAdmin = async (req, res, next) => {
             }
 
             await Staff.findOneAndUpdate(
-                { _id: adminId },
+                { _id: staffId },
                 {
-                    $set: { role }
+                    $set: { role: "OTHERS" }
                 },
                 { session }
             );

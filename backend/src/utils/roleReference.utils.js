@@ -12,7 +12,7 @@ const resolveRoleReferences = async ({ role, _id: userId }) => {
     if (role === "PATIENT") {
         const patient = await Patient.findOne({ userId });
 
-        if (!patient) throw new APIError(404, "Patient record not found")
+        if (!patient) throw new APIError(404, "Patient record not found, Tell Receptionist")
 
         return { roleRefId: patient?._id };
     }

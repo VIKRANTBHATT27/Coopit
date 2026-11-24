@@ -1,5 +1,6 @@
 import { Staff, User } from "../models/index.js";
 import APIError from "../utils/ApiError.utils.js";
+import ApiResponse from "../utils/ApiResponse.utils.js";
 
 export const handleGetAllStaffMembers = async (req, res, next) => {
     try {
@@ -16,6 +17,9 @@ export const handleGetAllStaffMembers = async (req, res, next) => {
                 .skip(skip)
                 .limit(limit)
                 .sort({ createdAt: -1 })
+                .populate({
+                    path: "userId"
+                })
         ]);
 
         if (staffList.length === 0) {
@@ -50,13 +54,12 @@ export const handleStaffLookUp = async (req, res, next) => {
         const staffMember = await Staff.findOne({
             _id: staffId,
             hospitalId,
-            status: "ACTIVE",
-            role: { $ne: "Admin" },
+            status: "ACTIVE"
         });
 
         if (!staffMember) {
             return next(
-                new APIError(404, "Staff not activated or Invalid StaffId")
+                new APIError(404, "Staff record not found")
             );
         }
 
@@ -72,7 +75,7 @@ export const handleStaffLookUp = async (req, res, next) => {
 
 export const handleRegisterStaffMember = async (req, res, next) => {
     try {
-        const { userId } = req.parsedBody;
+        const { userId } = req.parsedParams;
         const { hospitalId } = req.user;
 
         const [userExsists, staffExists] = await Promise.all([
@@ -94,9 +97,9 @@ export const handleRegisterStaffMember = async (req, res, next) => {
 
         const staffMember = await Staff.create({
             ...req.parsedBody,
-            hospitalId
+            hospitalId,
+            userId
         });
-
 
         return res.status(201).json({
             message: "successfully created staffMember",
@@ -118,24 +121,32 @@ export const handleChangeStaffRole = async (req, res, next) => {
         const staffMember = await Staff.findOne({
             _id: staffId,
             hospitalId,
-            status: "ACTIVE",
-            role: { $ne: "Admin" },
+            status: "ACTIVE"
         });
 
         if (!staffMember) {
             return next(
-                new APIError(404, "Staff not activated or Invalid StaffId")
+                new APIError(404, "Staff record not found")
             );
         }
 
-        await staffMember.updateOne({
-            $set: { role }
-        });
+        if (staffMember.role === "HOSPITAL_ADMIN") {
+            new APIError(
+                401,
+                "This staff member is a hospital admin and cannot have their role changed"
+            )
+        }
 
-        return res.status(200).json({
-            message: "updated role successfully"
-        });
+        staffMember.role = role;
+        await staffMember.save({ new: true, validateBeforeSave: true });
 
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                staffMember,
+                "updated staff role successfully"
+            )
+        );
     } catch (err) {
         return next(err);
     }
@@ -149,22 +160,35 @@ export const handleChangeStaffDetails = async (req, res, next) => {
         const staffMember = await Staff.findOne({
             _id: staffId,
             hospitalId,
-            status: "ACTIVE",
-            role: { $ne: "Admin" },
+            status: "ACTIVE"
         });
 
         if (!staffMember) {
             return next(
-                new APIError(404, "Staff not activated or Staff do not exist")
+                new APIError(404, "Staff record not found")
             );
         }
 
-        staffMember.set(req.parsedBody);
-        await staffMember.save();
+        if (staffMember.role === "HOSPITAL_ADMIN") {
+            return next(
+                new APIError(
+                    401,
+                    "This staff member is a hospital admin and cannot have their role changed"
+                )
+            )
+        }
 
-        return res.status(200).json({
-            message: "updated details successfully"
-        });
+        staffMember.set(req.parsedBody);
+        await staffMember.save({ validateBeforeSave: true, new: true });
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                staffMember,
+                "updated details successfully"
+            )
+        );
+
     } catch (err) {
         return next(err);
     }
@@ -181,22 +205,31 @@ export const handleToggleStaffStatus = async (req, res, next) => {
                 _id: staffId,
                 hospitalId,
                 status: { $ne: status },
-                role: { $ne: "Admin" },
+                role: { $ne: "HOSPITAL_ADMIN" },
             },
             { $set: { status } },
-            { returnDocument: true, runValidator: true }
+            { returnDocument: 'after', runValidator: true }
         );
 
         if (!staffMember) {
             const exists = await Staff.exists({
                 _id: staffId,
                 hospitalId,
-            });
+            }).select("role");
 
             if (!exists) {
                 return next(
                     new APIError(404, "No Staff Account found")
                 );
+            }
+
+            if (exists.role === "HOSPITAL_ADMIN") {
+                return next(
+                    new APIError(
+                        401,
+                        "This staff member is a hospital admin and cannot have their role changed"
+                    )
+                )
             }
 
             return next(
@@ -205,7 +238,7 @@ export const handleToggleStaffStatus = async (req, res, next) => {
         }
 
         return res.status(200).json({
-            message: `successfully marked Staff Account  as ${status}`,
+            message: `successfully marked Staff Account as ${status}`,
             data: staffMember
         });
 

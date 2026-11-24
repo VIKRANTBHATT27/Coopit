@@ -4,16 +4,17 @@ import {
     handleLogout,
     handleResetPassword,
     handleUpdatePassword,
-    handleUpdatePhone,
     handleUpdateProfile,
     handleUserLogin,
-    handleVerifyUserLogin,
     handleUserSignup,
     handleVerifyEmailId,
     handleSetMFA,
     handleSendEmailOTP,
     handleVerifyMFA,
+    handleGetUserData
 } from "../controllers/user.controller.js";
+// handleUpdatePhone,
+// handleVerifyUserLogin,
 
 import {
     changePhoneSchema,
@@ -41,7 +42,7 @@ router.post('/signup',
     handleUserSignup
 );
 
-router.post("/send/otp", 
+router.post("/send/otp",
     parseIncomingReq(emailIdSchema),
     handleSendEmailOTP
 );
@@ -65,16 +66,10 @@ router.post('/login',
     parseIncomingReq(loginSchema),
     handleUserLogin
 );
-router.post('/verify/login',
-    parseIncomingReq(verificationSchema),
-    handleVerifyUserLogin
-);
-
-router.patch("/auth/change-phone",
-    phoneLimiter,
-    parseIncomingReq(changePhoneSchema),
-    handleChangePhone
-);
+// router.post('/verify/login',
+//     parseIncomingReq(verificationSchema),
+//     handleVerifyUserLogin
+// );
 
 router.post("/auth/forgot-password",
     parseIncomingReq(emailIdSchema),
@@ -90,20 +85,29 @@ router.use(authenticate);
 router.use(authorize([
     "PATIENT",
     "STAFF",
-    "SUPER-ADMIN",
+    "SUPER_ADMIN",
 ]));
+
+router.patch("/phone/change",
+    phoneLimiter,
+    parseIncomingReq(changePhoneSchema),
+    handleChangePhone
+);
 
 router.post('/logout', handleLogout);
 
-router.patch("/profile",
-    parseIncomingReq(updateProfileSchema),
-    handleUpdateProfile
-);
 
-router.patch("/phone",
-    parseIncomingReq(updatePhoneSchema),
-    handleUpdatePhone
-);
+router.route("/me")
+    .get(handleGetUserData)
+    .patch(
+        parseIncomingReq(updateProfileSchema),
+        handleUpdateProfile
+    );
+
+// router.patch("/phone",
+//     parseIncomingReq(updatePhoneSchema),
+//     handleUpdatePhone
+// );
 
 router.patch("/password",
     parseIncomingReq(updatePasswordSchema),
