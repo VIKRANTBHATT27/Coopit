@@ -7,28 +7,32 @@ const AVATAR_FILE_TYPES = [
     "image/webp"
 ];
 
-const mongooseObjectIdValidator = (fieldName) => z.string()
+const mongooseObjectIdValidator = (fieldName) => z.string().trim()
     .refine((val) => mongoose.Types.ObjectId.isValid(val), {
         message: `Invalid ObjectId for field ${fieldName}`
     });
 
+const timeSchema = z.string().trim()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/,
+        "Time must be in 24-hour format with leading zeros (HH:MM)"
+    );
+
 export const createReceptionistSchema = z.object({
     body: z.object({
         department: z.enum([
-            "Front Desk",
-            "Billing Desk",
-            "Emergency Desk"
-        ]).default("Front Desk"),
+            "FRONT_DESK",
+            "BILLING_DESK",
+            "EMERGENCY_DESK"
+        ]).default("FRONT_DESK"),
 
         shift: z.enum(["Morning", "Evening", "Night"]),
 
         workingHours: z.object({
-            start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)"),
-            end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in 24-hour format with leading zeros (HH:MM)")
-        })
-        ,
+            start: timeSchema,
+            end: timeSchema
+        }),
 
-        qualifications: z.array(z.string()).optional(),
+        qualifications: z.array(z.string().trim()).optional(),
     }),
 
     params: z.object({
@@ -37,23 +41,23 @@ export const createReceptionistSchema = z.object({
 });
 
 export const updateReceptionistSchema = z.object({
-    body: z.object(createReceptionistSchema.shape.body).partial(),
+    body: createReceptionistSchema.shape.body.partial(),
 
     params: z.object({
-        staffId: mongooseObjectIdValidator('Staff')
+        receptionistId: mongooseObjectIdValidator('Receptionist')
     })
 });
 
 
 export const avatarUploadSchema = z.object({
     file: z.object({
-        originalName: z.string()
-            .min(1, "Original filename is required"),
-        mimeType: z.string()
+        originalName: z.string().trim()
+            .min(3, "Original filename is required"),
+        mimeType: z.string().trim()
             .refine(mime => AVATAR_FILE_TYPES.includes(mime), {
                 message: "invalid image file type"
             }),
-        path: z.string()
+        path: z.string().trim()
             .min(1, "Temporary storage file path is missing"),
     }, {
         message: "file is required for avatar uplaod"

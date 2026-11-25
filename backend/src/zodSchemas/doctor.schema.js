@@ -19,6 +19,10 @@ const AVATAR_FILE_TYPES = [
 ];
 
 export const createDoctorSchema = z.object({
+    params: z.object({
+        staffId: mongooseObjectIdValidator("Staff")
+    }),
+    
     body: z.object({
         specialization: z.array(
             z.enum([
@@ -70,15 +74,15 @@ export const createDoctorSchema = z.object({
                 ])
             ).default([]),
         })
-    }),
-
-    params: mongooseObjectIdValidator("Staff"),
+    })
 });
 
 export const updateDoctorSchema = z.object({
-    params: mongooseObjectIdValidator("Staff"),
+    params: z.object({
+        doctorId: mongooseObjectIdValidator("Doctor")
+    }),
 
-    body: z.object(createDoctorSchema.shape.body.shape).partial()
+    body: createDoctorSchema.shape.body.partial()
 });
 
 export const avatarUploadSchema = z.object({

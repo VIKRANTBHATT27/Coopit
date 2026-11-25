@@ -72,8 +72,9 @@ const nurseSchema = new Schema({
         type: Number,
         default: 0
     },
+
     qualification: {
-        type: String,
+        type: [String],
         required: true
     },
 });

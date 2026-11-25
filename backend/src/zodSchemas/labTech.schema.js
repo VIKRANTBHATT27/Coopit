@@ -30,9 +30,8 @@ export const createLabTechnicianSchema = z.object({
         qualification: z.string(),
 
         shift: z.enum([
-            "MORNING",
-            "EVENING",
-            "Night"
+            "DAY",
+            "NIGHT"
         ])
     }),
 
@@ -42,10 +41,10 @@ export const createLabTechnicianSchema = z.object({
 });
 
 export const updateLabTechnicianSchema = z.object({
-    body: z.object(createLabTechnicianSchema.shape.body.shape).partial(),
+    body: createLabTechnicianSchema.shape.body.partial(),
 
     params: z.object({
-        staffId: mongooseObjectIdValidator('staffId'),
+        labTechnicianId: mongooseObjectIdValidator('labTechnician'),
     })
 });
 

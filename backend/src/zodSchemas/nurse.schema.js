@@ -1,13 +1,12 @@
 import mongoose from 'mongoose';
 import { z } from 'zod';
 
-
-const mongooseObjectIdValidator = (fieldName) => z.string()
+const mongooseObjectIdValidator = (fieldName) => z.string().trim()
     .refine(val => mongoose.Types.ObjectId.isValid(val), {
         message: `Invalid Object Id for ${fieldName}`
     });
 
-const timeSchema = z.string()
+const timeSchema = z.string().trim()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/,
         "Time must be in 24-hour format with leading zeros (HH:MM)"
     );
@@ -34,7 +33,7 @@ export const createNurseSchema = z.object({
             "ISOLATION_UNIT"
         ]),
 
-        nurseDescription: z.string().optional(),
+        nurseDescription: z.string().trim().optional(),
 
         shift: z.enum(["DAY", "NIGHT"]),
 
@@ -45,7 +44,7 @@ export const createNurseSchema = z.object({
 
         experienceYears: z.number().default(0),
 
-        qualification: z.string()
+        qualification: z.array(z.string().trim())
     }),
 
     params: z.object({
@@ -54,22 +53,22 @@ export const createNurseSchema = z.object({
 });
 
 export const nurseUpdationSchema = z.object({
-    body: z.object(createNurseSchema.shape.body.shape).partial(),
+    body: createNurseSchema.shape.body.partial(),
 
     params: z.object({
-        staffId: mongooseObjectIdValidator('Staff')
+        nurseId: mongooseObjectIdValidator('Nurse')
     })
 });
 
 export const avatarUploadSchema = z.object({
     file: z.object({
-        originalName: z.string()
+        originalName: z.string().trim()
             .min(1, "Original filename is required"),
-        mimeType: z.string()
+        mimeType: z.string().trim()
             .refine(mime => AVATAR_FILE_TYPES.includes(mime), {
                 message: "invalid image file type"
             }),
-        path: z.string()
+        path: z.string().trim()
             .min(1, "Temporary storage file path is missing"),
     }, {
         message: "file is required for avatar uplaod"

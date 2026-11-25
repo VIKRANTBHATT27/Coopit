@@ -1,6 +1,7 @@
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
 import { Staff, Nurse, Patient, User } from "../models/index.js";
 import APIError from "../utils/ApiError.utils.js";
+import ApiResponse from "../utils/ApiResponse.utils.js";
 
 export const handleGetNurse = async (req, res, next) => {
     try {
@@ -81,6 +82,13 @@ export const handleCreateNurse = async (req, res, next) => {
             staffId
         });
 
+        await nurse.populate({
+            path: "staffId",
+            populate: {
+                path: "userId"
+            }
+        });
+
         return res.status(201).json({
             success: true,
             message: "Nurse record created successfully",
@@ -94,10 +102,10 @@ export const handleCreateNurse = async (req, res, next) => {
 
 export const handleUpdateNurse = async (req, res, next) => {
     try {
-        const { staffId } = req.parsedParams;
+        const { nurseId } = req.parsedParams;
 
-        const nurse = await Nurse.findOneAndUpdate(
-            { staffId },
+        const nurse = await Nurse.findByIdAndUpdate(
+            nurseId,
             { $set: { ...req.parsedBody } },
             { returnDocument: "after" }
         );
@@ -108,12 +116,13 @@ export const handleUpdateNurse = async (req, res, next) => {
             );
         }
 
-        return res.status(200).json({
-            success: true,
-            msg: "Nurse record updated successfully",
-            data: nurse
-        });
-
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                nurse,
+                "Nurse record updated successfully"
+            )
+        );
     } catch (err) {
         return next(err);
     }

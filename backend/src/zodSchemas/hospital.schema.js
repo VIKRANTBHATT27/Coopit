@@ -1,12 +1,15 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 
-export const phoneNumberSchema = z.array(z.string().regex(/^\+?[1-9]\d{9,14}$/, "Invalid phone number")).nonempty().refine(
-    phones => new Set(phones).size === phones.length,
-    { message: "Phone numbers must be unique" }
-);
+export const phoneNumberSchema = z.array(
+    z.string().trim().regex(/^\+?[1-9]\d{9,14}$/, "Invalid phone number")
+).nonempty()
+    .refine(
+        phones => new Set(phones).size === phones.length,
+        { message: "Phone numbers must be unique" }
+    );
 
-const mongooseObjectIdValidator = (fieldName) => z.string()
+const mongooseObjectIdValidator = (fieldName) => z.string().trim()
     .refine((val) => mongoose.Types.ObjectId.isValid(val), {
         message: `Invalid ObjectId for field ${fieldName}`
     });
@@ -14,14 +17,14 @@ const mongooseObjectIdValidator = (fieldName) => z.string()
 export const hospitalRegistrationSchema = z.object({
     body: z.object({
         hospital: z.object({
-            hospitalName: z.string().min(3).max(100),
+            hospitalName: z.string().trim().min(3).max(100),
 
             hospitalAddress: z.object({
-                street: z.string(),
-                locality: z.string(),
-                city: z.string(),
-                state: z.string(),
-                pincode: z.string().regex(/^[1-9][0-9]{5}$/, "invalid pincode"),
+                street: z.string().trim(),
+                locality: z.string().trim(),
+                city: z.string().trim(),
+                state: z.string().trim(),
+                pincode: z.string().trim().regex(/^[1-9][0-9]{5}$/, "invalid pincode"),
             }),
 
             hospitalType: z.enum([
@@ -55,7 +58,7 @@ export const hospitalRegistrationSchema = z.object({
                 ])
             ).nonempty(),
 
-            licenseNumber: z.string(),
+            licenseNumber: z.string().trim(),
 
             // Example: { type: "Point", coordinates: [77.5946, 12.9716] }
             location: z.object({
@@ -65,9 +68,9 @@ export const hospitalRegistrationSchema = z.object({
         }),
 
         admin: z.object({
-            adminEmailId: z.string().email({ message: "Invalid email address" }),
+            adminEmailId: z.email({ message: "Invalid email address" }),
 
-            adminEmployeeId: z.string()
+            adminEmployeeId: z.string().trim()
                 .regex(/^(NUR|REC|LAB|DOC|ADM)-\d{4}-\d{4}$/, {
                     message: "Invalid employee ID format",
                 }),

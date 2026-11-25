@@ -27,11 +27,11 @@ const receptionistSchema = new Schema({
     department: {
         type: String,
         enum: [
-            "Front Desk",
-            "Billing Desk",
-            "Emergency Desk"
+            "FRONT_DESK",
+            "BILLING_DESK",
+            "EMERGENCY_DESK"
         ],
-        default: "Front Desk"
+        default: "FRONT_DESK"
     },
 
     shift: {

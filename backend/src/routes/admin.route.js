@@ -136,7 +136,7 @@ router.patch("/receptionist/:receptionistId",
     handleUpdateReceptionist
 );
 
-router.route("/:staffId/nurse")
+router.route("/nurse/:staffId")
     .get(
         parseIncomingReq(staffIdSchema),
         handleGetNurseDetails
@@ -144,13 +144,14 @@ router.route("/:staffId/nurse")
     .post(
         parseIncomingReq(createNurseSchema),
         handleCreateNurse
-    )
-    .patch(
-        parseIncomingReq(nurseUpdationSchema),
-        handleUpdateNurse
     );
 
-router.route("/:staffId/doctor")
+router.patch("/nurse/:nurseId",
+    parseIncomingReq(nurseUpdationSchema),
+    handleUpdateNurse
+);
+
+router.route("/doctor/:staffId")
     .get(
         parseIncomingReq(staffIdSchema),
         handleGetDoctorDetails
@@ -158,13 +159,14 @@ router.route("/:staffId/doctor")
     .post(
         parseIncomingReq(createDoctorSchema),
         handleCreateDoctor
-    )
-    .patch(
-        parseIncomingReq(updateDoctorSchema),
-        handleUpdateDoctor
     );
 
-router.route("/:staffId/lab-technician")
+router.patch("/doctor/:doctorId",
+    parseIncomingReq(updateDoctorSchema),
+    handleUpdateDoctor
+);
+
+router.route("/lab-technician/:staffId")
     .get(
         parseIncomingReq(staffIdSchema),
         handleGetLabTechDetails
@@ -172,8 +174,9 @@ router.route("/:staffId/lab-technician")
     .post(
         parseIncomingReq(createLabTechnicianSchema),
         handleCreateLabTechnician
-    )
-    .patch(
+    );
+    
+router.patch("/lab-technician/:labTechnicianId",
         parseIncomingReq(updateLabTechnicianSchema),
         handleUpdateLabTechnician
     )

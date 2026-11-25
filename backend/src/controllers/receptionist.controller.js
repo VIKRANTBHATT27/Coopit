@@ -30,7 +30,7 @@ export const handleGetReceptionistDetails = async (req, res, next) => {
                     path: "userId",
                     select: "-passwordHash -phoneNumberHash -phoneNumberEnc -phoneIV -phoneAuthTag"
                 }
-            })
+            });
 
         if (!receptionistDetails) {
             return next(
@@ -68,7 +68,7 @@ export const handleCreateReceptionist = async (req, res, next) => {
         }
         if (receptionistExists) {
             return next(
-                new APIError(400, "Receptionist already exists")
+                new APIError(409, "Receptionist already exists")
             );
         }
 
@@ -76,6 +76,13 @@ export const handleCreateReceptionist = async (req, res, next) => {
             ...req.parsedBody,
             hospitalId,
             staffId
+        });
+
+        await receptionist.populate({
+            path: "staffId",
+            populate: {
+                path: "userId"
+            }
         });
 
         return res.status(201).json({
@@ -90,29 +97,23 @@ export const handleCreateReceptionist = async (req, res, next) => {
 
 export const handleUpdateReceptionist = async (req, res, next) => {
     try {
-        const { staffId } = req.parsedParams;
+        const { receptionistId } = req.parsedParams;
 
-        const staffRecord = await Staff.exists({
-            _id: staffId,
-            role: "RECEPTIONIST"
-        }).lean();
-
-        if (!staffRecord) {
-            return next(
-                new APIError(400, "No staff record found")
-            );
-        }
-
-        const receptionist = await Receptionist.findOneAndUpdate(
-            { staffId },
+        const receptionist = await Receptionist.findByIdAndUpdate(
+            receptionistId,
             {
                 $set: {
-                    ...req.parsedBody,
-                    staffId
+                    ...req.parsedBody
                 }
             },
             { returnDocument: "after", runValidator: true }
-        );
+        ).populate({
+            path: "staffId",
+            populate: {
+                path: "userId",
+                select: "-passwordHash -phoneNumberHash -phoneNumberEnc -phoneIV -phoneAuthTag"
+            }
+        });
 
         if (!receptionist) {
             return next(

@@ -1,4 +1,4 @@
-import { User, Otp, PasswordReset } from "../models/index.js";
+import { User, PasswordReset } from "../models/index.js";
 import {
     hashPassword,
     passwordMatch
@@ -69,10 +69,12 @@ export const handleUserSignup = async (req, res, next) => {
             );
         }
 
+        const hashedPassword = await hashPassword(password);
+
         const tempUser = await User.create({
             ...req.parsedBody,
             phoneNumberEnc: phoneNumber,
-            passwordHash: password
+            passwordHash: hashedPassword
         });
 
         if (!tempUser) {
@@ -237,7 +239,8 @@ export const handleVerifyMFA = async (req, res, next) => {
     try {
         const { emailId, otpCode } = req.parsedBody;
 
-        const tempUser = await User.findOne({ emailId }).select("_id mfaEncryptedPayload mfaEnabled");
+        const tempUser = await User.findOne({ emailId })
+            .select("_id mfaEncryptedPayload mfaEnabled");
 
         if (!tempUser) {
             return next(
@@ -471,6 +474,61 @@ export const handleGetUserData = async (req, res, next) => {
                 "user data fetched successfully"
             )
         );
+
+    } catch (err) {
+        return next(err);
+    }
+};
+
+export const handleGenerateNewAccessToken = async (req, res, next) => {
+    try {
+        const { userId } = req.user;
+
+        const user = await User.findById(userId).select("_id role refreshToken");
+
+        if (!user) {
+            throw new APIError(404, "User not found")
+        }
+
+        const providedTokenHash = crypto
+            .createHash("sha256")
+            .update(String(req.refreshToken ?? ""))
+            .digest();
+        const storedTokenHash = crypto
+            .createHash("sha256")
+            .update(String(user.refreshToken ?? ""))
+            .digest();
+
+        if (!crypto.timingSafeEqual(providedTokenHash, storedTokenHash)) {
+            throw new APIError(401, "Refresh token is expired or used. Please login again")
+        }
+
+        const roleRefDetails = await resolveRoleReferences(user);
+
+        const {
+            accessToken,
+            refreshToken
+        } = generateAccessAndRefreshToken(user, roleRefDetails);
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none"
+        };
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { accessToken, refreshToken },
+                    "login successful"
+                )
+            );
 
     } catch (err) {
         return next(err);

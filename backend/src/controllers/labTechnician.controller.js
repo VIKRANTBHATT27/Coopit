@@ -2,8 +2,29 @@ import { User, LabTechnician, Staff } from "../models/index.js";
 import APIError from "../utils/ApiError.utils.js";
 import deleteUserAvatar from "../infrastructure/cloudinary.js";
 
-import dotenv from "dotenv";
-dotenv.config();
+import 'dotenv/config';
+
+export const handleGetLabTechnician = async (req, res, next) => {
+    try {
+        const { staffId } = req.user;
+
+        const labTechnician = await LabTechnician.findOne({ staffId });
+
+        if (!labTechnician) {
+            return next(
+                new APIError(404, "Lab Technician record not found.")
+            );
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: labTechnician
+        });
+
+    } catch (err) {
+        return next(err);
+    }
+};
 
 export const handleGetLabTechDetails = async (req, res, next) => {
     try {
@@ -41,43 +62,41 @@ export const handleGetLabTechDetails = async (req, res, next) => {
     }
 };
 
-export const handleGetLabTechnician = async (req, res, next) => {
-    try {
-        const { staffId } = req.user;
-
-        const labTechnician = await LabTechnician.findOne({ staffId });
-
-        if (!labTechnician) {
-            return next(
-                new APIError(404, "Lab Technician record not found.")
-            );
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: labTechnician
-        });
-
-    } catch (err) {
-        return next(err);
-    }
-};
 
 export const handleCreateLabTechnician = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
 
-        const staff = await Staff.exists({ _id: staffId });
+        const [staffExists, labTechnicianExists] = await Promise.all([
+            Staff.exists({
+                _id: staffId,
+                role: "LAB_TECHNICIAN"
+            }).lean(),
+            LabTechnician.exists({ staffId }).lean()
+        ]);
 
-        if (!staff) {
+        if (!staffExists) {
             return next(
-                new APIError(404, "No staff record found")
+                new APIError(404, "Staff Record not found")
+            );
+        }
+
+        if (labTechnicianExists) {
+            return next(
+                new APIError(409, "Lab Technician already exists")
             );
         }
 
         const labTech = await LabTechnician.create({
             ...req.parsedBody,
             staffId
+        });
+
+        await labTech.populate({
+            path: "staffId",
+            populate: {
+                path: "userId"
+            }
         });
 
         return res.status(201).json({
@@ -92,21 +111,18 @@ export const handleCreateLabTechnician = async (req, res, next) => {
 
 export const handleUpdateLabTechnician = async (req, res, next) => {
     try {
-        const { staffId } = req.parsedParams;
+        const { labTechnicianId } = req.parsedParams;
 
-        const staffRecord = await Staff.exists({ _id: staffId });
-
-        if (!staffRecord) {
-            return next(
-                new APIError(404, "No staff record found")
-            );
-        }
-
-        const updatedLabTechnician = await LabTechnician.findOneAndUpdate(
-            { staffId },
+        const updatedLabTechnician = await LabTechnician.findByIdAndUpdate(
+            labTechnicianId,
             { $set: { ...req.parsedBody } },
             { returnDocument: "after", runValidators: true }
-        );
+        ).populate({
+            path: "staffId",
+            populate: {
+                path: "userId"
+            }
+        });;
 
         if (!updatedLabTechnician) {
             return next(

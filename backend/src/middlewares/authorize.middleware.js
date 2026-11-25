@@ -6,8 +6,8 @@ export const authorize = (roles = [], staffRoles = []) => {
             return res.status(400).json({ err: "user not logged in" });
 
         if (
-            !roles.includes(req.user.role) &&
-            (staffRoles.length === 0 || !staffRoles.includes(req.user.staffRole))
+            !roles.includes(req.user.role) ||
+            (staffRoles.length !== 0 && !staffRoles.includes(req.user.staffRole))
         )
             return res.status(403).json({
                 err: "Un-Authorize Request",

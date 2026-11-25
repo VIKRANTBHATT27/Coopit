@@ -55,6 +55,8 @@ export const handleStaffLookUp = async (req, res, next) => {
             _id: staffId,
             hospitalId,
             status: "ACTIVE"
+        }).populate({
+            path: "userId"
         });
 
         if (!staffMember) {
@@ -101,11 +103,17 @@ export const handleRegisterStaffMember = async (req, res, next) => {
             userId
         });
 
-        return res.status(201).json({
-            message: "successfully created staffMember",
-            EmpId: staffMember.employeeId,
-            staffId: staffMember._id,
+        await staffMember.populate({
+            path: "userId"
         });
+
+        return res.status(201).json(
+            new ApiResponse(
+                201,
+                staffMember,
+                "successfully created staff Member",
+            )
+        );
 
     } catch (err) {
         return next(err);
@@ -212,18 +220,18 @@ export const handleToggleStaffStatus = async (req, res, next) => {
         );
 
         if (!staffMember) {
-            const exists = await Staff.exists({
+            const staffExists = await Staff.findOne({
                 _id: staffId,
                 hospitalId,
             }).select("role");
 
-            if (!exists) {
+            if (!staffExists) {
                 return next(
                     new APIError(404, "No Staff Account found")
                 );
             }
 
-            if (exists.role === "HOSPITAL_ADMIN") {
+            if (staffExists.role === "HOSPITAL_ADMIN") {
                 return next(
                     new APIError(
                         401,

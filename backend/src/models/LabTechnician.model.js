@@ -49,9 +49,8 @@ const labTechSchema = new Schema({
     shift: {
         type: String,
         enum: [
-            "MORNING",
-            "EVENING",
-            "Night"
+            "DAY",
+            "NIGHT"
         ]
     },
 

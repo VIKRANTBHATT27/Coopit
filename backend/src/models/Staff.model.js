@@ -65,8 +65,8 @@ const staffSchema = new Schema({
 
     shift: {
         type: String,
-        enum: ["Morning", "Night"],
-        required: false
+        enum: ["DAY", "NIGHT"],
+        required: false             //coz of admin
     },
 
     designation: {

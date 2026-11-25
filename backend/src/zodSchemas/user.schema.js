@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 
-const mongooseObjectIdValidator = (fieldName) => z.string()
+const mongooseObjectIdValidator = (fieldName) => z.string().trim()
     .refine((val) => mongoose.Types.ObjectId.isValid(val), {
         message: `Invalid ObjectId for field ${fieldName}`
     });
@@ -19,17 +19,17 @@ export const getUserByUserId = z.object({
 });
 
 export const userProfileSchema = z.object({
-    firstName: z.string().min(1).max(50),
-    middleName: z.string().min(1).max(50).optional(),
-    lastName: z.string().min(1).max(50),
-    emailId: z.email({ message: "Invalid email address" }),
-    password: z.string()
+    firstName: z.string().trim().min(1).max(50),
+    middleName: z.string().trim().min(1).max(50).optional(),
+    lastName: z.string().trim().min(1).max(50),
+    emailId: z.email({ message: "Invalid email address" }).trim(),
+    password: z.string().trim()
         .min(8, "Password must be at least 8 characters long")
         .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
-    phoneNumber: z.string()
+    phoneNumber: z.string().trim()
         .regex(/^\+?[1-9]\d{9,14}$/, "Phone number must be 10 digits"),
     gender: z.enum(['MALE', 'FEMALE', 'OTHERS']),
-    dateOfBirth: z.date()
+    dateOfBirth: z.coerce.date()
         .max(new Date(),
             { message: "Birth date cannot be in the future" }
         ),
@@ -38,9 +38,9 @@ export const userProfileSchema = z.object({
         "STAFF",
         "SUPER_ADMIN",
     ]).default("PATIENT"),
-    state: z.string(),
-    districtName: z.string(),
-    landmark: z.string().optional(),
+    state: z.string().trim(),
+    districtName: z.string().trim(),
+    landmark: z.string().trim().optional(),
 });
 
 export const createUserSchema = z.object({
@@ -60,7 +60,7 @@ export const createUserSchema = z.object({
 
 export const verificationSchema = z.object({
     body: userProfileSchema.pick({
-        emailId: true,
+        emailId: true
     }).extend({
         otpCode: z.string().trim()
             .regex(/^\d{6}$/,
@@ -74,7 +74,7 @@ export const loginSchema = z.object({
         emailId: true,
         password: true
     }).extend({
-        otpCode: z.string()
+        otpCode: z.string().trim()
             .regex(/^\d{6}$/,
                 { message: "OTP must be exactly 6 digits" }
             )
@@ -110,13 +110,14 @@ export const updatePhoneSchema = z.object({
 
 export const passwordResetSchema = z.object({
     body: z.object({
-        resetToken: z.string()
+        resetToken: z.string().trim()
             .length(64, "Invalid reset token")
             .regex(/^[a-f0-9]{64}$/i, "Invalid reset token format"),
 
-        otpCode: z.string().regex(/^\d{6}$/, { message: "OTP must be exactly 6 digits" }),
+        otpCode: z.string().trim()
+            .regex(/^\d{6}$/, { message: "OTP must be exactly 6 digits" }),
 
-        newPassword: z.string()
+        newPassword: z.string().trim()
             .min(8, "Password must be at least 8 characters long")
             .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
     })
@@ -124,10 +125,10 @@ export const passwordResetSchema = z.object({
 
 export const updatePasswordSchema = z.object({
     body: z.object({
-        currentPassword: z.string()
+        currentPassword: z.string().trim()
             .min(8, "Password must be at least 8 characters long")
             .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
-        newPassword: z.string()
+        newPassword: z.string().trim()
             .min(8, "Password must be at least 8 characters long")
             .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/, "Invalid Password"),
     })

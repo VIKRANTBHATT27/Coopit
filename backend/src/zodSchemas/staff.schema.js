@@ -1,13 +1,13 @@
 import { z } from "zod";
 import mongoose from "mongoose";
 
-const mongooseObjectIdValidator = (fieldName) => z.string()
+const mongooseObjectIdValidator = (fieldName) => z.string().trim()
     .refine((val) => mongoose.Types.ObjectId.isValid(val), {
         message: `Invalid ObjectId for field ${fieldName}`
     });
 
 const staffSchema = z.object({
-    employeeId: z.string()
+    employeeId: z.string().trim()
         .regex(/^(NUR|REC|LAB|DOC|ADM)-\d{4}-\d{4}$/, {
             message: "Invalid employee ID format",
         }),
@@ -42,9 +42,9 @@ const staffSchema = z.object({
         "OTHERS"
     ]),
 
-    shift: z.enum(["Morning", "Night"]),
+    shift: z.enum(["DAY", "NIGHT"]),
 
-    designation: z.string().optional()
+    designation: z.string().trim().optional()
 });
 
 export const registrationSchema = z.object({

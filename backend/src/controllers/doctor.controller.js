@@ -6,17 +6,36 @@ export const handleCreateDoctor = async (req, res, next) => {
     try {
         const { staffId } = req.parsedParams;
 
-        const staffExists = await Staff.exists({ _id: staffId }).lean();
+        const [staffExists, doctorExists] = await Promise.all([
+            Staff.exists({
+                _id: staffId,
+                role: "DOCTOR"
+            }).lean(),
+            Doctor.exists({ staffId }).lean()
+        ]);
 
         if (!staffExists) {
             return next(
-                new APIError(404, "No staff record found")
+                new APIError(404, "Staff Record not found")
+            );
+        }
+        
+        if (doctorExists) {
+            return next(
+                new APIError(409, "Doctor already exists")
             );
         }
 
         const doctor = await Doctor.create({
             ...req.parsedBody,
             staffId
+        });
+
+        await doctor.populate({
+            path: "staffId",
+            populate: {
+                path: "userId"
+            }
         });
 
         return res.status(201).json({
@@ -74,10 +93,10 @@ export const handleGetDoctorDetails = async (req, res, next) => {
 
 export const handleUpdateDoctor = async (req, res, next) => {
     try {
-        const { staffId } = req.parsedParams;
+        const { doctorId } = req.parsedParams;
 
-        const doctor = await doctorModel.findOneAndUpdate(
-            { staffId },
+        const doctor = await Doctor.findByIdAndUpdate(
+            doctorId,
             { ...req.parsedBody },
             { returnDocument: "after", runValidators: true }
         );

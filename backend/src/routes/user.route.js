@@ -11,7 +11,8 @@ import {
     handleSetMFA,
     handleSendEmailOTP,
     handleVerifyMFA,
-    handleGetUserData
+    handleGetUserData,
+    handleGenerateNewAccessToken
 } from "../controllers/user.controller.js";
 // handleUpdatePhone,
 // handleVerifyUserLogin,
@@ -29,7 +30,7 @@ import {
 } from "../zodSchemas/user.schema.js";
 
 import { authorize } from "../middlewares/authorize.middleware.js";
-import { authenticate } from "../middlewares/authenticate.middleware.js";
+import { authenticate, verifyRefreshToken } from "../middlewares/authenticate.middleware.js";
 
 import parseIncomingReq from "../middlewares/parseReq.middleware.js";
 import phoneLimiter from "../middlewares/rateLimiter.middleware.js";
@@ -79,6 +80,11 @@ router.post("/auth/forgot-password",
 router.post("/auth/reset-password",
     parseIncomingReq(passwordResetSchema),
     handleResetPassword
+);
+
+router.post("/refresh-token",
+    verifyRefreshToken,
+    handleGenerateNewAccessToken
 );
 
 router.use(authenticate);
