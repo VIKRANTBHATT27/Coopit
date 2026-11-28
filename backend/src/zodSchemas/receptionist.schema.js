@@ -4,7 +4,8 @@ import mongoose from "mongoose";
 const AVATAR_FILE_TYPES = [
     "image/jpeg",
     "image/png",
-    "image/webp"
+    "image/webp",
+    "image/avif"
 ];
 
 const mongooseObjectIdValidator = (fieldName) => z.string().trim()
@@ -51,9 +52,9 @@ export const updateReceptionistSchema = z.object({
 
 export const avatarUploadSchema = z.object({
     file: z.object({
-        originalName: z.string().trim()
+        originalname: z.string().trim()
             .min(3, "Original filename is required"),
-        mimeType: z.string().trim()
+        mimetype: z.string().trim()
             .refine(mime => AVATAR_FILE_TYPES.includes(mime), {
                 message: "invalid image file type"
             }),

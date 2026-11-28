@@ -135,8 +135,8 @@ export const handleUploadAvatar = async (req, res, next) => {
     try {
         const { staffId } = req.user;
 
-        const pfp_url = req.pfpImageURL;
-        const pfp_publicId = req.pfpImagePublicId;
+        const pfp_url = req.pfpAvatarURL;
+        const pfp_publicId = req.pfpAvatarPublicId;
 
         const receptionist = await Receptionist.findOneAndUpdate(
             { staffId },

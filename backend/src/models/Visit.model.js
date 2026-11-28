@@ -48,6 +48,7 @@ const visitSchema = new Schema({
 visitSchema.index({ hospitalId: 1, visitDate: -1 });
 visitSchema.index({ assignedDoctor: 1 });
 visitSchema.index({ patientId: 1 });
+visitSchema.index({ assignedNurseId: 1, patientId: 1 }, { unique: true });
 
 const Visit = model("Visit", visitSchema);
 export default Visit;

@@ -6,10 +6,11 @@ const customStorageAvatars = multer.diskStorage({
         cb(null, path.resolve("./public/uploaded-avatar"))
     },
     filename: (req, file, cb) => {
-        // const extensionName = path.extname(file.originalname);
-        // const basename = path.basename(file.originalname, extensionName);
-
-        cb(null, "Image-" + Date.now() + file.originalname);
+        const fileName =  `Image-${Date.now()}-${file.originalname}`;
+        file.path = fileName;
+        
+        req.file = file;
+        cb(null, fileName);
     }
 });
 

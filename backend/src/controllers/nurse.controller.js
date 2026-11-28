@@ -96,6 +96,17 @@ export const handleCreateNurse = async (req, res, next) => {
         });
 
     } catch (err) {
+        if (err?.code === 11000) {
+            const duplicateFields = Object.keys(err.keyPattern ?? {}).join(", ");
+            return next(
+                new APIError(
+                    409,
+                    duplicateFields
+                        ? `A nurse record already uses this value for: ${duplicateFields}`
+                        : "A nurse record already uses one of these unique values"
+                )
+            );
+        }
         return next(err);
     }
 };
@@ -206,25 +217,14 @@ export const handleGetNursesByDept = async (req, res, next) => {
             department,
             role: "NURSE",
             status: "ACTIVE",
+        }).populate({
+            path: "userId",
+            select: "firstName middleName lastName emailId gender dateOfBirth"
         });
 
-        if (!allNurses) {
-            return next(
-                new APIError(404, "No nurse records found")
-            );
-        }
-
-        const allNurseDetails = [];
-
-        for (const nurse of allNurses) {
-            const userDetails = await User.findById(nurse.userId).select("fullName emailId gender dateOfBirth");
-
-            allNurseDetails.push(userDetails);
-        }
-
         return res.status(200).json({
-            message: "details of all the doctors",
-            data: allNurseDetails
+            message: "details of all the nurses",
+            data: allNurses
         });
 
     } catch (err) {

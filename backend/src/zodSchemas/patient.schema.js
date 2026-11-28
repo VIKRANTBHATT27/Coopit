@@ -27,7 +27,7 @@ export const createPatientSchema = z.object({
             alcohol: z.boolean().default(false),
             tobacco: z.boolean().default(false),
             occupation: z.string().optional(),
-        }),
+        }).optional(),
 
         allergies: z.array(z.string()).default([]),
         chronicConditions: z.array(z.string()).default([]),

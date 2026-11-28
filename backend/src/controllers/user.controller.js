@@ -172,6 +172,12 @@ export const handleVerifyEmailId = async (req, res, next) => {
             );
         }
 
+        if (tempUser.emailIdVerified) {
+            return next(
+                new APIError(409, "emailId already registered")
+            );
+        }
+
         await checkEmailOtp(tempUser._id, otpCode);
 
         tempUser.emailIdVerified = true;
@@ -205,6 +211,12 @@ export const handleSetMFA = async (req, res, next) => {
         if (!tempUser.emailIdVerified) {
             return next(
                 new APIError(404, "Email Id is not verified")
+            );
+        }
+
+        if (tempUser.mfaEnabled) {
+            return next(
+                new APIError(404, "mfa is already verified")
             );
         }
 
@@ -276,7 +288,7 @@ export const handleVerifyMFA = async (req, res, next) => {
                     _id: tempUser._id,
                     mfaEnabled: tempUser.mfaEnabled
                 },
-                "email has been successfully registered. Please login"
+                "user has been successfully verified. Please login"
             )
         );
 
@@ -745,18 +757,22 @@ export const handleGetUserLookup = async (req, res, next) => {
     try {
         const { emailId } = req.parsedBody;
 
-        const user = await User.findOne({ emailId }).select("_id").lean();
+        const userData = await User.findOne({ emailId })
+            .select("_id firstName middleName lastName role emailId emailIdVerified mfaEnabled");
 
-        if (!user) {
+        if (!userData) {
             return next(
                 new APIError(404, "user not found")
             );
         }
 
-        return res.status(200).json({
-            message: "User Exists",
-            userId: user._id
-        });
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                userData,
+                "User Exists"
+            )
+        );
     } catch (err) {
         return next(err);
     }

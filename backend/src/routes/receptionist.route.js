@@ -25,7 +25,6 @@ import {
 
 import { handleGetUserLookup } from "../controllers/user.controller.js";
 
-
 import { avatarUploadSchema } from "../zodSchemas/receptionist.schema.js";
 import { createPatientSchema } from "../zodSchemas/patient.schema.js";
 import {
@@ -34,17 +33,20 @@ import {
 } from "../zodSchemas/user.schema.js";
 import {
     changeVisitNurseSchema,
+    getAllVisitSchema,
     patientVisitSchema,
     visitIdSchema
 } from "../zodSchemas/visit.schema.js";
 
 import express from "express";
+import { getNursesQuerySchema } from "../zodSchemas/nurse.schema.js";
+import { handleGetNursesByDept } from "../controllers/nurse.controller.js";
 const router = express.Router();
 
 router.use(authenticate);
 router.use(authorize(["STAFF"], ["RECEPTIONIST"]));
 
-router.get("/receptionist",
+router.get("/me",                 //might remove this route => i think it serve no purpose
     handleGetReceptionist
 )
 
@@ -73,16 +75,23 @@ router.route("/patient/:userId")
         handleCreatePatient
     );
 
+// apply pagination
+router.get('/nurses',
+    parseIncomingReq(getNursesQuerySchema),
+    handleGetNursesByDept
+);
+
 router.post("/patient/:patientId/visit",
     parseIncomingReq(patientVisitSchema),
     handleCreatePatientVisit
 );
 
 router.get("/visit",
+    parseIncomingReq(getAllVisitSchema),
     handleGetAllVisit
 );
 
-router.patch("/visit/:visitId/nurse/:nurseId",
+router.patch("/visit/:visitId/nurse/:nurseStaffId",
     parseIncomingReq(changeVisitNurseSchema),
     handleChangeNurse
 );

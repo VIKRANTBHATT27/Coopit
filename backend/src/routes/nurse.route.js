@@ -69,15 +69,15 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get('/department',
-    authorize(["STAFF"], ["RECEPTIONIST", "NURSE", "ADMIN"]),
-    parseIncomingReq(getNursesQuerySchema),
-    handleGetNursesByDept
-);
+// router.get('/department',
+//     authorize(["STAFF"], ["RECEPTIONIST", "NURSE", "ADMIN"]),
+//     parseIncomingReq(getNursesQuerySchema),
+//     handleGetNursesByDept
+// );
 
 router.use(authorize(["STAFF"], ["NURSE"]));
 
-router.get("/",
+router.get("/me",
     handleGetNurse
 );
 

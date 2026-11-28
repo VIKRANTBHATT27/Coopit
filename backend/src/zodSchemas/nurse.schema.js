@@ -100,6 +100,6 @@ export const getNursesQuerySchema = z.object({
         ], {
             required_error: "Department query parameter is required",
             invalid_type_error: "Invalid hospital department selected"
-        })
+        }),
     })
 });

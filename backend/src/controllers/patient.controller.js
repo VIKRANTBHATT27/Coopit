@@ -68,7 +68,9 @@ export const handlePatientLookup = async (req, res, next) => {
     try {
         const { userId } = req.parsedParams;
 
-        const patient = await Patient.findOne({ userId }).lean();
+        const patient = await Patient.findOne({ userId })
+            .populate({ path: "userId" })
+            .lean();
 
         if (!patient) {
             return next(

@@ -4,8 +4,7 @@ const nurseSchema = new Schema({
     staffId: {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: "Staff",
-        unique: true
+        ref: "Staff"
     },
 
     pfp_url: {
@@ -38,13 +37,15 @@ const nurseSchema = new Schema({
     },
 
     assignedPatients: {
-        type: [{
-            type: Schema.Types.ObjectId,
-            ref: "Patient",
-            required: true,
-            unique: true
-        }],
-        default: []
+        type: [Schema.Types.ObjectId],
+        ref: "Patient",
+        default: [],
+        validate: {
+            validator(value) {
+                return new Set(value.map(id => id.toString())).size === value.length;
+            },
+            message: "Duplicate Ids in assignedPatients"
+        },
     },
 
     nurseDescription: {
@@ -78,6 +79,8 @@ const nurseSchema = new Schema({
         required: true
     },
 });
+
+nurseSchema.index({ staffId: 1 }, { unique: true });
 
 const Nurse = model("Nurse", nurseSchema);
 export default Nurse;
